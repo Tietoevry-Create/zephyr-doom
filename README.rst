@@ -4,9 +4,9 @@ Zephyr-Doom
 
 This is a port of `Doom (1993)`_ for `Zephyr RTOS`_.
 
-The project is forked from `nrf-doom`_ (commit `2d42413`_), which is forked from `Chocolate Doom`_ version 3.0.0. This is an internship project which aims to create a dedicated port of the game, ensuring compatibility with various System-on-Chips (SoCs) by meeting specific system requirements such as CPU, RAM, and Flash storage. The objective is to optimize the game to run seamlessly on different SoCs, leveraging the capabilities of Zephyr real-time operating system.
+The project is forked from `nrf-doom`_ (commit `2d42413`_), which is forked from `Chocolate Doom`_ version 3.0.0. The objective of this internship project is to develop a Zephyr port of the game, making sure it can run on different System-on-Chips (SoCs). This endeavor will be divided into several stages, presented as Minimum Viable Product (MVP) packages.
 
-Zephyr-Doom has only been tested with shareware version of Doom 1
+Zephyr-Doom has only been tested with shareware version of Doom 1.
 
 ======================= ================= ================================
  Game                    Status            Comment
@@ -24,7 +24,7 @@ Doom 2                  Not Tested
 
 .. _nRF5340: https://www.nordicsemi.com/Products/Low-power-short-range-wireless/nRF5340
 .. _Doom (1993): https://en.wikipedia.org/wiki/Doom_(1993_video_game)
-.. _Zephyr: https://zephyrproject.org/
+.. _Zephyr RTOS: https://zephyrproject.org/
 
 Table of Contents
 ^^^^^^^^^^^^^^^^^^^^^^^
@@ -71,7 +71,7 @@ Music                        Open
 MVP1
 """""""""""""""""""""
  
-* Goal - Port `nrf-doom`_ to `nRF Connect SDK`_ and get it up and running, with diplay and basic control using dev kit buttons, under Zephyr RTOS (still with dependencies on nRF SDKs).
+* Goal - Port `nrf-doom`_ to `nRF Connect SDK`_ and get it up and running, with display and basic control using dev kit buttons, under Zephyr RTOS (still with dependency on nRF Connect SDK).
 * Features:
  * QSPI flash
  * Doom engine running
@@ -79,7 +79,7 @@ MVP1
  * Nordic Semiconductor `nRF5340`_ dev kit button control
 * Required Hardware
  * Nordic Semiconductor `nRF5340`_ dev kit
- * TBD display
+ * 3,5" ILI9486 `display`_, no touch
 
 MVP2
 """""""""""""""""""""
