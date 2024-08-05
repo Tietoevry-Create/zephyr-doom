@@ -37,7 +37,7 @@
  * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
-#include "sdk_common.h"
+// #include "sdk_common.h"
 #include <stdint.h>
 #include "compiler_abstraction.h"
 

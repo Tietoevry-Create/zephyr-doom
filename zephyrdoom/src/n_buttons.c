@@ -33,7 +33,7 @@
 #include <stdio.h>
 
 #include "nrf.h"
-#include "nrf_gpio.h"
+#include <hal/nrf_gpio.h>
 #include "board_config.h"
 
 #undef PACKED_STRUCT
@@ -76,7 +76,6 @@ int N_ButtonStateRaw(int id)
 
 void N_ReadButtons() 
 {
-    
     static event_t event;
 
     boolean button_state[4];
@@ -108,7 +107,6 @@ void N_ReadButtons()
     for (int i=0; i<4; i++) {
         button_prev_state[i] = button_state[i];
     }
-
 }
 
 int N_ButtonState(int num)

@@ -686,7 +686,7 @@ static void SinglePlayerClear(ticcmd_set_t *set)
 //
 
 void TryRunTics (void)
-{
+{   
     int	i;
     int	lowtic;
     int	entertic;
@@ -712,7 +712,6 @@ void TryRunTics (void)
     {
         NetUpdate ();
     }
-
     lowtic = GetLowTic();
 
     availabletics = lowtic - gametic/ticdup;
@@ -738,6 +737,7 @@ void TryRunTics (void)
 
         if (net_client_connected)
         {
+            printf("OldNetSync\n");
             OldNetSync();
         }
     }

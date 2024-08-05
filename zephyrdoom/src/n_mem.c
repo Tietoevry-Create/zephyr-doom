@@ -5,8 +5,8 @@
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
  *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
+ * 1. Redistributions of source code must retain the above copyright notice,
+ * this list of conditions and the following disclaimer.
  *
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
@@ -29,24 +29,32 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <stdlib.h>
+#include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h>
 
-extern const uint32_t __HeapLimit;
-const uint32_t heapLimit = (uint32_t)&__HeapLimit;
+// extern const uint32_t __HeapLimit;
+// const uint32_t heapLimit = (uint32_t)&__HeapLimit;
 
-void *N_malloc(size_t size)
-{
+void *N_malloc(size_t size) {
+    // void *result;
+    // result = malloc(size);
+    // size_t end = (size_t)result + size;
+
+    // printf("A %d at %X - %X - %lX\n", size, (size_t)result, end, heapLimit);
+    // if (end > heapLimit) {
+    //     printf("Heap Overflow!!\n");
+    //     return NULL;
+    // }
+
+    // return result;
+
     void *result;
     result = malloc(size);
-    size_t end = (size_t)result + size;
-    
-    // printf("A %d at %X - %X - %lX\n", size, (size_t)result, end, heapLimit);
-    if (end > heapLimit) {
+    if (result == NULL) {
         printf("Heap Overflow!!\n");
         return NULL;
     }
 
     return result;
 }
-

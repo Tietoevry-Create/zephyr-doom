@@ -345,7 +345,10 @@ void R_GenerateInit(int texture_storage_size)
     N_ReadButtons();
     I_Sleep(1);
     N_ReadButtons();
-    generate_to_flash = N_ButtonState(1);
+    // generate_to_flash = N_ButtonState(1);
+
+    // TODO
+    generate_to_flash = false;
 
     generate_buffer = (byte*)I_VideoBuffers;
     store_loc = N_qspi_alloc_block();
@@ -452,6 +455,9 @@ void R_GenerateComposite_N (int num, texture_t *texture, char *patch_names)
             }
         }
     }
+
+    // TODO
+    generate_to_flash = false;
 
     if (generate_to_flash) {
         N_qspi_write(texture_loc, generate_buffer, texture_size);
@@ -787,8 +793,10 @@ void R_InitTextures (void)
             
         offset = LONG(*directory);
 
+        printf("Offset: %d, maxoff: %d\n", offset, maxoff);
         if (offset > maxoff)
-            I_Error ("R_InitTextures: bad texture directory");
+            {
+                I_Error ("R_InitTextures: bad texture directory");}
         
         mtexture = (maptexture_t *) ( (byte *)maptex + offset);
 

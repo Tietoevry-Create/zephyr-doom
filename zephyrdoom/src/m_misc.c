@@ -55,11 +55,11 @@ void M_MakeDirectory(char *path)
 
 boolean M_FileExists(char *filename)
 {
-    if (N_fs_file_exists(filename)) {
-        return true;
-    } else {
-        return false;
-    }
+    // if (N_fs_file_exists(filename)) {
+    //     return true;
+    // } else {
+    //     return false;
+    // }
 }
 
 // Check if a file exists by probing for common case variation of its filename.

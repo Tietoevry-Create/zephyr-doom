@@ -34,8 +34,8 @@
 
 #include "board_config.h"
 #include "nrf.h"
-#include "nrf_delay.h"
-#include "nrf_gpio.h"
+#include <zephyr/kernel.h>
+#include <hal/nrf_gpio.h>
 
 #include "FT810.h"
 
@@ -46,7 +46,7 @@ volatile uint8_t display_spi_txd_buf[BUF_MAXCNT];
 volatile uint8_t display_spi_rxd_buf[BUF_MAXCNT];
 
 void N_display_gpiote_end_to_cs() {
-  const int TASK_MODE = 3;
+  /*const int TASK_MODE = 3;
   const int LO_TO_HI = 1;
   const int OUT_INIT_LOW = 0;
 
@@ -54,17 +54,17 @@ void N_display_gpiote_end_to_cs() {
   NRF_DISPLAY_GPIOTE->CONFIG[0] = (TASK_MODE << 0) | (DISPLAY_PIN_CS_N << 8) | (LO_TO_HI << 16) | (OUT_INIT_LOW << 20);
   NRF_DISPLAY_GPIOTE->SUBSCRIBE_OUT[0] = 0 | GPIOTE_SUBSCRIBE_OUT_EN_Msk;
   NRF_DISPLAY_SPIM->PUBLISH_END = 0 | SPIM_PUBLISH_END_EN_Msk;
-  NRF_DPPIC_S->CHENSET = 1;
+  NRF_DPPIC_S->CHENSET = 1;*/
 }
 
 void N_display_gpiote_clear() {
-  NRF_DISPLAY_GPIOTE->CONFIG[0] = 0;
+  //NRF_DISPLAY_GPIOTE->CONFIG[0] = 0;
 }
 
 void N_display_spi_init() {
 
   // Set up GPIO pins
-  nrf_gpio_cfg(DISPLAY_PIN_SCK, NRF_GPIO_PIN_DIR_OUTPUT, NRF_GPIO_PIN_INPUT_DISCONNECT, NRF_GPIO_PIN_NOPULL, NRF_GPIO_PIN_H0H1, NRF_GPIO_PIN_NOSENSE);
+  /*nrf_gpio_cfg(DISPLAY_PIN_SCK, NRF_GPIO_PIN_DIR_OUTPUT, NRF_GPIO_PIN_INPUT_DISCONNECT, NRF_GPIO_PIN_NOPULL, NRF_GPIO_PIN_H0H1, NRF_GPIO_PIN_NOSENSE);
   nrf_gpio_cfg(DISPLAY_PIN_MOSI,NRF_GPIO_PIN_DIR_OUTPUT, NRF_GPIO_PIN_INPUT_DISCONNECT, NRF_GPIO_PIN_NOPULL, NRF_GPIO_PIN_H0H1, NRF_GPIO_PIN_NOSENSE);
   nrf_gpio_cfg(DISPLAY_PIN_MISO,NRF_GPIO_PIN_DIR_INPUT , NRF_GPIO_PIN_INPUT_CONNECT   , NRF_GPIO_PIN_NOPULL, NRF_GPIO_PIN_S0S1, NRF_GPIO_PIN_NOSENSE);
   nrf_gpio_cfg(DISPLAY_PIN_CS_N,NRF_GPIO_PIN_DIR_OUTPUT, NRF_GPIO_PIN_INPUT_DISCONNECT, NRF_GPIO_PIN_NOPULL, NRF_GPIO_PIN_H0H1, NRF_GPIO_PIN_NOSENSE);
@@ -86,79 +86,79 @@ void N_display_spi_init() {
 
   NRF_DISPLAY_SPIM->TXD.PTR = 0xFFFFFFFF;
 
-  display_spi_tip = 0;
+  display_spi_tip = 0;*/
 
 }
 
 void N_display_power_reset() {
-  nrf_gpio_pin_clear(DISPLAY_PIN_PD_N);
+  /*nrf_gpio_pin_clear(DISPLAY_PIN_PD_N);
   nrf_delay_ms(50);
   nrf_gpio_pin_set(DISPLAY_PIN_PD_N);
-  nrf_delay_ms(50);
+  nrf_delay_ms(50);*/
 }
 
 void N_display_spi_setup(int txdMaxCnt, volatile uint8_t * txdPtr, 
                        int rxdMaxCnt, volatile uint8_t * rxdPtr) {
 
-  NRF_DISPLAY_SPIM->TXD.MAXCNT = txdMaxCnt;
+  /*NRF_DISPLAY_SPIM->TXD.MAXCNT = txdMaxCnt;
   NRF_DISPLAY_SPIM->TXD.PTR = (uint32_t)txdPtr;
   NRF_DISPLAY_SPIM->RXD.MAXCNT = rxdMaxCnt;
-  NRF_DISPLAY_SPIM->RXD.PTR = (uint32_t)rxdPtr;
+  NRF_DISPLAY_SPIM->RXD.PTR = (uint32_t)rxdPtr;*/
 }
 
 void N_display_spi_transfer_finish() {
-  if (display_spi_tip) {
+  /*f (display_spi_tip) {
     while (NRF_DISPLAY_SPIM->EVENTS_END == 0) { 
     }
     NRF_DISPLAY_SPIM->EVENTS_END = 0;
     display_spi_tip = 0;
     N_display_gpiote_clear();
-  }
+  }*/
 }
 
 void N_display_spi_transfer_start() {
-  N_display_spi_transfer_finish();
-  nrf_gpio_pin_clear(DISPLAY_PIN_CS_N);
+  /*N_display_spi_transfer_finish();
+  nrf_gpio_pin_clear(DISPLAY_PIN_CS_N);*/
 }
 
 void N_display_spi_transfer_data() {
-  NRF_DISPLAY_SPIM->EVENTS_END = 0;
+  /*NRF_DISPLAY_SPIM->EVENTS_END = 0;
   NRF_DISPLAY_SPIM->TASKS_START = 1;
   while (NRF_DISPLAY_SPIM->EVENTS_END == 0) { 
   }
-  NRF_DISPLAY_SPIM->EVENTS_END = 0;
+  NRF_DISPLAY_SPIM->EVENTS_END = 0;*/
 }
 
 void N_display_spi_transfer_data_end() {
-  NRF_DISPLAY_SPIM->EVENTS_END = 0;
+  /*NRF_DISPLAY_SPIM->EVENTS_END = 0;
 
   N_display_gpiote_end_to_cs();
 
   NRF_DISPLAY_SPIM->TASKS_START = 1;
-  display_spi_tip = 1;
+  display_spi_tip = 1;*/
 }
 
 void N_display_spi_transfer_end() {
-  nrf_gpio_pin_set(DISPLAY_PIN_CS_N);
+  /*nrf_gpio_pin_set(DISPLAY_PIN_CS_N);*/
 }
 
 void N_display_spi_transfer() {
-  N_display_spi_transfer_start();
+  /*N_display_spi_transfer_start();
   N_display_spi_transfer_data();
-  N_display_spi_transfer_end();
+  N_display_spi_transfer_end();*/
 }
 
 void N_display_spi_cmd(uint8_t b1, uint8_t b2) {
-  display_spi_txd_buf[0] = b1;
+  /*display_spi_txd_buf[0] = b1;
   display_spi_txd_buf[1] = b2;
   display_spi_txd_buf[2] = 0x00;
 
   N_display_spi_setup(3, display_spi_txd_buf, 0, NULL);
-  N_display_spi_transfer();
+  N_display_spi_transfer();*/
 }
 
 void N_display_spi_wr8(uint32_t addr, uint8_t data) {
-  uint8_t *addrBytes = (uint8_t*)&addr;
+  /*uint8_t *addrBytes = (uint8_t*)&addr;
 
   // Assuming MCU is Little-Endian
   display_spi_txd_buf[0] = addrBytes[2] | 0x80;
@@ -169,11 +169,11 @@ void N_display_spi_wr8(uint32_t addr, uint8_t data) {
   //printf("Wr8 %.2X %.2X %.2X %.2X\n", display_spi_txd_buf[0], display_spi_txd_buf[1], display_spi_txd_buf[2], display_spi_txd_buf[3]);
 
   N_display_spi_setup(4, display_spi_txd_buf, 0, NULL);
-  N_display_spi_transfer();
+  N_display_spi_transfer();*/
 }
 
 void N_display_spi_wr16(uint32_t addr, uint16_t data) {
-  uint8_t *addrBytes = (uint8_t*)&addr;
+  /*uint8_t *addrBytes = (uint8_t*)&addr;
   uint8_t *dataBytes = (uint8_t*)&data;
 
   // Assuming MCU is Little-Endian
@@ -186,11 +186,11 @@ void N_display_spi_wr16(uint32_t addr, uint16_t data) {
   //printf("Wr16 %.2X %.2X %.2X %.2X %.2X\n", display_spi_txd_buf[0], display_spi_txd_buf[1], display_spi_txd_buf[2], display_spi_txd_buf[3], display_spi_txd_buf[4]);
 
   N_display_spi_setup(5, display_spi_txd_buf, 0, NULL);
-  N_display_spi_transfer();
+  N_display_spi_transfer();*/
 }
 
 void N_display_spi_wr32(uint32_t addr, uint32_t data) {
-  uint8_t *addrBytes = (uint8_t*)&addr;
+  /*uint8_t *addrBytes = (uint8_t*)&addr;
   uint8_t *dataBytes = (uint8_t*)&data;
 
   // Assuming MCU is Little-Endian
@@ -204,11 +204,11 @@ void N_display_spi_wr32(uint32_t addr, uint32_t data) {
   display_spi_txd_buf[6] = dataBytes[3];
 
   N_display_spi_setup(7, display_spi_txd_buf, 0, NULL);
-  N_display_spi_transfer();
+  N_display_spi_transfer();*/
 }
 
 void N_display_spi_wr(uint32_t addr, int dataSize, uint8_t *data) {
-  uint8_t *addrBytes = (uint8_t*)&addr;
+  /*uint8_t *addrBytes = (uint8_t*)&addr;
 
   // Assuming MCU is Little-Endian
   display_spi_txd_buf[0] = addrBytes[2] | 0x80;
@@ -224,7 +224,7 @@ void N_display_spi_wr(uint32_t addr, int dataSize, uint8_t *data) {
   N_display_spi_setup(dataSize, dataPtr, 0, NULL);
   N_display_spi_transfer_data_end();
 
-  // N_display_spi_transfer_end();
+  // N_display_spi_transfer_end();*/
 }
 
 // void N_display_spi_transfer_data_async() {
@@ -255,7 +255,7 @@ void N_display_spi_wr(uint32_t addr, int dataSize, uint8_t *data) {
 // }
 
 uint8_t N_display_spi_rd8(uint32_t addr) {
-  uint8_t *addrBytes = (uint8_t*)&addr;
+  /*uint8_t *addrBytes = (uint8_t*)&addr;
 
   // Assuming MCU is Little-Endian
   display_spi_txd_buf[0] = addrBytes[2];
@@ -269,7 +269,8 @@ uint8_t N_display_spi_rd8(uint32_t addr) {
   N_display_spi_transfer();
 
 
-  return display_spi_rxd_buf[4];
+  return display_spi_rxd_buf[4];*/
+  return 0;
 }
 
 /// --------
@@ -277,13 +278,13 @@ uint8_t N_display_spi_rd8(uint32_t addr) {
 uint32_t ram_free_loc = FT810_RAM_G;
 
 void N_display_wakeup() {
-  N_display_spi_cmd(0x00, 0x00);
+  //N_display_spi_cmd(0x00, 0x00);
 }
 
 void N_display_init() 
 {
 
-  N_display_spi_init();
+  /*N_display_spi_init();
 
   N_display_power_reset();
     
@@ -318,30 +319,31 @@ void N_display_init()
 
   N_display_spi_wr8 (FT810_REG_PCLK,      2   ); // Pixel Clock
 
-  N_display_spi_wr8 (FT810_REG_ROTATE,  1   ); // inverted (up-down)
+  N_display_spi_wr8 (FT810_REG_ROTATE,  1   ); // inverted (up-down)*/
 
 }
 
 uint32_t N_display_ram_alloc(size_t size)
 {
-    uint32_t result = ram_free_loc;
+    /*uint32_t result = ram_free_loc;
     ram_free_loc += size;
-    return result;
+    return result;*/
+    return 0;
 }
 
 void N_display_dlswap_frame() {
-  N_display_spi_wr32(FT810_REG_DLSWAP, FT810_DLSWAP_FRAME);  
+  /*N_display_spi_wr32(FT810_REG_DLSWAP, FT810_DLSWAP_FRAME);  */
 }
 
 uint32_t display_dli = 0;
 
 void dl_start() {
-  display_dli = FT810_RAM_DL;
+  /*display_dli = FT810_RAM_DL;*/
 }
 void dl(uint32_t cmd) {
-  N_display_spi_wr32(display_dli, cmd);
-  display_dli += 4;
+  /*N_display_spi_wr32(display_dli, cmd);
+  display_dli += 4;*/
 }
 void dl_end() {
-  N_display_spi_wr32(display_dli, FT810_DISPLAY());
+  //N_display_spi_wr32(display_dli, FT810_DISPLAY());
 }

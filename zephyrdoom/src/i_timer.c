@@ -19,7 +19,7 @@
 #include "i_timer.h"
 
 #undef PACKED_STRUCT
-#include "nrf_delay.h"
+#include <zephyr/kernel.h>
 #include "board_config.h"
 
 //
@@ -67,13 +67,13 @@ uint32_t I_GetTimeRaw(void)
 
 void I_Sleep(int ms)
 {
-    nrf_delay_ms(ms);
+    k_msleep(ms);
 }
 
 
 void I_SleepUS(int us)
 {
-    nrf_delay_us(us);
+    k_usleep(us);
 }
 
 void I_WaitVBL(int count)

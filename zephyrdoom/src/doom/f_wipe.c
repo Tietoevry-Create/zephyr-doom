@@ -27,7 +27,7 @@
 
 #include "f_wipe.h"
 
-#define INCLUDE_WIPE
+//#define INCLUDE_WIPE
 
 //
 //                       SCREEN WIPE PACKAGE

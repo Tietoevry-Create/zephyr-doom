@@ -1150,8 +1150,8 @@ typedef struct __attribute__((packed))
     actionf_t action;
     statenum_t nextstate;
     // NRFD-TODO?
-    // int misc1;
-    // int misc2;
+    int misc1;
+    int misc2;
 } state_t;
 
 extern const state_t  states[NUMSTATES];

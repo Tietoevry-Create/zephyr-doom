@@ -180,12 +180,14 @@ wad_file_t *W_AddFile (char *filename)
     // Open the file and add to directory
     // wad_file = W_OpenFile(filename);
     if (!no_sdcard) {
-        wad_file = N_fs_open(filename);
-        if (wad_file == NULL)
-        {
-            printf (" couldn't open %s\n", filename);
-            return NULL;
-        }
+        // wad_file = N_fs_open(filename);
+        // if (wad_file == NULL)
+        // {
+        //     printf (" couldn't open %s\n", filename);
+        //     return NULL;
+        // }
+    } else {
+        printf("no_sdcard = 1 - skipping file open\n");
     }
     wad_file_data = Z_Malloc(sizeof(wad_file_t), PU_STATIC, 0);
 
@@ -217,7 +219,7 @@ wad_file_t *W_AddFile (char *filename)
 
         long file_size = 4196366;
         if (!no_sdcard) {
-            file_size = N_fs_size(wad_file);
+            // file_size = N_fs_size(wad_file);
         }
         printf("File size: %ld\n", file_size);
 
@@ -257,9 +259,49 @@ wad_file_t *W_AddFile (char *filename)
                     int block_next = block_loc + N_QSPI_BLOCK_SIZE;
                     int block_size = block_next > file_size ? (file_size%N_QSPI_BLOCK_SIZE) : N_QSPI_BLOCK_SIZE;
                     printf("N_fs_read\n");
-                    N_fs_read(wad_file, block_loc, block_data, block_size);
+                    // N_fs_read(wad_file, block_loc, block_data, block_size);
+                    printf("First 40b of block: \n");
+                    int pt = 0;
+                    int tmp = 0;
+                    for (int i = 0; i < 4; i++) {
+                        for (int j = 0; j < 10; j++) {
+                            printf("%x ", block_data[pt]);
+                            pt++;
+                        }
+                        printf("| ");
+                        for (int j = 0; j < 10; j++) {
+                            if (block_data[tmp] >= 33 && block_data[tmp] <= 126) {
+                                printf("%c ", block_data[tmp]);
+                            } else {
+                                printf(". ");
+                            }
+                            tmp++;
+                        }
+                        printf("\n");
+                    }
+                    printf("\n");
                     printf("N_qspi_write_block\n");
                     N_qspi_write_block(block_loc, block_data, block_size);
+                    N_qspi_read(block_loc,block_data,block_size);
+                    printf("First 40b of block in flash: \n");
+                    pt = 0;
+                    tmp = 0;
+                    for (int i = 0; i < 4; i++) {
+                        for (int j = 0; j < 10; j++) {
+                            printf("%x ", block_data[pt]);
+                            pt++;
+                        }
+                        printf("| ");
+                        for (int j = 0; j < 10; j++) {
+                            if (block_data[tmp] >= 33 && block_data[tmp] <= 126) {
+                                printf("%c ", block_data[tmp]);
+                            } else {
+                                printf(". ");
+                            }
+                            tmp++;
+                        }
+                        printf("\n");
+                    }
                     block_loc = block_next;
                 }
             }
@@ -268,10 +310,34 @@ wad_file_t *W_AddFile (char *filename)
         
 
         wadinfo_t *header_ptr = N_qspi_data_pointer(0);
+        char *dat_ptr = N_qspi_data_pointer(0);
+
+        printf("Dumping flash data: \n");
+        int pt = 0;
+        int tmp = 0;
+        for (int i = 0; i < 30; i++) {
+            for (int j = 0; j < 10; j++) {
+                printf("%x ", dat_ptr[pt]);
+                pt++;
+            }
+            printf("| ");
+            for (int j = 0; j < 10; j++) {
+                if (dat_ptr[tmp] >= 33 && dat_ptr[tmp] <= 126) {
+                    printf("%c ", dat_ptr[tmp]);
+                } else {
+                    printf(". ");
+                }
+                tmp++;
+            }
+            printf("\n");
+        }
 
         // WAD file
         // W_Read(wad_file, 0, &header, sizeof(header));
-
+        printf("Header: %x %x %x %x\n", header_ptr->identification[0],
+                header_ptr->identification[1],
+                header_ptr->identification[2],
+                header_ptr->identification[3]);
         if (strncmp(header_ptr->identification,"IWAD",4))
         {
             // Homebrew levels?

@@ -113,7 +113,8 @@ void N_uart_putc(char ch)
 
 boolean N_uart_has_data() {
     NRF_UARTE->TASKS_STOPRX = 1;
-    while (!NRF_UARTE->EVENTS_ENDRX) {}
+
+    while (!NRF_UARTE->EVENTS_ENDRX) {} // TODO: Fix
     NRF_UARTE->EVENTS_ENDRX = 0;
     uart_rx_count = NRF_UARTE->RXD.AMOUNT;
     uart_rx_cur = 0;
@@ -121,7 +122,7 @@ boolean N_uart_has_data() {
     NRF_UARTE->RXD.PTR = (uint32_t)(&uart_rx_buf[0]);
     NRF_UARTE->RXD.MAXCNT = 32;
     NRF_UARTE->TASKS_STARTRX = 1;
-    while (!NRF_UARTE->EVENTS_RXSTARTED) {}
+    while (!NRF_UARTE->EVENTS_RXSTARTED) {} // TODO: Fix
 
     return uart_rx_count > 0;
 }

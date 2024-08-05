@@ -5,8 +5,8 @@
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
  *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
+ * 1. Redistributions of source code must retain the above copyright notice,
+ * this list of conditions and the following disclaimer.
  *
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
@@ -31,25 +31,27 @@
 
 #include "n_qspi.h"
 
+#include <board_config.h>
+#include <hal/nrf_gpio.h>
+#include <nrf.h>
+#include <nrfx_qspi.h>
 #include <stdio.h>
 
-#include <board_config.h>
+#include "config/board_config.h"
+#include "config/nrf_error.h"
+#include "config/nrfx_config.h"
+// #include <nordic_common.h>
+// #include <app_error.h>
 
-#include <nrf.h>
-#include <nrf_gpio.h>
-#include <nrfx_qspi.h>
-#include <nordic_common.h>
-#include <app_error.h>
+void I_Error(char *error, ...);
 
-void I_Error (char *error, ...);
-
-#define QSPI_STD_CMD_WRSR        0x01
-#define QSPI_STD_CMD_RDSR        0x05
-#define QSPI_STD_CMD_RDCR        0x15
-#define QSPI_STD_CMD_RSTEN       0x66
-#define QSPI_STD_CMD_RST         0x99
-#define QSPI_STD_CMD_RDID        0x9F
-#define QSPI_STD_CMD_CE          0x60
+#define QSPI_STD_CMD_WRSR 0x01
+#define QSPI_STD_CMD_RDSR 0x05
+#define QSPI_STD_CMD_RDCR 0x15
+#define QSPI_STD_CMD_RSTEN 0x66
+#define QSPI_STD_CMD_RST 0x99
+#define QSPI_STD_CMD_RDID 0x9F
+#define QSPI_STD_CMD_CE 0x60
 
 #define QSPI_SR_QUAD_ENABLE_BYTE 0x40
 
@@ -57,33 +59,33 @@ static volatile bool m_finished = false;
 
 size_t qspi_next_loc;
 
+#include <zephyr/kernel.h>
+
+// TODO
 void N_qspi_wait() {
-    while (!m_finished) {}
-    m_finished = false; 
+    k_msleep(2000);
+    // while (!m_finished) {
+    // }
+    // m_finished = false;
 }
 
-static void qspi_handler(nrfx_qspi_evt_t event, void * p_context)
-{
+static void qspi_handler(nrfx_qspi_evt_t event, void *p_context) {
     UNUSED_PARAMETER(event);
     UNUSED_PARAMETER(p_context);
     m_finished = true;
 }
 
-static void configure_memory(void)
-{
+static void configure_memory(void) {
     uint32_t err_code;
     uint8_t rxdata[4];
     uint8_t data[4];
 
-    nrf_qspi_cinstr_conf_t cinstr_cfg = {
-        .opcode    = QSPI_STD_CMD_RSTEN,
-        .length    = NRF_QSPI_CINSTR_LEN_1B,
-        .io2_level = true,
-        .io3_level = true,
-        .wipwait   = true,
-        .wren      = true
-    };
-
+    nrf_qspi_cinstr_conf_t cinstr_cfg = {.opcode = QSPI_STD_CMD_RSTEN,
+                                         .length = NRF_QSPI_CINSTR_LEN_1B,
+                                         .io2_level = true,
+                                         .io3_level = true,
+                                         .wipwait = true,
+                                         .wren = true};
 
     // Send reset enable
     printf("N_qspi: Send reset enable\n");
@@ -106,7 +108,6 @@ static void configure_memory(void)
     APP_ERROR_CHECK(err_code);
     printf("N_qspi:   %x %x %x\n", rxdata[0], rxdata[1], rxdata[2]);
 
-
     printf("N_qspi: Read status\n");
     cinstr_cfg.opcode = QSPI_STD_CMD_RDSR;
     cinstr_cfg.length = NRF_QSPI_CINSTR_LEN_2B;
@@ -114,7 +115,6 @@ static void configure_memory(void)
     err_code = nrfx_qspi_cinstr_xfer(&cinstr_cfg, data, rxdata);
     APP_ERROR_CHECK(err_code);
     printf("N_qspi:   %x\n", rxdata[0]);
-
 
     printf("N_qspi: Read Conf\n");
     cinstr_cfg.opcode = QSPI_STD_CMD_RDCR;
@@ -154,82 +154,94 @@ static void configure_memory(void)
     APP_ERROR_CHECK(err_code);
     */
 
-    while (nrfx_qspi_mem_busy_check())
-    {}
+    while (nrfx_qspi_mem_busy_check()) {
+    }
 }
 
 void N_qspi_init() {
-
     uint32_t err_code = NRF_SUCCESS;
 
     // Set high-drive for QuadSpi pins
-    nrf_gpio_cfg(QSPI_SCK_PIN, NRF_GPIO_PIN_DIR_INPUT, NRF_GPIO_PIN_INPUT_DISCONNECT, NRF_GPIO_PIN_NOPULL, NRF_GPIO_PIN_H0H1, NRF_GPIO_PIN_NOSENSE);
-    nrf_gpio_cfg(QSPI_CSN_PIN, NRF_GPIO_PIN_DIR_INPUT, NRF_GPIO_PIN_INPUT_DISCONNECT, NRF_GPIO_PIN_NOPULL, NRF_GPIO_PIN_H0H1, NRF_GPIO_PIN_NOSENSE);
-    nrf_gpio_cfg(QSPI_IO0_PIN, NRF_GPIO_PIN_DIR_INPUT, NRF_GPIO_PIN_INPUT_DISCONNECT, NRF_GPIO_PIN_NOPULL, NRF_GPIO_PIN_H0H1, NRF_GPIO_PIN_NOSENSE);
-    nrf_gpio_cfg(QSPI_IO1_PIN, NRF_GPIO_PIN_DIR_INPUT, NRF_GPIO_PIN_INPUT_DISCONNECT, NRF_GPIO_PIN_NOPULL, NRF_GPIO_PIN_H0H1, NRF_GPIO_PIN_NOSENSE);
-    nrf_gpio_cfg(QSPI_IO2_PIN, NRF_GPIO_PIN_DIR_INPUT, NRF_GPIO_PIN_INPUT_DISCONNECT, NRF_GPIO_PIN_NOPULL, NRF_GPIO_PIN_H0H1, NRF_GPIO_PIN_NOSENSE);
-    nrf_gpio_cfg(QSPI_IO3_PIN, NRF_GPIO_PIN_DIR_INPUT, NRF_GPIO_PIN_INPUT_DISCONNECT, NRF_GPIO_PIN_NOPULL, NRF_GPIO_PIN_H0H1, NRF_GPIO_PIN_NOSENSE);
+    nrf_gpio_cfg(QSPI_SCK_PIN, NRF_GPIO_PIN_DIR_INPUT,
+                 NRF_GPIO_PIN_INPUT_DISCONNECT, NRF_GPIO_PIN_NOPULL,
+                 NRF_GPIO_PIN_H0H1, NRF_GPIO_PIN_NOSENSE);
+    nrf_gpio_cfg(QSPI_CSN_PIN, NRF_GPIO_PIN_DIR_INPUT,
+                 NRF_GPIO_PIN_INPUT_DISCONNECT, NRF_GPIO_PIN_NOPULL,
+                 NRF_GPIO_PIN_H0H1, NRF_GPIO_PIN_NOSENSE);
+    nrf_gpio_cfg(QSPI_IO0_PIN, NRF_GPIO_PIN_DIR_INPUT,
+                 NRF_GPIO_PIN_INPUT_DISCONNECT, NRF_GPIO_PIN_NOPULL,
+                 NRF_GPIO_PIN_H0H1, NRF_GPIO_PIN_NOSENSE);
+    nrf_gpio_cfg(QSPI_IO1_PIN, NRF_GPIO_PIN_DIR_INPUT,
+                 NRF_GPIO_PIN_INPUT_DISCONNECT, NRF_GPIO_PIN_NOPULL,
+                 NRF_GPIO_PIN_H0H1, NRF_GPIO_PIN_NOSENSE);
+    nrf_gpio_cfg(QSPI_IO2_PIN, NRF_GPIO_PIN_DIR_INPUT,
+                 NRF_GPIO_PIN_INPUT_DISCONNECT, NRF_GPIO_PIN_NOPULL,
+                 NRF_GPIO_PIN_H0H1, NRF_GPIO_PIN_NOSENSE);
+    nrf_gpio_cfg(QSPI_IO3_PIN, NRF_GPIO_PIN_DIR_INPUT,
+                 NRF_GPIO_PIN_INPUT_DISCONNECT, NRF_GPIO_PIN_NOPULL,
+                 NRF_GPIO_PIN_H0H1, NRF_GPIO_PIN_NOSENSE);
 
     // Set QSPI peripheral with default configuration.
-    nrfx_qspi_config_t config = NRFX_QSPI_DEFAULT_CONFIG(
-                                     QSPI_SCK_PIN, // _pin_sck
-                                     QSPI_CSN_PIN, // _pin_csn
-                                     QSPI_IO0_PIN, // _pin_io0
-                                     QSPI_IO1_PIN, // _pin_io1
-                                     QSPI_IO2_PIN, // _pin_io2
-                                     QSPI_IO3_PIN  // _pin_io3
-                                    );
+    nrfx_qspi_config_t config =
+        NRFX_QSPI_DEFAULT_CONFIG(QSPI_SCK_PIN,  // _pin_sck
+                                 QSPI_CSN_PIN,  // _pin_csn
+                                 QSPI_IO0_PIN,  // _pin_io0
+                                 QSPI_IO1_PIN,  // _pin_io1
+                                 QSPI_IO2_PIN,  // _pin_io2
+                                 QSPI_IO3_PIN   // _pin_io3
+        );
 
     // Set SCK frequency to max
-    config.prot_if.readoc     = (nrf_qspi_readoc_t)NRFX_QSPI_CONFIG_READOC;
-    config.prot_if.writeoc    = (nrf_qspi_writeoc_t)NRFX_QSPI_CONFIG_WRITEOC;
-    config.prot_if.addrmode   = (nrf_qspi_addrmode_t)NRFX_QSPI_CONFIG_ADDRMODE;
-    config.prot_if.dpmconfig  = false;
-    config.phy_if.sck_delay    = NRFX_QSPI_CONFIG_SCK_DELAY;
-    config.phy_if.dpmen       = false;
-    config.phy_if.spi_mode    = (nrf_qspi_spi_mode_t)NRFX_QSPI_CONFIG_MODE;
-    config.phy_if.sck_freq    = (nrf_qspi_frequency_t)NRFX_QSPI_CONFIG_FREQUENCY;
+    config.prot_if.readoc = (nrf_qspi_readoc_t)NRFX_QSPI_CONFIG_READOC;
+    config.prot_if.writeoc = (nrf_qspi_writeoc_t)NRFX_QSPI_CONFIG_WRITEOC;
+    config.prot_if.addrmode = (nrf_qspi_addrmode_t)NRFX_QSPI_CONFIG_ADDRMODE;
+    config.prot_if.dpmconfig = false;
+    config.phy_if.sck_delay = NRFX_QSPI_CONFIG_SCK_DELAY;
+    config.phy_if.dpmen = false;
+    config.phy_if.spi_mode = (nrf_qspi_spi_mode_t)NRFX_QSPI_CONFIG_MODE;
+    config.phy_if.sck_freq = (nrf_qspi_frequency_t)NRFX_QSPI_CONFIG_FREQUENCY;
 
     // Try to initialize QSPI peripheral in blocking mode.
-    err_code = nrfx_qspi_init(&config, qspi_handler, NULL);
+    // TODO
+    err_code = nrfx_qspi_init(&config, NULL, NULL);
     APP_ERROR_CHECK(err_code);
 
     // Set RXDELAY to 1
     // TODO: Use define if MDK is updated to include it
-    NRF_QSPI_S->IFTIMING = (1 << 8); 
+    NRF_QSPI_S->IFTIMING = (1 << 8);
 
     printf("QSPI initialized\n");
-    printf("QSPI initialized %ld %ld\n", (NRF_QSPI_S->IFTIMING>>8), ((NRF_QSPI_S->IFCONFIG1>>28)&0xF));
+    printf("QSPI initialized %ld %ld\n", (NRF_QSPI_S->IFTIMING >> 8),
+           ((NRF_QSPI_S->IFCONFIG1 >> 28) & 0xF));
 
-    // Restart and configure external memory to use quad line mode for data exchange.
+    // Restart and configure external memory to use quad line mode for data
+    // exchange.
     configure_memory();
     printf("Memory device configured. Quad Mode activated.\n");
 
     qspi_next_loc = 0;
 }
 
-void N_qspi_erase_block(size_t loc) 
-{
+void N_qspi_erase_block(size_t loc) {
     uint32_t err_code = NRF_SUCCESS;
 
     err_code = nrfx_qspi_erase(NRF_QSPI_ERASE_LEN_64KB, loc);
-    if (err_code != NRF_SUCCESS) I_Error("N_qspi_write_block: nrfx_qspi_erase fail");
+    if (err_code != NRF_SUCCESS)
+        I_Error("N_qspi_write_block: nrfx_qspi_erase fail");
     N_qspi_wait();
     printf("N_qspi: Erased 64KB block at %d\n", loc);
 }
 
-void N_qspi_write(size_t loc, void *buffer, size_t size) 
-{
+void N_qspi_write(size_t loc, void *buffer, size_t size) {
     uint32_t err_code = NRF_SUCCESS;
     err_code = nrfx_qspi_write(buffer, size, loc);
-    if (err_code != NRF_SUCCESS) I_Error("N_qspi_write_block: nrfx_qspi_write fail");
+    if (err_code != NRF_SUCCESS)
+        I_Error("N_qspi_write_block: nrfx_qspi_write fail");
     N_qspi_wait();
-    printf("N_qspi: Wrote %d byte chunk at %d\n", size, loc);    
+    printf("N_qspi: Wrote %d byte chunk at %d\n", size, loc);
 }
 
-
-void N_qspi_write_block(size_t loc, void *buffer, size_t size) 
-{
+void N_qspi_write_block(size_t loc, void *buffer, size_t size) {
     uint32_t err_code = NRF_SUCCESS;
 
     if (size > N_QSPI_BLOCK_SIZE) {
@@ -237,29 +249,46 @@ void N_qspi_write_block(size_t loc, void *buffer, size_t size)
     }
 
     err_code = nrfx_qspi_erase(NRF_QSPI_ERASE_LEN_64KB, loc);
-    if (err_code != NRF_SUCCESS) I_Error("N_qspi_write_block: nrfx_qspi_erase fail");
+    if (err_code != NRF_SUCCESS)
+        I_Error("N_qspi_write_block: nrfx_qspi_erase fail");
     N_qspi_wait();
     printf("N_qspi: Erased 64KB block at %d\n", loc);
 
     err_code = nrfx_qspi_write(buffer, size, loc);
-    if (err_code != NRF_SUCCESS) I_Error("N_qspi_write_block: nrfx_qspi_write fail");
+    if (err_code != NRF_SUCCESS)
+        I_Error("N_qspi_write_block: nrfx_qspi_write fail");
     N_qspi_wait();
     printf("N_qspi: Wrote %d byte chunk at %d\n", size, loc);
-
 }
 
-void *N_qspi_data_pointer(size_t loc)
-{
-    return (void*)(N_QSPI_XIP_START_ADDR+loc);
+void N_qspi_read(size_t loc, void *buffer, size_t size) {
+    uint32_t err_code = NRF_SUCCESS;
+    err_code = nrfx_qspi_read(buffer, size, loc);
+    if (err_code != NRF_SUCCESS) {
+        if (err_code == NRFX_ERROR_BUSY) {
+            I_Error("N_qspi_write_block: nrfx_qspi_read fail NRFX_ERROR_BUSY");
+        }
+        if (err_code == NRFX_ERROR_INVALID_ADDR) {
+            I_Error(
+                "N_qspi_write_block: nrfx_qspi_read fail "
+                "NRFX_ERROR_INVALID_ADDR %x",
+                loc);
+        }
+        I_Error("N_qspi_write_block: nrfx_qspi_read fail UNKNOWN");
+    }
+    N_qspi_wait();
+    // printf("N_qspi: Read %d at %d\n", size, loc);
 }
 
-void N_qspi_reserve_blocks(size_t block_count)
-{
-    qspi_next_loc += block_count*N_QSPI_BLOCK_SIZE;
+void *N_qspi_data_pointer(size_t loc) {
+    return (void *)(N_QSPI_XIP_START_ADDR + loc);
 }
 
-size_t N_qspi_alloc_block()
-{
+void N_qspi_reserve_blocks(size_t block_count) {
+    qspi_next_loc += block_count * N_QSPI_BLOCK_SIZE;
+}
+
+size_t N_qspi_alloc_block() {
     size_t loc = qspi_next_loc;
     qspi_next_loc += N_QSPI_BLOCK_SIZE;
     return loc;
