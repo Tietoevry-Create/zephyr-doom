@@ -9,7 +9,7 @@
 #include <nrfx_clock.h>
 #include <string.h>
 #include <zephyr/device.h>
-#include <zephyr/devicetree.h>z
+#include <zephyr/devicetree.h>
 #include <zephyr/drivers/gpio.h>
 #include <zephyr/fs/fs.h>
 #include <zephyr/kernel.h>
@@ -19,7 +19,7 @@
 
 #include "deh_str.h"
 
-LOG_MODULE_REGISTER(sd_card, LOG_LEVEL_DBG);
+LOG_MODULE_REGISTER(doom_main, CONFIG_DOOM_MAIN_LOG_LEVEL);
 
 /* 1000 msec = 1 sec */
 #define SLEEP_TIME_MS 1000
@@ -34,34 +34,6 @@ LOG_MODULE_REGISTER(sd_card, LOG_LEVEL_DBG);
 static const struct gpio_dt_spec led = GPIO_DT_SPEC_GET(LED0_NODE, gpios);
 #define GPIO0 ((NRF_GPIO_Type*)0x50842500UL)
 #define GPIO1 ((NRF_GPIO_Type*)0x50842800UL)
-
-#define LCD1_NODE DT_ALIAS(lcd1)
-#define LCD2_NODE DT_ALIAS(lcd2)
-#define LCD3_NODE DT_ALIAS(lcd3)
-#define LCD4_NODE DT_ALIAS(lcd4)
-#define LCD5_NODE DT_ALIAS(lcd5)
-#define LCD6_NODE DT_ALIAS(lcd6)
-#define LCD7_NODE DT_ALIAS(lcd7)
-#define LCD8_NODE DT_ALIAS(lcd8)
-#define LCD_RST DT_ALIAS(lcdrst)
-#define LCD_CS DT_ALIAS(lcdsc)
-#define LCD_RS DT_ALIAS(lcdrs)
-#define LCD_WR DT_ALIAS(lcdwr)
-#define LCD_RD DT_ALIAS(lcdrd)
-
-static const struct gpio_dt_spec lcd_1 = GPIO_DT_SPEC_GET(LCD1_NODE, gpios);
-static const struct gpio_dt_spec lcd_2 = GPIO_DT_SPEC_GET(LCD2_NODE, gpios);
-static const struct gpio_dt_spec lcd_3 = GPIO_DT_SPEC_GET(LCD3_NODE, gpios);
-static const struct gpio_dt_spec lcd_4 = GPIO_DT_SPEC_GET(LCD4_NODE, gpios);
-static const struct gpio_dt_spec lcd_5 = GPIO_DT_SPEC_GET(LCD5_NODE, gpios);
-static const struct gpio_dt_spec lcd_6 = GPIO_DT_SPEC_GET(LCD6_NODE, gpios);
-static const struct gpio_dt_spec lcd_7 = GPIO_DT_SPEC_GET(LCD7_NODE, gpios);
-static const struct gpio_dt_spec lcd_8 = GPIO_DT_SPEC_GET(LCD8_NODE, gpios);
-static const struct gpio_dt_spec lcd_rst = GPIO_DT_SPEC_GET(LCD_RST, gpios);
-static const struct gpio_dt_spec lcd_cs = GPIO_DT_SPEC_GET(LCD_CS, gpios);
-static const struct gpio_dt_spec lcd_rs = GPIO_DT_SPEC_GET(LCD_RS, gpios);
-static const struct gpio_dt_spec lcd_wr = GPIO_DT_SPEC_GET(LCD_WR, gpios);
-static const struct gpio_dt_spec lcd_rd = GPIO_DT_SPEC_GET(LCD_RD, gpios);
 
 void setup_lcd_pins_old() {
     for (int i = 4; i <= 11; i++) {
@@ -81,63 +53,6 @@ void setup_lcd_pins_old() {
     nrf_gpio_cfg(25, NRF_GPIO_PIN_DIR_OUTPUT, NRF_GPIO_PIN_INPUT_DISCONNECT,
                  NRF_GPIO_PIN_NOPULL, NRF_GPIO_PIN_S0S1, NRF_GPIO_PIN_NOSENSE);
     GPIO0->OUT = (GPIO0->OUT & ~(1 << 25)) | (1 << 25);
-}
-
-void setup_lcd_pins_new() {
-    nrf_gpio_cfg(lcd_1.pin, NRF_GPIO_PIN_DIR_OUTPUT,
-                 NRF_GPIO_PIN_INPUT_DISCONNECT, NRF_GPIO_PIN_NOPULL,
-                 NRF_GPIO_PIN_S0S1, NRF_GPIO_PIN_NOSENSE);
-
-    nrf_gpio_cfg(lcd_2.pin, NRF_GPIO_PIN_DIR_OUTPUT,
-                 NRF_GPIO_PIN_INPUT_DISCONNECT, NRF_GPIO_PIN_NOPULL,
-                 NRF_GPIO_PIN_S0S1, NRF_GPIO_PIN_NOSENSE);
-    nrf_gpio_cfg(lcd_3.pin, NRF_GPIO_PIN_DIR_OUTPUT,
-                 NRF_GPIO_PIN_INPUT_DISCONNECT, NRF_GPIO_PIN_NOPULL,
-                 NRF_GPIO_PIN_S0S1, NRF_GPIO_PIN_NOSENSE);
-    nrf_gpio_cfg(lcd_4.pin, NRF_GPIO_PIN_DIR_OUTPUT,
-                 NRF_GPIO_PIN_INPUT_DISCONNECT, NRF_GPIO_PIN_NOPULL,
-                 NRF_GPIO_PIN_S0S1, NRF_GPIO_PIN_NOSENSE);
-    nrf_gpio_cfg(lcd_5.pin, NRF_GPIO_PIN_DIR_OUTPUT,
-                 NRF_GPIO_PIN_INPUT_DISCONNECT, NRF_GPIO_PIN_NOPULL,
-                 NRF_GPIO_PIN_S0S1, NRF_GPIO_PIN_NOSENSE);
-    nrf_gpio_cfg(lcd_6.pin, NRF_GPIO_PIN_DIR_OUTPUT,
-                 NRF_GPIO_PIN_INPUT_DISCONNECT, NRF_GPIO_PIN_NOPULL,
-                 NRF_GPIO_PIN_S0S1, NRF_GPIO_PIN_NOSENSE);
-    nrf_gpio_cfg(lcd_7.pin, NRF_GPIO_PIN_DIR_OUTPUT,
-                 NRF_GPIO_PIN_INPUT_DISCONNECT, NRF_GPIO_PIN_NOPULL,
-                 NRF_GPIO_PIN_S0S1, NRF_GPIO_PIN_NOSENSE);
-    nrf_gpio_cfg(lcd_8.pin, NRF_GPIO_PIN_DIR_OUTPUT,
-                 NRF_GPIO_PIN_INPUT_DISCONNECT, NRF_GPIO_PIN_NOPULL,
-                 NRF_GPIO_PIN_S0S1, NRF_GPIO_PIN_NOSENSE);
-    nrf_gpio_cfg(lcd_rst.pin, NRF_GPIO_PIN_DIR_OUTPUT,
-                 NRF_GPIO_PIN_INPUT_DISCONNECT, NRF_GPIO_PIN_NOPULL,
-                 NRF_GPIO_PIN_S0S1, NRF_GPIO_PIN_NOSENSE);
-    nrf_gpio_cfg(lcd_cs.pin, NRF_GPIO_PIN_DIR_OUTPUT,
-                 NRF_GPIO_PIN_INPUT_DISCONNECT, NRF_GPIO_PIN_NOPULL,
-                 NRF_GPIO_PIN_S0S1, NRF_GPIO_PIN_NOSENSE);
-    nrf_gpio_cfg(lcd_rs.pin, NRF_GPIO_PIN_DIR_OUTPUT,
-                 NRF_GPIO_PIN_INPUT_DISCONNECT, NRF_GPIO_PIN_NOPULL,
-                 NRF_GPIO_PIN_S0S1, NRF_GPIO_PIN_NOSENSE);
-    nrf_gpio_cfg(lcd_wr.pin, NRF_GPIO_PIN_DIR_OUTPUT,
-                 NRF_GPIO_PIN_INPUT_DISCONNECT, NRF_GPIO_PIN_NOPULL,
-                 NRF_GPIO_PIN_S0S1, NRF_GPIO_PIN_NOSENSE);
-    nrf_gpio_cfg(lcd_rd.pin, NRF_GPIO_PIN_DIR_OUTPUT,
-                 NRF_GPIO_PIN_INPUT_DISCONNECT, NRF_GPIO_PIN_NOPULL,
-                 NRF_GPIO_PIN_S0S1, NRF_GPIO_PIN_NOSENSE);
-
-    GPIO0->OUT = (GPIO0->OUT & ~(1 << lcd_1.pin)) | (1 << lcd_1.pin);
-    GPIO0->OUT = (GPIO0->OUT & ~(1 << lcd_2.pin)) | (1 << lcd_2.pin);
-    GPIO0->OUT = (GPIO0->OUT & ~(1 << lcd_3.pin)) | (1 << lcd_3.pin);
-    GPIO0->OUT = (GPIO0->OUT & ~(1 << lcd_4.pin)) | (1 << lcd_4.pin);
-    GPIO0->OUT = (GPIO0->OUT & ~(1 << lcd_5.pin)) | (1 << lcd_5.pin);
-    GPIO0->OUT = (GPIO0->OUT & ~(1 << lcd_6.pin)) | (1 << lcd_6.pin);
-    GPIO0->OUT = (GPIO0->OUT & ~(1 << lcd_7.pin)) | (1 << lcd_7.pin);
-    GPIO0->OUT = (GPIO0->OUT & ~(1 << lcd_8.pin)) | (1 << lcd_8.pin);
-    GPIO0->OUT = (GPIO0->OUT & ~(1 << lcd_rst.pin)) | (1 << lcd_rst.pin);
-    GPIO0->OUT = (GPIO0->OUT & ~(1 << lcd_cs.pin)) | (1 << lcd_cs.pin);
-    GPIO0->OUT = (GPIO0->OUT & ~(1 << lcd_rs.pin)) | (1 << lcd_rs.pin);
-    GPIO0->OUT = (GPIO0->OUT & ~(1 << lcd_wr.pin)) | (1 << lcd_wr.pin);
-    GPIO0->OUT = (GPIO0->OUT & ~(1 << lcd_rd.pin)) | (1 << lcd_rd.pin);
 }
 
 void clock_initialization() {
@@ -325,7 +240,6 @@ int main(void) {
 
     // N_uart_init();
 
-    printk("aldkfjasldkfj\n");
     printf("\n\n");
     printf("----------------------------------\n");
     printf("UART Initialized\n");
@@ -370,8 +284,6 @@ int main(void) {
     }
 
     while (1) {
-        LOG_INF("Hello World! %s", CONFIG_BOARD);
-        // DEH_printf("asjaskld"); //TODO: DO THIS
         sd_card_list_files(NULL, NULL, NULL);
         ret = gpio_pin_toggle_dt(&led);
         if (ret < 0) {

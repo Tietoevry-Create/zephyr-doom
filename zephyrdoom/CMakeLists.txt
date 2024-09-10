@@ -1,12 +1,6 @@
-# SPDX-License-Identifier: Apache-2.0
-
 cmake_minimum_required(VERSION 3.20.0)
 find_package(Zephyr REQUIRED HINTS $ENV{ZEPHYR_BASE})
 project(connect_port)
-
-# Glob everything under src/
-# file(GLOB_RECURSE SOURCES src/*.c)
-set(SDK_ROOT ../../nrf)
 
 target_include_directories(app PRIVATE src/)
 target_include_directories(app PRIVATE src/config)
@@ -106,27 +100,3 @@ set(CMAKE_C_STANDARD 89)
 
 # set oldest CPP version
 set(CMAKE_CXX_STANDARD  98)
-
-# Set CFLAGS
-# set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O3 -g3")
-# set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DFLOAT_ABI_HARD")
-# set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DNRF5340_XXAA_APPLICATION")
-# set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mcpu=cortex-m33 -mthumb -mabi=aapcs")
-# set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mfloat-abi=hard -mfpu=fpv4-sp-d16")
-# set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall")
-# set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -ffunction-sections -fdata-sections -fno-strict-aliasing")
-# set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fno-builtin -fshort-enums")
-# set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-unused-variable -Wno-unused-function -Wno-unused-but-set-variable")
-# set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-error=char-subscripts -Wno-error=address-of-packed-member")
-
-# set_target_properties(app PROPERTIES
-#     LINK_FLAGS "-mthumb -mabi=aapcs -T${LINKER_SCRIPT} -Wl,--gc-sections --specs=nano.specs"
-# )
-
-# target_link_libraries(app
-#     -lc
-#     -lnosys
-#     -lm
-# )
-
-# target_compile_options(app PRIVATE ${CFLAGS})

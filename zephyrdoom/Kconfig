@@ -1,0 +1,7 @@
+mainmenu "Zephyr Kernel Configuration"
+
+source "Kconfig.zephyr"
+
+module = DOOM_MAIN
+module-str = doom_main
+source "subsys/logging/Kconfig.template.log_config"
