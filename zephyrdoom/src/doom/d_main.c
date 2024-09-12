@@ -71,7 +71,8 @@
 #include "w_wad.h"
 #include "wi_stuff.h"
 #include "z_zone.h"
-// #include "nrf_cache.h"
+
+#include <zephyr/kernel.h>
 
 // extern int no_sdcard;  // NRFD-NOTE: from main.c
 int no_sdcard = 1;
@@ -308,7 +309,7 @@ void D_Display(void) {
         do {
             nowtime = I_GetTime();
             tics = nowtime - wipestart;
-            // I_UpdateSound(); // NRFD-NOTE: Reduce sound glitches during wipes
+            // I_UpdateSound(); // TODO: Reduce sound glitches during wipes
             I_Sleep(1);
         } while (tics <= 0);
         wipestart = nowtime;
@@ -317,7 +318,7 @@ void D_Display(void) {
         I_UpdateNoBlit();
         M_Drawer();        // menu is drawn even on top of wipes
         I_FinishUpdate();  // page flip or blit buffe
-        // I_UpdateSound(); // NRFD-NOTE: Reduce sound glitches during wipes
+        // I_UpdateSound(); // TODO: Reduce sound glitches during wipes
 
     } while (!done);
 }
@@ -415,7 +416,6 @@ boolean D_GrabMouseCallback(void)
 //  D_DoomLoop
 //
 //
-#include <zephyr/kernel.h>
 
 
 void D_DoomLoop(void) {
@@ -457,7 +457,9 @@ void D_DoomLoop(void) {
     frame_time_prev = I_GetTimeRaw();
     // nrf_cache_profiling_set(NRF_CACHE_S, 1);
 
-    k_msleep(100);
+    // Game keeps restarting at startup without this. 
+    // Some device initialized above probably needs time to set up
+    k_msleep(2); 
 
     while (1) {
         // nrf_cache_profiling_counters_clear(NRF_CACHE_S);
@@ -475,6 +477,8 @@ void D_DoomLoop(void) {
         TryRunTics();  // will run at least one tic
 
         S_UpdateSounds(players[consoleplayer].mo);  // move positional sounds
+
+        printk("FPS: %d\n", frame_time_fps);
 
         // Update display, next frame, with current state.
         if (screenvisible) D_Display();

@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.20.0)
 find_package(Zephyr REQUIRED HINTS $ENV{ZEPHYR_BASE})
-project(connect_port)
+project(zephyr_doom)
 
 target_include_directories(app PRIVATE src/)
 target_include_directories(app PRIVATE src/config)
@@ -19,6 +19,8 @@ target_sources(app PRIVATE
                 src/n_i2s_sound.c
                 src/deh_main.c
                 src/deh_str.c
+                src/doom/deh_misc.h
+                src/doom/deh_misc.c
                 src/d_event.c
                 src/d_iwad.c
                 src/d_mode.c

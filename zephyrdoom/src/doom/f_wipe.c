@@ -27,7 +27,8 @@
 
 #include "f_wipe.h"
 
-//#define INCLUDE_WIPE
+// TODO: Heap overflow at startup with this uncommented
+// #define INCLUDE_WIPE
 
 //
 //                       SCREEN WIPE PACKAGE

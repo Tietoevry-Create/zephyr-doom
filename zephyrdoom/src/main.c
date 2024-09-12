@@ -19,6 +19,8 @@
 
 #include "deh_str.h"
 
+#include <debug/cpu_load.h>
+
 LOG_MODULE_REGISTER(doom_main, CONFIG_DOOM_MAIN_LOG_LEVEL);
 
 /* 1000 msec = 1 sec */
@@ -231,10 +233,14 @@ int sd_card_list_files(char const* const path, char* buf, size_t* buf_size) {
 //     NRF_RESET_S->NETWORK.FORCEOFF = 0;
 // }
 
+#include "bluetooth_stuff.h"
+
 int main(void) {
     LOG_INF("BOARD STARTING %s", CONFIG_BOARD);
     setup_lcd_pins_old();
     // setup_lcd_pins_new();
+
+    cpu_load_init();
 
     clock_initialization();
 
@@ -265,6 +271,10 @@ int main(void) {
     // // N_I2S_init();
 
     M_ArgvInit();
+
+    // bluetooth_main();
+    bluetooth_init();
+    // bluetooth_main();
 
     D_DoomMain();
 

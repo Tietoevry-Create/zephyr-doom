@@ -598,6 +598,8 @@ void S_UpdateSounds(mobj_t *listener)
     sfxinfo_t*        sfx;
     channel_t*        c;
 
+    // TODO: Fix this function
+    // printf("NRFD-TODO: S_UpdateSounds\n");
     return;
 
     I_UpdateSound();

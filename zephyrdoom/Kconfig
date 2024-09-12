@@ -1,7 +1,12 @@
 mainmenu "Zephyr Kernel Configuration"
 
+# source "${ZEPHYR_BASE}/share/sysbuild/Kconfig"
 source "Kconfig.zephyr"
 
 module = DOOM_MAIN
 module-str = doom_main
 source "subsys/logging/Kconfig.template.log_config"
+
+# Central UART seems to work even without this
+# config NRF_DEFAULT_BLUETOOTH
+# 	default y
