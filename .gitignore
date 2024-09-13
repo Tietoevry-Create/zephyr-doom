@@ -5,3 +5,5 @@ log.log
 Output
 *.emSession
 *.jlink
+
+.vscode/
