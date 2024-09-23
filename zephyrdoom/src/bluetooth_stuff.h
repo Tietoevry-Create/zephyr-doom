@@ -104,21 +104,20 @@ uint8_t ble_data_received(struct bt_nus_client *nus, const uint8_t *data,
            adc_buf0, adc_buf1, button_A, button_B, button_C, button_D, button_E,
            button_F);
     
-    int centered_adc = adc_buf0 - 475;
-    int deadzone = 30;
-    if (centered_adc > -deadzone && centered_adc < deadzone) {
+    int centered_adc = adc_buf0 - 470;
+    if (centered_adc > -50 && centered_adc < 50) {
         adc_buf0 = 0;
     } else {
         adc_buf0 = centered_adc;
     }
-    centered_adc = adc_buf1 - 475;
-    if (centered_adc > -deadzone && centered_adc < deadzone) {
+    centered_adc = adc_buf1 - 480;
+    if (centered_adc > -40 && centered_adc < 40) {
         adc_buf1 = 0;
     } else {
         adc_buf1 = centered_adc;
     }
-    adc_buf0 /= 10;
-    adc_buf1 /= 10;
+    adc_buf0 /= 15;
+    adc_buf1 /= 15;
     adc_buf0 = -adc_buf0;
     adc_buf1 = -adc_buf1;
 
