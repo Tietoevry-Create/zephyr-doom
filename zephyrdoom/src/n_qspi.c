@@ -63,7 +63,7 @@ size_t qspi_next_loc;
 
 // TODO
 void N_qspi_wait() {
-    k_msleep(2000);
+    k_msleep(5);
     // while (!m_finished) {
     // }
     // m_finished = false;
