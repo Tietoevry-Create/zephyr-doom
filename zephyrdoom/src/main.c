@@ -60,7 +60,9 @@ void setup_lcd_pins_old() {
 void clock_initialization() {
     nrfx_clock_hfclk_start();
     nrf_clock_hfclk_div_set(NRF_CLOCK_S, NRF_CLOCK_HFCLK_DIV_1);
+    // NRF_CLOCK_S->HFCLKCTRL = (CLOCK_HFCLKCTRL_HCLK_Div1 << CLOCK_HFCLKCTRL_HCLK_Pos);
     nrfx_clock_divider_set(NRF_CLOCK_DOMAIN_HFCLK192M, NRF_CLOCK_HFCLK_DIV_1);
+    // nrfx_clock_divider_set(NRF_CLOCK_DOMAIN_HFCLK, NRF_CLOCK_HFCLK_DIV_1);
 }
 
 #define SD_ROOT_PATH "/SD:/"
@@ -250,6 +252,9 @@ int main(void) {
     printf("----------------------------------\n");
     printf("UART Initialized\n");
     printf("---------------------------------\n");
+    
+    uint32_t hfclkctrl = NRF_CLOCK_S->HFCLKCTRL;
+    printf("HFCLK_S: %d\n", hfclkctrl);
 
     NRF_CACHE_S->ENABLE = 1;
 
