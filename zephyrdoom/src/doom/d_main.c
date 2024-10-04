@@ -462,6 +462,7 @@ void D_DoomLoop(void) {
     k_msleep(2); 
 
     while (1) {
+        k_usleep(10);
         // nrf_cache_profiling_counters_clear(NRF_CACHE_S);
         int frame_time = I_GetTimeRaw();
         frame_time_fps = I_RawTimeToFps(frame_time - frame_time_prev);
