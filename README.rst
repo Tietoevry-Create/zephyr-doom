@@ -26,8 +26,11 @@ Doom 2                  Not Tested
 .. _Doom (1993): https://en.wikipedia.org/wiki/Doom_(1993_video_game)
 .. _Zephyr RTOS: https://zephyrproject.org/
 
+.. _Visual Studio Code: https://code.visualstudio.com/download
+.. _nRF Connect for VS Code: https://www.nordicsemi.com/Products/Development-tools/nRF-Connect-for-VS-Code/Download#infotabs
+
 Table of Contents
-^^^^^^^^^^^^^^^^^^^^^^^
+-------------------------------------------------------
 
 - `Status`_
 - `Getting Started`_
@@ -36,8 +39,10 @@ Table of Contents
 
 Status
 -------------------------------------------------------
+
 Backlog
-"""""""""""""""""""""
+~~~~~~~~~
+
 ============================ ================= ================================
  Feature                     Status            Comment
 ============================ ================= ================================
@@ -69,8 +74,8 @@ Music                        Open
 ============================ ================= ================================
 
 MVP1
-"""""""""""""""""""""
- 
+~~~~~~~~~
+
 * Goal - Port `nrf-doom`_ to `nRF Connect SDK`_ and get it up and running, with display and basic control using dev kit buttons, under Zephyr RTOS (still with dependency on nRF Connect SDK).
 * Features:
  * QSPI flash
@@ -82,7 +87,8 @@ MVP1
  * 3,5" ILI9486 `display`_, no touch
 
 MVP2
-"""""""""""""""""""""
+~~~~~~~~~
+
 * Goal - Integrate a Bluetooth Low Energy (BLE) game controller to enable game control through a micro:bit-based gamepad. This addition will enhance the gaming experience by allowing players to utilize the micro:bit as a game controller via wireless connectivity.
 * Features:
  * BLE game controller
@@ -97,42 +103,133 @@ MVP2
 .. _joystick v2: https://shop.elecfreaks.com/products/elecfreaks-micro-bit-joystick-bit-v2-kit
 .. _display: https://www.laskakit.cz/320x480-barevny-lcd-tft-displej-3-5-shield-arduino-uno/
 
+MVP3
+~~~~~~~~~
+
+* Goal - Migrate from current display (connected via GPIO) to SPI one.
+* Features:
+ * New display
+* Required Hardware
+ * Nordic Semiconductor `nRF5340`_ dev kit
+ * 2.8" ILI9341 `SPI display`_
+ * `micro:bit v2`_
+ * ELECFREAKS `joystick v2`_
+
+.. _SPI display: https://cz.mouser.com/ProductDetail/Adafruit/1947?qs=GURawfaeGuArmJSJoJoDJA%3D%3D
+
+MVP4
+~~~~~~~~~
+
+* Goal - Add option to connect BLE keyboard. This step will enable full game control (i.e. all the options).
+* Features:
+ * Full-fledged game control per original manual (inc. cheats).
+* Required Hardware
+ * Nordic Semiconductor `nRF5340`_ dev kit
+ * 2.8" ILI9341 `SPI display`_
+ * `micro:bit v2`_
+ * ELECFREAKS `joystick v2`_
+ * BLE keyboard
+
+MVP5
+~~~~~~~~~
+
+* Goal - Add sound via I2S.
+* Features:
+ * Game sounds.
+* Required Hardware
+ * Nordic Semiconductor `nRF5340`_ dev kit
+ * 2.8" ILI9341 `SPI display`_
+ * `micro:bit v2`_
+ * ELECFREAKS `joystick v2`_
+ * TBD
+
 Getting Started
 -------------------------------------------------------
 
+Configuration Index
+~~~~~~~~~
+
+======================= ================= ================================
+ Item                    Version            Comment
+======================= ================= ================================
+Windows 11 Enterprise    10.0.22631       N/A     
+----------------------- ----------------- --------------------------------
+Visual Studio Code       1.93.1           N/A
+----------------------- ----------------- --------------------------------
+nRF Connect for Desktop  v5.0.2           N/A
+----------------------- ----------------- --------------------------------
+Toolchain Manager        v1.5.2           N/A
+----------------------- ----------------- --------------------------------
+nRF Connect SDK          v2.6.2           N/A
+----------------------- ----------------- --------------------------------
+nRF Connect for VS Code  v2024.9.87       Can be downloaded using the Toolchain Manager found in nRF Connect for Desktop. Alternatively, it can be downloaded directly from inside Visual Studio Code.
+======================= ================= ================================
+
 Prerequisites
-"""""""""""""""""""""
+~~~~~~~~~
+
+#. Install the `Visual Studio Code`_.
+#. Install the `nRF Connect for VS Code`_.
 
 Build
-"""""""""""""""""""""
+~~~~~~~~~
+Game
+^^^^^^^^^
+* VS Code -> nRF Connect extension -> Add Folder as Application -> select zephyrdoom folder.
+* VS Code -> nRF Connect extension -> APPLICATIONS -> Add build configuration -> select board target nrf5340dk_nrf5340_cpuapp -> Build Configuration.
+Gamepad
+^^^^^^^^^
+* VS Code -> nRF Connect extension -> Add Folder as Application -> select gamepad\microbit folder.
+* VS Code -> nRF Connect extension -> APPLICATIONS -> Add build configuration -> select board target bbc_microbit_v2 -> Build Configuration.
 
 Flash
-"""""""""""""""""""""
+~~~~~~~~~
+Game
+^^^^^^^^^
+#. Connect Nordic Semiconductor `nRF5340`_ dev kit.
+#. Flash data (contains WAD file) to external flash::
+   
+     nrfjprog --family nrf53 --qspicustominit --program qspi.hex --verify
+#. Flash the game. VS Code -> nRF Connect extension -> ACTIONS -> Flash.
+
+Gamepad
+^^^^^^^^^
+#. Connect `micro:bit v2`_.
+ VS Code -> nRF Connect extension -> ACTIONS -> Flash.
 
 Monitor
-"""""""""""""""""""""
+~~~~~~~~~
+* VS Code -> nRF Connect extension -> CONNECTED DEVICES -> VCOM? COM ? -> Connect to Serial Port.
 
 Software
 -------------------------------------------------------
 
 Changes
-"""""""""""""""""""""
+~~~~~~~~~
 
 Known Bugs
-"""""""""""""""""""""
+~~~~~~~~~
 
 To be Improved
-"""""""""""""""""""""
+~~~~~~~~~
+MVP1
+^^^^^^^^^
+* Low FPS (~8).
+MVP2
+^^^^^^^^^
+* Low FPS (~14).
+* Not full display area used.
+* Limited game control ('not eough buttons on the gamepad') 
 
 Hardware
 -------------------------------------------------------
 
 System Requirements
-"""""""""""""""""""""""""
+~~~~~~~~~
 
 CPU, RAM, Flash
 
 Display
-""""""""""""""""""""""""
+~~~~~~~~~
 
 
