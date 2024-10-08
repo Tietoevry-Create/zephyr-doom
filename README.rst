@@ -73,6 +73,24 @@ Sound                        Open
 Music                        Open
 ============================ ================= ================================
 
+Compatibility Matrix
+~~~~~~~~~
+
+======================= ================= ================================ ================================ ================================
+ Item                    Version           MVP1                             MVP2                             MVP3
+======================= ================= ================================ ================================ ================================
+`nRF5340`_ dev kit       2.0.1            X                                 X
+----------------------- ----------------- -------------------------------- -------------------------------- --------------------------------
+3,5" `display`_          N/A              X                                 X
+----------------------- ----------------- -------------------------------- -------------------------------- --------------------------------
+2.8" `SPI display`_      N/A              --                                --
+----------------------- ----------------- -------------------------------- -------------------------------- --------------------------------
+`micro:bit v2`_          2.x              --                                X
+----------------------- ----------------- -------------------------------- -------------------------------- --------------------------------
+`joystick v2`_           2                --                                X
+======================= ================= ================================ ================================ ================================
+-- means not supported, X means supported
+
 MVP1
 ~~~~~~~~~
 
@@ -146,7 +164,24 @@ MVP5
 Getting Started
 -------------------------------------------------------
 
-Configuration Index
+HW Configuration Index
+~~~~~~~~~
+======================= ================= 
+ Item                    Version          
+======================= ================= 
+`nRF5340`_ dev kit       2.0.1            
+----------------------- ----------------- 
+3,5" `display`_          N/A              
+----------------------- ----------------- 
+2.8" `SPI display`_      N/A              
+----------------------- ----------------- 
+`micro:bit v2`_          2.x              
+----------------------- ----------------- 
+`joystick v2`_           2                
+======================= =================
+
+
+SW Configuration Index
 ~~~~~~~~~
 
 ======================= ================= ================================
@@ -190,12 +225,14 @@ Game
 #. Flash data (contains WAD file) to external flash::
    
      nrfjprog --family nrf53 --qspicustominit --program qspi.hex --verify
+#. Select game app.  VS Code -> nRF Connect extension -> APPLICATIONS -> Select zephyrdoom.
 #. Flash the game. VS Code -> nRF Connect extension -> ACTIONS -> Flash.
 
 Gamepad
 ^^^^^^^^^
 #. Connect `micro:bit v2`_.
- VS Code -> nRF Connect extension -> ACTIONS -> Flash.
+#. Select gamepad app.  VS Code -> nRF Connect extension -> APPLICATIONS -> Select microbit.
+#. Flash the code. VS Code -> nRF Connect extension -> ACTIONS -> Flash.
 
 Monitor
 ~~~~~~~~~
@@ -218,8 +255,8 @@ MVP1
 MVP2
 ^^^^^^^^^
 * Low FPS (~14).
-* Not full display area used.
-* Limited game control ('not eough buttons on the gamepad') 
+* Not using full display area.
+* Limited game control ('not enough buttons on the gamepad').
 
 Hardware
 -------------------------------------------------------
