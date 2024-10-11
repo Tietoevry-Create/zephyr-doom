@@ -50,7 +50,7 @@ Read game data QSPI Flash    Done
 ---------------------------- ----------------- --------------------------------
 Doom game engine running     Done
 ---------------------------- ----------------- --------------------------------
-Basic diplay support         Done              Currently, there is a limitation on the FPS and the picture is rotated by 90 degrees
+Basic display support         Done             Currently, there is a limitation on the FPS and the picture is rotated by 90 degrees
 ---------------------------- ----------------- --------------------------------
 Devkit button control        Done
 ---------------------------- ----------------- --------------------------------
