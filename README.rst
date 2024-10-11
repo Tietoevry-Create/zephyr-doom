@@ -58,7 +58,7 @@ BLE game controller          In Progress       Transition from the original prop
 ---------------------------- ----------------- --------------------------------
 Display enhancements         Open
 ---------------------------- ----------------- --------------------------------
-Game data (SD card to flash) Open
+Game data (SD card to flash) Open              Automatically copy game data from SD card to flash during first start (or on demand). 
 ---------------------------- ----------------- --------------------------------
 Pure Zephyr port             Open              Modify the code to make it compatible with any Zephyr device that meets the resource requirements by removing nrfx/ncs elements
 ---------------------------- ----------------- --------------------------------
@@ -124,7 +124,7 @@ MVP2
 MVP3
 ~~~~~~~~~
 
-* Goal - Migrate from current display (connected via GPIO) to SPI one.
+* Goal - Migrate from current display (connected via GPIO) to SPI one. Support full-screen.
 * Features:
  * New display
 * Required Hardware
@@ -258,6 +258,7 @@ MVP2
 * Low FPS (~14).
 * Picture is rotated by 90 degrees. Plus, we are not using full display area.
 * Limited game control ('not enough buttons on the gamepad').
+* Need to flash qspi before flashing the application.
 
 Hardware
 -------------------------------------------------------
