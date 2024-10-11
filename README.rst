@@ -252,10 +252,11 @@ To be Improved
 MVP1
 ^^^^^^^^^
 * Low FPS (~8).
+* Picture is rotated by 90 degrees. Plus, we are not using full display area.
 MVP2
 ^^^^^^^^^
 * Low FPS (~14).
-* Not using full display area.
+* Picture is rotated by 90 degrees. Plus, we are not using full display area.
 * Limited game control ('not enough buttons on the gamepad').
 
 Hardware
