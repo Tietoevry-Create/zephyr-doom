@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+#include <debug/cpu_load.h>
 #include <ff.h>
 #include <hal/nrf_gpio.h>
 #include <nrfx_clock.h>
@@ -18,8 +19,6 @@
 #include <zephyr/storage/disk_access.h>
 
 #include "deh_str.h"
-
-#include <debug/cpu_load.h>
 
 LOG_MODULE_REGISTER(doom_main, CONFIG_DOOM_MAIN_LOG_LEVEL);
 
@@ -36,26 +35,6 @@ LOG_MODULE_REGISTER(doom_main, CONFIG_DOOM_MAIN_LOG_LEVEL);
 static const struct gpio_dt_spec led = GPIO_DT_SPEC_GET(LED0_NODE, gpios);
 #define GPIO0 ((NRF_GPIO_Type*)0x50842500UL)
 #define GPIO1 ((NRF_GPIO_Type*)0x50842800UL)
-
-void setup_lcd_pins_old() {
-    for (int i = 4; i <= 11; i++) {
-        nrf_gpio_cfg(32 + i, NRF_GPIO_PIN_DIR_OUTPUT,
-                     NRF_GPIO_PIN_INPUT_DISCONNECT, NRF_GPIO_PIN_NOPULL,
-                     NRF_GPIO_PIN_S0S1, NRF_GPIO_PIN_NOSENSE);
-        GPIO1->OUT = (GPIO1->OUT & ~(1 << i)) | (1 << i);
-    }
-
-    for (int i = 4; i <= 7; i++) {
-        nrf_gpio_cfg(i, NRF_GPIO_PIN_DIR_OUTPUT, NRF_GPIO_PIN_INPUT_DISCONNECT,
-                     NRF_GPIO_PIN_NOPULL, NRF_GPIO_PIN_S0S1,
-                     NRF_GPIO_PIN_NOSENSE);
-        GPIO0->OUT = (GPIO0->OUT & ~(1 << i)) | (1 << i);
-    }
-
-    nrf_gpio_cfg(25, NRF_GPIO_PIN_DIR_OUTPUT, NRF_GPIO_PIN_INPUT_DISCONNECT,
-                 NRF_GPIO_PIN_NOPULL, NRF_GPIO_PIN_S0S1, NRF_GPIO_PIN_NOSENSE);
-    GPIO0->OUT = (GPIO0->OUT & ~(1 << 25)) | (1 << 25);
-}
 
 void clock_initialization() {
     nrfx_clock_hfclk_start();
@@ -214,7 +193,6 @@ int sd_card_list_files(char const* const path, char* buf, size_t* buf_size) {
     return 0;
 }
 
-
 // void boot_net()
 // {
 //     printf("Booting NetMCU\n");
@@ -235,11 +213,12 @@ int sd_card_list_files(char const* const path, char* buf, size_t* buf_size) {
 // }
 
 #include "bluetooth_stuff.h"
+// #include "ili_display.h"
 
 int main(void) {
     LOG_INF("BOARD STARTING %s", CONFIG_BOARD);
-    setup_lcd_pins_old();
-    // setup_lcd_pins_new();
+    
+    // ili_do_stuff();
 
     cpu_load_init();
 
@@ -251,7 +230,7 @@ int main(void) {
     printf("----------------------------------\n");
     printf("UART Initialized\n");
     printf("---------------------------------\n");
-    
+
     uint32_t hfclkctrl = NRF_CLOCK_S->HFCLKCTRL;
     printf("HFCLK_S: %d\n", hfclkctrl);
 
@@ -259,8 +238,8 @@ int main(void) {
 
     // boot_net();
 
-    // sd_card_init(); // TODO: Get this working (all references to N_fs have been commented out in w_wad and m_misc)
-    // N_qspi_init();
+    // sd_card_init(); // TODO: Get this working (all references to N_fs have
+    // been commented out in w_wad and m_misc) N_qspi_init();
 
     // if (!no_sdcard) {
     //     N_fs_init();

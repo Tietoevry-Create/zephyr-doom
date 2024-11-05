@@ -371,6 +371,23 @@ void framebuffer_fill(uint16_t fb[], uint16_t color) {
     }
 }
 
+#include "ili_screen_controller.h"
+#include "ili_display.h"
+
+#include <zephyr/device.h>
+
+const struct device *screen;
+
+void framebuffer_send(uint8_t fb[], int len) {
+   	struct display_buffer_descriptor buf_desc;
+    
+	buf_desc.buf_size = 320 * 200;
+	buf_desc.width = 320;
+	buf_desc.height = 200;
+	buf_desc.pitch = 320;
+    
+    int	err = screen_write(screen, 0, 0, &buf_desc, fb);
+}
 
 /**
  * Send provided framebuffer into LCD.
@@ -381,50 +398,50 @@ void framebuffer_fill(uint16_t fb[], uint16_t color) {
  *
  * @return  void
  */
-void framebuffer_send(uint8_t fb[], int len) {
-    Address_set(0, 0, 320, 199);
-    write_byte(0x02c, false); //write_memory_start
-    // digitalWrite(LCD_RS,HIGH);
-    NRF_P0_S->OUT = (NRF_P0_S->OUT & ~(1 << 6)) | (1 << 6); // CS pin 6
-    NRF_P0_S->OUT = (NRF_P0_S->OUT & ~(1 << 7));
+// void framebuffer_send(uint8_t fb[], int len) {
+//     Address_set(0, 0, 320, 199);
+//     write_byte(0x02c, false); //write_memory_start
+//     // digitalWrite(LCD_RS,HIGH);
+//     NRF_P0_S->OUT = (NRF_P0_S->OUT & ~(1 << 6)) | (1 << 6); // CS pin 6
+//     NRF_P0_S->OUT = (NRF_P0_S->OUT & ~(1 << 7));
 
-    NRF_P0_S->OUT = (NRF_P0_S->OUT | (1 << 6));
+//     NRF_P0_S->OUT = (NRF_P0_S->OUT | (1 << 6));
 
-    for (int j = 199; j >= 0; j--) {
-        for (int k= 0; k < 320; k++) {
-            int i = k + j * 320;
-            // This generates too much tint and lowers contrast significantly
-            /*uint16_t cur = ((display_pal[fb[i]*4+0]>>3)&0x1f) << 11 |
-                            ((display_pal[fb[i]*4+1]>>3)&0x3f)<<5 |
-                            ((display_pal[fb[i]*4+2]>>3)&0x1f);*/
-            /*uint16_t cur = (display_pal[fb[i]*4+0]>>4)<<11 |
-                            (display_pal[fb[i]*4+1]>>3)<<5 |
-                            (display_pal[fb[i]*4+2]>>4);*/
+//     for (int j = 199; j >= 0; j--) {
+//         for (int k= 0; k < 320; k++) {
+//             int i = k + j * 320;
+//             // This generates too much tint and lowers contrast significantly
+//             /*uint16_t cur = ((display_pal[fb[i]*4+0]>>3)&0x1f) << 11 |
+//                             ((display_pal[fb[i]*4+1]>>3)&0x3f)<<5 |
+//                             ((display_pal[fb[i]*4+2]>>3)&0x1f);*/
+//             /*uint16_t cur = (display_pal[fb[i]*4+0]>>4)<<11 |
+//                             (display_pal[fb[i]*4+1]>>3)<<5 |
+//                             (display_pal[fb[i]*4+2]>>4);*/
 
-            // Best RGB888 -> RGB565 conversion
-            uint16_t cur = ((display_pal[fb[i]*4+0] * 249 + 1024) >> 11) << 11 |
-                            ((display_pal[fb[i]*4+1] * 253 + 512) >> 10) <<5 |
-                            ((display_pal[fb[i]*4+2] * 249 + 1024) >> 11);
+//             // Best RGB888 -> RGB565 conversion
+//             uint16_t cur = ((display_pal[fb[i]*4+0] * 249 + 1024) >> 11) << 11 |
+//                             ((display_pal[fb[i]*4+1] * 253 + 512) >> 10) <<5 |
+//                             ((display_pal[fb[i]*4+2] * 249 + 1024) >> 11);
 
-            uint16_t aligned_byte = (uint8_t) (cur >> 8);
-            aligned_byte |= ((aligned_byte & 3) << 8);
-            aligned_byte >>= 2;
+//             uint16_t aligned_byte = (uint8_t) (cur >> 8);
+//             aligned_byte |= ((aligned_byte & 3) << 8);
+//             aligned_byte >>= 2;
 
-            NRF_P1_S->OUT = (NRF_P1_S->OUT & ~(0xFF << 4)) | (aligned_byte << 4);
-            NRF_P0_S->OUT = (NRF_P0_S->OUT & ~(1 << 5));
-            NRF_P0_S->OUT = (NRF_P0_S->OUT & ~(1 << 5)) | (1 << 5);
+//             NRF_P1_S->OUT = (NRF_P1_S->OUT & ~(0xFF << 4)) | (aligned_byte << 4);
+//             NRF_P0_S->OUT = (NRF_P0_S->OUT & ~(1 << 5));
+//             NRF_P0_S->OUT = (NRF_P0_S->OUT & ~(1 << 5)) | (1 << 5);
 
-            aligned_byte = (uint8_t) cur;
-            aligned_byte |= ((aligned_byte & 3) << 8);
-            aligned_byte >>= 2;
-            NRF_P1_S->OUT = (NRF_P1_S->OUT & ~(0xFF << 4)) | (aligned_byte << 4);
+//             aligned_byte = (uint8_t) cur;
+//             aligned_byte |= ((aligned_byte & 3) << 8);
+//             aligned_byte >>= 2;
+//             NRF_P1_S->OUT = (NRF_P1_S->OUT & ~(0xFF << 4)) | (aligned_byte << 4);
 
-            NRF_P0_S->OUT = (NRF_P0_S->OUT & ~(1 << 5));
-            NRF_P0_S->OUT = (NRF_P0_S->OUT & ~(1 << 5)) | (1 << 5);
-        }
-    }
-    NRF_P0_S->OUT = (NRF_P0_S->OUT & ~(1 << 7)) | (1 << 7); // CS pin 7
-}
+//             NRF_P0_S->OUT = (NRF_P0_S->OUT & ~(1 << 5));
+//             NRF_P0_S->OUT = (NRF_P0_S->OUT & ~(1 << 5)) | (1 << 5);
+//         }
+//     }
+//     NRF_P0_S->OUT = (NRF_P0_S->OUT & ~(1 << 7)) | (1 << 7); // CS pin 7
+// }
 
 
 // Set the variable controlling FPS dots.
@@ -718,10 +735,75 @@ void I_InitGraphics(void)
 {
     printf("I_InitGraphics\n");
 
-    init_lcd();
+    // init_lcd();
+    
+    int err;
+
+	struct display_capabilities cap;
+
+	/* STEP 12 - Obtain the screen node from device tree */
+	screen = DEVICE_DT_GET(DT_NODELABEL(ili9340));
+	if (!device_is_ready(screen)) {
+		printk("Device %s not found; Aborting", screen->name);
+		return 0;
+	}
+
+	/* Setting orientation 1 (W=320 H=240) */
+	err = display_set_orientation(screen, 1);
+	if (err < 0) {
+		printk("Error %d",err);
+		return 0;
+	}
+
+	/* Setting pixel format 1 (16 bit) */
+	err = display_set_pixel_format(screen, PANEL_PIXEL_FORMAT_RGB_565);
+	if (err < 0) {
+		printk("Error %d",err);
+		return 0;
+	}
+
+	/* Obtain and display screen capabilities */
+	display_get_capabilities(screen, &cap);
+
+	printk("Display Sample on %s: Orientation=%d,  Pixel-format=%d,   X-res=%d,   Y-res=%d", \
+							screen->name, cap.current_orientation, cap.current_pixel_format,  \
+							cap.x_resolution, cap.y_resolution);
+
+	/* STEP 13 - Observe that we call the previously define functions one-by-one */
+	/* Set the background color */
+	err = set_background_color(screen, cap);
+	if (err < 0) {
+		printk("Error %d",err);
+		return 0;
+	} 
+    
+    size_t x = 0, y = 0, dy = 0;
+	size_t w = 80, h = 40;
+	uint8_t num_pixels = 100;
+	uint8_t num_lines = 25;
+
+    
+    /* Display a diagonal line (pixel by pixel) */
+	x = 20;
+	y = 20;
+	err = draw_diagonal_line(screen, x, y, num_pixels);
+	if (err < 0) {
+		printk("Error %d",err);
+		return 0;
+	}
+
+	/* Display a series of lines (1 line at a time) */
+	x = 100;
+	y = 100;
+	dy = 3;
+	err = draw_lines(screen, x, y, dy, w, num_lines);
+	if (err < 0) {
+		printk("Error %d",err);
+		return 0;
+	}
 
     current_dl = 1;
-
+    
     I_VideoBuffer = I_VideoBuffers[1];
     I_VideoBackBuffer = I_VideoBuffers[0];
     initialized = true;

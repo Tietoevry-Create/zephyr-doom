@@ -1,75 +1,62 @@
-/ {
-    lcd {
-        compatible = "gpio-keys";
-
-        lcd_bit1: lcd_bit1-gpios {
-            gpios = <&gpio1 10 0>;
-        };
-        lcd_bit2: lcd_bit2-gpios {
-            gpios = <&gpio1 11 0>;
-        };
-        lcd_bit3: lcd_bit3-gpios {
-            gpios = <&gpio1 4 0>;
-        };
-        lcd_bit4: lcd_bit4-gpios {
-            gpios = <&gpio1 5 0>;
-        };
-        lcd_bit5: lcd_bit5-gpios {
-            gpios = <&gpio1 6 0>;
-        };
-        lcd_bit6: lcd_bit6-gpios {
-            gpios = <&gpio1 7 0>;
-        };
-        lcd_bit7: lcd_bit7-gpios {
-            gpios = <&gpio1 8 0>;
-        };
-        lcd_bit8: lcd_bit8-gpios {
-            gpios = <&gpio1 9 0>;
-        };
-        lcd_rst: lcd_rst-gpios {
-            gpios = <&gpio0 25 0>;
-        };
-        lcd_sc: lcd_sc-gpios {
-            gpios = <&gpio0 7 0>;
-        };
-        lcd_rs: lcd_rs-gpios {
-            gpios = <&gpio0 6 0>;
-        };
-        lcd_wr: lcd_wr-gpios {
-            gpios = <&gpio0 5 0>;
-        };
-        lcd_rd: lcd_rd-gpios {
-            gpios = <&gpio0 4 0>;
-        };
+&spi4{
+    compatible = "nordic,nrf-spim";
+    #address-cells = < 0x1 >;
+    #size-cells = < 0x0 >;
+    reg = < 0xa000 0x1000 >;
+    interrupts = < 0xa 0x1 >;
+    max-frequency = < 0x1e84800 >;
+    easydma-maxcnt-bits = < 0x10 >;
+    rx-delay-supported;
+    rx-delay = < 0x2 >;
+    status = "okay";
+    cs-gpios = < &arduino_header 0x10 0x1 >, < &arduino_header 0xa 0x1 >;
+    pinctrl-0 = < &spi4_default >;
+    pinctrl-1 = < &spi4_sleep >;
+    pinctrl-names = "default", "sleep";
+    ili9340: ili9340@0 {
+        compatible = "ilitek,ili9340";
+        spi-max-frequency = < 0xe7319b >;
+        reg = < 0x0 >;
+        cmd-data-gpios = < &arduino_header 0xf 0x1 >;
+        width = < 0x140 >;
+        height = < 0xf0 >;
+        pixel-format = < 0x1 >;
+        rotation = < 0x5a >;
+        frmctr1 = [ 00 18 ];
+        pwctrl1 = [ 23 00 ];
+        vmctrl1 = [ 3E 28 ];
+        vmctrl2 = [ 86 ];
+        pgamctrl = [ 0F 31 2B 0C 0E 08 4E F1 37 07 10 03 0E 09 00 ];
+        ngamctrl = [ 00 0E 14 03 11 07 31 C1 48 08 0F 0C 31 36 0F ];
     };
-
-    aliases {
-        lcd1 = &lcd_bit1;
-        lcd2 = &lcd_bit2;
-        lcd3 = &lcd_bit3;
-        lcd4 = &lcd_bit4;
-        lcd5 = &lcd_bit5;
-        lcd6 = &lcd_bit6;
-        lcd7 = &lcd_bit7;
-        lcd8 = &lcd_bit8;
-        lcdrst = &lcd_rst;
-        lcdsc = &lcd_sc;
-        lcdrs = &lcd_rs;
-        lcdwr = &lcd_wr;
-        lcdrd = &lcd_rd;
-    };
-};
-
-&arduino_spi {
-    sdhc0: sdhc@0 {
+    adafruit_2_8_tft_touch_v2_sdhc: sdhc@1 {
         compatible = "zephyr,sdhc-spi-slot";
-        reg = <0>;
+        reg = < 0x1 >;
         status = "okay";
-        sdmmc {
+        spi-max-frequency = < 0x16e3600 >;
+        mmc {
             compatible = "zephyr,sdmmc-disk";
             status = "okay";
         };
-
-        spi-max-frequency = <32000000>;
     };
 };
+
+&pinctrl {
+    spi4_default{
+        group1 {
+                psels = <NRF_PSEL(SPIM_SCK, 1, 15)>,
+                        <NRF_PSEL(SPIM_MISO, 1, 14)>,
+                        <NRF_PSEL(SPIM_MOSI, 1, 13)>;
+        };
+    };
+
+    spi4_sleep{
+        group1 {
+                psels = <NRF_PSEL(SPIM_SCK, 1, 15)>,
+                        <NRF_PSEL(SPIM_MISO, 1, 14)>,
+                        <NRF_PSEL(SPIM_MOSI, 1, 13)>;
+                low-power-enable;
+        };
+    };
+};
+
