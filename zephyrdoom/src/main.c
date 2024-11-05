@@ -234,7 +234,7 @@ int sd_card_list_files(char const* const path, char* buf, size_t* buf_size) {
 //     NRF_RESET_S->NETWORK.FORCEOFF = 0;
 // }
 
-#include "bluetooth_stuff.h"
+#include "bluetooth_control.h"
 
 int main(void) {
     LOG_INF("BOARD STARTING %s", CONFIG_BOARD);
