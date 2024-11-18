@@ -5,7 +5,7 @@
  */
 
 #include "ili_display.h"
-
+#include "ili_screen_controller.h"
 
 
 LOG_MODULE_REGISTER(Lesson5_Exercise2, LOG_LEVEL_INF);

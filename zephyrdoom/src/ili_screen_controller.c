@@ -184,3 +184,62 @@ int screen_write(const struct device *dev, const uint16_t x, const uint16_t y, \
 
 	return 0;
 }
+
+int screen_write_8bit(const struct device *dev, const uint16_t x, const uint16_t y, \
+			 const struct display_buffer_descriptor *desc, const uint8_t *fb, const uint8_t *display_pal)
+{
+	size_t size8 = 1000;
+	size_t size16 = size8 * 2;
+    char buf16[size16];
+
+	int err;
+    const uint8_t *data_start_addr = (const uint8_t *)buf16;
+
+    const struct ili_ctrl_config *config = dev->config;
+    struct ili_ctrl_data *data = dev->data;
+
+    struct spi_buf tx_buf;
+    struct spi_buf_set tx_bufs;
+
+    uint16_t write_cnt;
+    uint16_t nbr_of_writes;
+    uint16_t write_h;
+
+    err = ili_ctrl_setmem(dev, 0, 0, desc->width, desc->height);
+    if (err < 0) {
+        return err;
+    }
+
+    if (desc->pitch > desc->width) {write_h = 1U; nbr_of_writes = desc->height;}
+    else {write_h = desc->height; nbr_of_writes = 1U;}
+    
+    /* STEP 6 - Call spi_ctrl_transmit() to send the RAMWR command */
+    err = spi_ctrl_transmit(dev, ILI9XXX_RAMWR, data_start_addr,
+                desc->width * data->bytes_per_pixel * write_h);
+    if (err < 0) {
+        return err;
+    }
+
+    tx_bufs.buffers = &tx_buf;
+    tx_bufs.count = 1;
+
+    for (int chunk = 0; chunk < 320 * 200 / size8; chunk++) {
+        for (int i = 0; i < size8; i++) {
+            uint16_t cur = ((display_pal[fb[chunk * size8 + i] * 4 + 0] * 249 + 1024) >> 11) << 11 |
+                           ((display_pal[fb[chunk * size8 + i] * 4 + 1] * 253 + 512) >> 10) << 5 |
+                           ((display_pal[fb[chunk * size8 + i] * 4 + 2] * 249 + 1024) >> 11);
+
+            buf16[2 * i] = (cur >> 8) & 0xFF;
+            buf16[2 * i + 1] = cur & 0xFF;
+        }
+
+        tx_buf.buf = (void *)buf16;
+        tx_buf.len = size16;
+
+        err = spi_write_dt(&config->spi, &tx_bufs);
+        if (err < 0) {
+            return err;
+        }
+    }
+
+}	

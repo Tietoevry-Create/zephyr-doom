@@ -60,4 +60,7 @@ int ili_ctrl_setmem(const struct device *dev, const uint16_t x, const uint16_t y
 int screen_write(const struct device *dev, const uint16_t x, const uint16_t y, \
 			 const struct display_buffer_descriptor *desc, const void *buf);
 
+int screen_write_8bit(const struct device *dev, const uint16_t x, const uint16_t y, \
+			 const struct display_buffer_descriptor *desc, const uint8_t *buf, const uint8_t *display_pal);
+
 #endif /* ILI_SCREEN_CONTROLLER_H_ */

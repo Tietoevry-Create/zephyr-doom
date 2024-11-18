@@ -379,14 +379,14 @@ void framebuffer_fill(uint16_t fb[], uint16_t color) {
 const struct device *screen;
 
 void framebuffer_send(uint8_t fb[], int len) {
-   	struct display_buffer_descriptor buf_desc;
+   	struct display_buffer_descriptor desc;
     
-	buf_desc.buf_size = 320 * 200;
-	buf_desc.width = 320;
-	buf_desc.height = 200;
-	buf_desc.pitch = 320;
+	desc.buf_size = 320 * 200;
+	desc.width = 320;
+	desc.height = 200;
+	desc.pitch = 320;
     
-    int	err = screen_write(screen, 0, 0, &buf_desc, fb);
+    int err = screen_write_8bit(screen, 0, 0, &desc, fb, display_pal);
 }
 
 /**
