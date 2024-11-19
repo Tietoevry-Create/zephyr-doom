@@ -54,21 +54,21 @@ Basic display support         Done             Currently, there is a limitation 
 ---------------------------- ----------------- --------------------------------
 Devkit button control        Done
 ---------------------------- ----------------- --------------------------------
-BLE game controller          In Progress       Transition from the original proprietary radio protocol to BLE using the Nordic UART Service (NUS) for data exchange
+BLE game controller          Done              Transition from the original proprietary radio protocol to BLE using the Nordic UART Service (NUS) for data exchange
 ---------------------------- ----------------- --------------------------------
-Display enhancements         Open
+Display enhancements         In Progress       Migrate from 'GPIO' display to SPI one (without hardware accelerator)
 ---------------------------- ----------------- --------------------------------
 Game data (SD card to flash) Open              Automatically copy game data from SD card to flash during first start (or on demand). 
----------------------------- ----------------- --------------------------------
-Pure Zephyr port             Open              Modify the code to make it compatible with any Zephyr device that meets the resource requirements by removing nrfx/ncs elements
 ---------------------------- ----------------- --------------------------------
 BLE HID                      Open              Replace NUS communication with BLE HID standard to allow control via BLE keybords, gamepads etc. 
 ---------------------------- ----------------- --------------------------------
 Basic CI                     Open              Build the code for target platfrom(s) in GitHub actions
 ---------------------------- ----------------- --------------------------------
-Multiplayer                  Open
----------------------------- ----------------- --------------------------------
 Sound                        Open
+---------------------------- ----------------- --------------------------------
+Pure Zephyr port             Open              Modify the code to make it compatible with any Zephyr device that meets the resource requirements by removing nrfx/ncs elements
+---------------------------- ----------------- --------------------------------
+Multiplayer                  Open
 ---------------------------- ----------------- --------------------------------
 Music                        Open
 ============================ ================= ================================
@@ -138,15 +138,14 @@ MVP3
 MVP4
 ~~~~~~~~~
 
-* Goal - Add option to connect BLE keyboard. This step will enable full game control (i.e. all the options).
+* Goal - Add option to connect BLE gamepad (e.g. Xbox controller) and ideally BLE keyboard. This step will enable full game control (i.e. all the options).
 * Features:
- * Full-fledged game control per original manual (inc. cheats).
+ * If using BLE gamepad - TBD. 
+ * If using BLE keayborad - full-fledged game control per original manual (inc. cheats). 
 * Required Hardware
  * Nordic Semiconductor `nRF5340`_ dev kit
  * 2.8" ILI9341 `SPI display`_
- * `micro:bit v2`_
- * ELECFREAKS `joystick v2`_
- * BLE keyboard
+ * BLE gamepad/keyboard
 
 MVP5
 ~~~~~~~~~
@@ -157,8 +156,6 @@ MVP5
 * Required Hardware
  * Nordic Semiconductor `nRF5340`_ dev kit
  * 2.8" ILI9341 `SPI display`_
- * `micro:bit v2`_
- * ELECFREAKS `joystick v2`_
  * TBD
 
 Getting Started
@@ -232,7 +229,7 @@ Gamepad
 ^^^^^^^^^
 #. Connect `micro:bit v2`_.
 #. Select gamepad app.  VS Code -> nRF Connect extension -> APPLICATIONS -> Select microbit.
-#. Flash the code. VS Code -> nRF Connect extension -> ACTIONS -> Flash.
+#. Copy file gamepad/microbit/build/zephyr/zephyr.hex to micro:bit (acting as a removable usb device).
 
 Monitor
 ~~~~~~~~~
@@ -241,11 +238,20 @@ Monitor
 Software
 -------------------------------------------------------
 
-Changes
+Fixed Bugs
 ~~~~~~~~~
+N/A
 
 Known Bugs
 ~~~~~~~~~
+N/A
+
+Improvements
+~~~~~~~~~
+MVP2
+^^^^^^^^^
+* FPS increase.
+* Moved from proprietary radio com between gamepad and game to BLE com.
 
 To be Improved
 ~~~~~~~~~
@@ -259,16 +265,4 @@ MVP2
 * Picture is rotated by 90 degrees. Plus, we are not using full display area.
 * Limited game control ('not enough buttons on the gamepad').
 * Need to flash qspi before flashing the application.
-
-Hardware
--------------------------------------------------------
-
-System Requirements
-~~~~~~~~~
-
-CPU, RAM, Flash
-
-Display
-~~~~~~~~~
-
 
