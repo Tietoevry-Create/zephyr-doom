@@ -35,7 +35,6 @@ Table of Contents
 - `Status`_
 - `Getting Started`_
 - `Software`_
-- `Hardware`_
 
 Status
 -------------------------------------------------------
@@ -233,7 +232,7 @@ Gamepad
 
 Monitor
 ~~~~~~~~~
-* VS Code -> nRF Connect extension -> CONNECTED DEVICES -> VCOM? COM ? -> Connect to Serial Port.
+* VS Code -> nRF Connect extension -> CONNECTED DEVICES -> VCOM1 -> Connect to Serial Port.
 
 Software
 -------------------------------------------------------
