@@ -69,10 +69,10 @@ int spi_ctrl_transmit(const struct device *dev, uint8_t cmd, const void *tx_data
 {
 	int err;
 	const struct ili_ctrl_config *config = dev->config;
-	
+
 	/* STEP 4.1 - Declare and configure the transmit buffers with command parameters */
 	struct spi_buf tx_buf;
-	struct spi_buf_set tx_bufs; 
+	struct spi_buf_set tx_bufs;
 
 	tx_buf.buf = &cmd;
 	tx_buf.len = 1U;
@@ -80,7 +80,7 @@ int spi_ctrl_transmit(const struct device *dev, uint8_t cmd, const void *tx_data
 	tx_bufs.count = 1U;
 
 	/* STEP 4.2 - Set GPIO pin for Command and write using spi_write_dt() */
-	gpio_pin_set_dt(&config->cmd_data, 1); 
+	gpio_pin_set_dt(&config->cmd_data, 1);
 	err = spi_write_dt(&config->spi, &tx_bufs);
 	if (err < 0) {
 		LOG_ERR("spi_ctrl_transmit: Error on %s", config->spi.bus->name);
@@ -96,7 +96,7 @@ int spi_ctrl_transmit(const struct device *dev, uint8_t cmd, const void *tx_data
 		if (err < 0) {
 			LOG_ERR("spi_ctrl_transmit: Error on %s", config->spi.bus->name);
 			return err;
-		}		
+		}
 	}
 
 	return 0;
@@ -120,7 +120,7 @@ int ili_ctrl_setmem(const struct device *dev, const uint16_t x, const uint16_t y
 	spi_ydata[1] = sys_cpu_to_be16(y + h - 1U);
 
 	/* STEP 5 - Call spi_ctrl_transmit() to transmit CASET and PASET commands */
-	err = spi_ctrl_transmit(dev, ILI9XXX_CASET, &spi_xdata[0], 4U);	
+	err = spi_ctrl_transmit(dev, ILI9XXX_CASET, &spi_xdata[0], 4U);
 	if (err < 0) {
 		return err;
 	}
@@ -186,11 +186,11 @@ int screen_write(const struct device *dev, const uint16_t x, const uint16_t y, \
 }
 
 int screen_write_8bit(const struct device *dev, const uint16_t x, const uint16_t y, \
-			 const struct display_buffer_descriptor *desc, const uint8_t *fb, const uint8_t *display_pal)
+			 const struct display_buffer_descriptor *desc, const uint8_t *fb, const uint8_t *palette)
 {
 	size_t size8 = 1000;
 	size_t size16 = size8 * 2;
-    char buf16[size16];
+    uint8_t buf16[size16];
 
 	int err;
     const uint8_t *data_start_addr = (const uint8_t *)buf16;
@@ -212,7 +212,7 @@ int screen_write_8bit(const struct device *dev, const uint16_t x, const uint16_t
 
     if (desc->pitch > desc->width) {write_h = 1U; nbr_of_writes = desc->height;}
     else {write_h = desc->height; nbr_of_writes = 1U;}
-    
+
     /* STEP 6 - Call spi_ctrl_transmit() to send the RAMWR command */
     err = spi_ctrl_transmit(dev, ILI9XXX_RAMWR, data_start_addr,
                 desc->width * data->bytes_per_pixel * write_h);
@@ -225,9 +225,9 @@ int screen_write_8bit(const struct device *dev, const uint16_t x, const uint16_t
 
     for (int chunk = 0; chunk < 320 * 200 / size8; chunk++) {
         for (int i = 0; i < size8; i++) {
-            uint16_t cur = ((display_pal[fb[chunk * size8 + i] * 4 + 0] * 249 + 1024) >> 11) << 11 |
-                           ((display_pal[fb[chunk * size8 + i] * 4 + 1] * 253 + 512) >> 10) << 5 |
-                           ((display_pal[fb[chunk * size8 + i] * 4 + 2] * 249 + 1024) >> 11);
+            uint16_t cur = ((palette[fb[chunk * size8 + i] * 4 + 0] * 249 + 1024) >> 11) << 11 |
+                           ((palette[fb[chunk * size8 + i] * 4 + 1] * 253 + 512) >> 10) << 5 |
+                           ((palette[fb[chunk * size8 + i] * 4 + 2] * 249 + 1024) >> 11);
 
             buf16[2 * i] = (cur >> 8) & 0xFF;
             buf16[2 * i + 1] = cur & 0xFF;
@@ -242,4 +242,4 @@ int screen_write_8bit(const struct device *dev, const uint16_t x, const uint16_t
         }
     }
 
-}	
+}

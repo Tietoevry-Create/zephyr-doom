@@ -378,14 +378,14 @@ void framebuffer_fill(uint16_t fb[], uint16_t color) {
 
 const struct device *screen;
 
-void framebuffer_send(uint8_t fb[], int len) {
+void framebuffer_send(const uint8_t fb[], int len) {
    	struct display_buffer_descriptor desc;
-    
+
 	desc.buf_size = 320 * 200;
 	desc.width = 320;
 	desc.height = 200;
 	desc.pitch = 320;
-    
+
     int err = screen_write_8bit(screen, 0, 0, &desc, fb, display_pal);
 }
 
@@ -736,7 +736,7 @@ void I_InitGraphics(void)
     printf("I_InitGraphics\n");
 
     // init_lcd();
-    
+
     int err;
 
 	struct display_capabilities cap;
@@ -775,14 +775,14 @@ void I_InitGraphics(void)
 	if (err < 0) {
 		printk("Error %d",err);
 		return 0;
-	} 
-    
+	}
+
     size_t x = 0, y = 0, dy = 0;
 	size_t w = 80, h = 40;
 	uint8_t num_pixels = 100;
 	uint8_t num_lines = 25;
 
-    
+
     /* Display a diagonal line (pixel by pixel) */
 	x = 20;
 	y = 20;
@@ -803,7 +803,7 @@ void I_InitGraphics(void)
 	}
 
     current_dl = 1;
-    
+
     I_VideoBuffer = I_VideoBuffers[1];
     I_VideoBackBuffer = I_VideoBuffers[0];
     initialized = true;

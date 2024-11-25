@@ -15,7 +15,9 @@
     pinctrl-names = "default", "sleep";
     ili9340: ili9340@0 {
         compatible = "ilitek,ili9340";
-        spi-max-frequency = < 0xe7319b >;
+        spi-max-frequency = < 0x28f5c28 >;
+        // spi-max-frequency = < 0x2625a00 >;
+        // spi-max-frequency = < 0xe7319b >;
         reg = < 0x0 >;
         cmd-data-gpios = < &arduino_header 0xf 0x1 >;
         width = < 0x140 >;
