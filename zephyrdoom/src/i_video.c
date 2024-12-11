@@ -769,38 +769,7 @@ void I_InitGraphics(void)
 							screen->name, cap.current_orientation, cap.current_pixel_format,  \
 							cap.x_resolution, cap.y_resolution);
 
-	/* STEP 13 - Observe that we call the previously define functions one-by-one */
-	/* Set the background color */
-	err = set_background_color(screen, cap);
-	if (err < 0) {
-		printk("Error %d",err);
-		return 0;
-	}
-
-    size_t x = 0, y = 0, dy = 0;
-	size_t w = 80, h = 40;
-	uint8_t num_pixels = 100;
-	uint8_t num_lines = 25;
-
-
-    /* Display a diagonal line (pixel by pixel) */
-	x = 20;
-	y = 20;
-	err = draw_diagonal_line(screen, x, y, num_pixels);
-	if (err < 0) {
-		printk("Error %d",err);
-		return 0;
-	}
-
-	/* Display a series of lines (1 line at a time) */
-	x = 100;
-	y = 100;
-	dy = 3;
-	err = draw_lines(screen, x, y, dy, w, num_lines);
-	if (err < 0) {
-		printk("Error %d",err);
-		return 0;
-	}
+    display_blanking_off(screen);
 
     current_dl = 1;
 

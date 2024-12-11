@@ -241,5 +241,4 @@ int screen_write_8bit(const struct device *dev, const uint16_t x, const uint16_t
             return err;
         }
     }
-
 }
