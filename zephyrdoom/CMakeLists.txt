@@ -95,7 +95,13 @@ target_sources(app PRIVATE
                 src/doom/st_stuff.c
                 src/doom/statdump.c
                 src/doom/sounds.c
-                src/doom/wi_stuff.c)
+                src/doom/wi_stuff.c
+                src/ili_display.h
+                src/ili_display.c
+                src/ili_screen_controller.c
+                src/ili_screen_controller.h
+                )
+
 
 # set C version
 set(CMAKE_C_STANDARD 89)
