@@ -212,13 +212,12 @@ int sd_card_list_files(char const* const path, char* buf, size_t* buf_size) {
 //     NRF_RESET_S->NETWORK.FORCEOFF = 0;
 // }
 
-#include "bluetooth_stuff.h"
-// #include "ili_display.h"
+#include "bluetooth_control.h"
 
 int main(void) {
     LOG_INF("BOARD STARTING %s", CONFIG_BOARD);
-    
-    // ili_do_stuff();
+    // setup_lcd_pins_old();
+    // setup_lcd_pins_new();
 
     cpu_load_init();
 

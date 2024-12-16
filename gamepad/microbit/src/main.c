@@ -7,7 +7,7 @@
 /** @file
  *  @brief Nordic UART Bridge Service (NUS) sample
  */
-#include "uart_async_adapter.h"
+// #include "uart_async_adapter.h"
 
 #include <zephyr/types.h>
 #include <zephyr/kernel.h>

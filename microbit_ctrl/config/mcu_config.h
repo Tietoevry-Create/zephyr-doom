@@ -1,4 +1,0 @@
-
-#define NRF_UARTE NRF_UARTE0_S
-
-#define NRF_MUTEX NRF_MUTEX_S
