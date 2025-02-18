@@ -25,6 +25,23 @@
 #include <zephyr/drivers/gpio.h>
 #include <zephyr/settings/settings.h>
 #include <zephyr/logging/log.h>
+#include "d_event.h"
+
+#define RESET_TIMEOUT_MS 500
+
+static struct k_work_delayable reset_work;
+static void reset_inputs(struct k_work *work)
+{
+    printk("Resetting joystick and button states\n");
+
+    event_t e;
+    e.type = ev_joystick;
+    e.data1 = 0; // No buttons pressed
+    e.data2 = 0; // Joystick X reset
+    e.data3 = 0; // Joystick Y reset
+
+    D_PostEvent(&e);
+}
 
 #define SW0_NODE DT_ALIAS(sw0)
 static const struct gpio_dt_spec button = GPIO_DT_SPEC_GET_OR(SW0_NODE, gpios, {0});
@@ -347,7 +364,6 @@ static void scan_init(void)
 	}
 }
 
-#include "d_event.h"
 
 static uint8_t hogp_notify_cb(struct bt_hogp *hogp,
 			     struct bt_hogp_rep_info *rep,
@@ -385,7 +401,7 @@ static uint8_t hogp_notify_cb(struct bt_hogp *hogp,
 	joyX = (joyX - 32767) / (double)32767 * 50;
 	joyY = (joyY - 32767) / (double)32767.0 * 50;
 
-	if (joyX > -45 && joyX < 45) {
+	if (joyX > -45 && joyX < 45	) {
 		joyX = 0;
 	}
 	if (joyY > -45 && joyY < 45) {
@@ -394,15 +410,12 @@ static uint8_t hogp_notify_cb(struct bt_hogp *hogp,
 
 	printk("New X: %d, Y: %d\n", joyX, joyY);
 
-	// data[0] and data[1] contain the x coordinate of the right joystick
-	// joy_X = (data[0] << 8 | data[1] - (2 << 15)) >> 7;
 	e.data2 = joyX;
-	// e.data2 = (data[0] << 8 | data[1] - (2 << 15)) >> 8;
-	// data[2] and data[3] contain the y coordinate of the right joystick
 	e.data3 = joyY;
-	// e.data3 = (data[2] << 8 | data[3] - (2 << 15)) >> 8;
 
 	D_PostEvent(&e);
+
+	k_work_reschedule(&reset_work, K_MSEC(RESET_TIMEOUT_MS));
 
 	printk("\n"); 
 	return BT_GATT_ITER_CONTINUE;
@@ -572,6 +585,8 @@ int bluetooth_main_xbox(void)
 
 	gpio_init_callback(&button_cb_data, button_pressed, BIT(button.pin));
 	gpio_add_callback(button.port, &button_cb_data);
+
+	k_work_init_delayable(&reset_work, reset_inputs);
 
 	err = bt_scan_start(BT_SCAN_TYPE_SCAN_ACTIVE);
 	if (err) {
