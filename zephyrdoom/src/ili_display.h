@@ -7,7 +7,6 @@
 #include <zephyr/kernel.h>
 #include <zephyr/logging/log.h>
 
-/* STEP 7 - Include the header file for the ili_screen_controller module*/
 #include "ili_screen_controller.h"
 
 int set_background_color(const struct device *screen,
