@@ -237,8 +237,7 @@ int main(void) {
 
     // boot_net();
 
-    // sd_card_init(); // TODO: Get this working (all references to N_fs have
-    // been commented out in w_wad and m_misc) N_qspi_init();
+    // sd_card_init(); // TODO: Get this working (all references to N_fs have been commented out in w_wad and m_misc) N_qspi_init();
 
     // if (!no_sdcard) {
     //     N_fs_init();

@@ -8,7 +8,7 @@
 #include "ili_screen_controller.h"
 
 
-LOG_MODULE_REGISTER(Lesson5_Exercise2, LOG_LEVEL_INF);
+LOG_MODULE_REGISTER(ili_display, LOG_LEVEL_INF);
 
 #define BKGCOLOR 	0x0000U		// 16-bit RGB value for background
 #define HLINECOLOR	0xF800		// 16-bit RGB value for line-color (5-6-5 RGB)
@@ -43,6 +43,7 @@ int set_background_color(const struct device *screen, struct display_capabilitie
 	for (int idx = 0; idx < cap.y_resolution; idx += h_step) {
 		err = screen_write(screen, 0, idx, &buf_desc, buf);
 		if (err < 0){
+			k_free(buf);
 			return err;
 		}
 	}
@@ -78,6 +79,7 @@ int draw_diagonal_line(const struct device *screen, uint8_t x, uint8_t y, uint8_
 	{
 		err = screen_write(screen, x++, y++, &buf_desc, buf);
 		if (err < 0) {
+			k_free(buf);
 			return err;
 		}
 		display_blanking_off(screen);

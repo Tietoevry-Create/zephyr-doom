@@ -47,6 +47,11 @@
 
 #include "FT810.h"
 
+#include <zephyr/logging/log.h>
+
+LOG_MODULE_REGISTER(i_video, LOG_LEVEL_INF);
+
+
 #define GPIO0 ((NRF_GPIO_Type*) 0x50842500UL)
 #define GPIO1 ((NRF_GPIO_Type*) 0x50842800UL)
 
@@ -387,6 +392,9 @@ void framebuffer_send(const uint8_t fb[], int len) {
 	desc.pitch = 320;
 
     int err = screen_write_8bit(screen, 0, 0, &desc, fb, display_pal);
+    if (err < 0) {
+        LOG_ERR("Failed to write to screen");
+    }
 }
 
 /**
@@ -741,7 +749,6 @@ void I_InitGraphics(void)
 
 	struct display_capabilities cap;
 
-	/* STEP 12 - Obtain the screen node from device tree */
 	screen = DEVICE_DT_GET(DT_NODELABEL(ili9340));
 	if (!device_is_ready(screen)) {
 		printk("Device %s not found; Aborting", screen->name);
