@@ -76,7 +76,6 @@ int spi_ctrl_transmit(const struct device *dev, uint8_t cmd, const void *tx_data
 	tx_bufs.buffers = &tx_buf;
 	tx_bufs.count = 1U;
 
-	/* STEP 4.2 - Set GPIO pin for Command and write using spi_write_dt() */
 	gpio_pin_set_dt(&config->cmd_data, 1);
 	err = spi_write_dt(&config->spi, &tx_bufs);
 	if (err < 0) {
