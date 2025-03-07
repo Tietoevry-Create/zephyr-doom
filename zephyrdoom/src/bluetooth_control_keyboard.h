@@ -270,8 +270,8 @@ static void scan_init(void) {
     }
 }
 
-#include "doomkeys.h"  // For Doom key definitions :contentReference[oaicite:0]{index=0}
-#include "d_event.h"   // For D_PostEvent and event_t :contentReference[oaicite:1]{index=1}
+#include "doomkeys.h"
+#include "d_event.h"
 
 // Structure for regular key mappings (from HID to Doom)
 typedef struct {
@@ -280,9 +280,7 @@ typedef struct {
     int ascii;      // ASCII representation (if applicable, 0 otherwise)
 } keymap_t;
 
-// Mapping table for regular keys
 static const keymap_t key_map[] = {
-    // Letters (using lowercase ASCII)
     { 0x04, 'a', 'a' },
     { 0x05, 'b', 'b' },
     { 0x06, 'c', 'c' },
@@ -309,7 +307,7 @@ static const keymap_t key_map[] = {
     { 0x1B, 'x', 'x' },
     { 0x1C, 'y', 'y' },
     { 0x1D, 'z', 'z' },
-    // Numbers
+
     { 0x1E, '1', '1' },
     { 0x1F, '2', '2' },
     { 0x20, '3', '3' },
@@ -320,18 +318,18 @@ static const keymap_t key_map[] = {
     { 0x25, '8', '8' },
     { 0x26, '9', '9' },
     { 0x27, '0', '0' },
-    // Control and punctuation keys
+
     { 0x28, KEY_ENTER, 0 },
     { 0x29, KEY_ESCAPE, 0 },
     { 0x2A, KEY_BACKSPACE, 0 },
     { 0x2B, KEY_TAB, 0 },
-    { 0x2C, ' ', ' ' },  // Space
-    // Arrow keys (using Doom definitions)
+    { 0x2C, ' ', ' ' },
+
     { 0x4F, KEY_RIGHTARROW, 0 },
     { 0x50, KEY_LEFTARROW, 0 },
     { 0x51, KEY_DOWNARROW, 0 },
     { 0x52, KEY_UPARROW, 0 },
-    // Function keys (HID codes for F1-F12 are typically 0x3A - 0x45)
+
     { 0x3A, KEY_F1, 0 },
     { 0x3B, KEY_F2, 0 },
     { 0x3C, KEY_F3, 0 },
