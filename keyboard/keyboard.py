@@ -69,22 +69,23 @@ def keyboard_listener():
             keycode_name = evdev.ecodes.KEY[event.code]
             print(f"Key Event: {keycode_name}, Value: {event.value}")
 
+            # Handle modifier keys (Ctrl, Shift, Alt, etc.)
             if keycode_name in modifier_map:
                 if event.value == 1:  # Key press
                     current_modifiers |= modifier_map[keycode_name]
                 elif event.value == 0:  # Key release
                     current_modifiers &= ~modifier_map[keycode_name]
-                send_key(0, 0)  # Send empty event to update modifier state (no key pressed)
+                # Send updated modifier state without an immediate release
+                send_key(current_modifiers, 0, release_immediately=False)
+            # Handle regular keys
             elif keycode_name in keycode_map:
                 hid_keycode = keycode_map[keycode_name]
-                if event.value == 1:  # Key press
-                    send_key(current_modifiers, hid_keycode)  # Send modifier and key code
+                if event.value in (1, 2):  # Key press or autorepeat
+                    send_key(current_modifiers, hid_keycode, release_immediately=False)
                 elif event.value == 0:  # Key release
-                    send_key(0, 0)  # Send release (all zeros)
+                    send_key(current_modifiers, 0, release_immediately=True)
             else:
                 print(f"Unhandled key: {keycode_name}")
-
-
 
 # ********** Bluetooth keyboard **********
 # From https://github.com/petzval/btferret
@@ -274,20 +275,20 @@ def lecallback(clientnode,op,cticn):
 #
 #*************************************
 
-def send_key(modifiers, keycode):
-    global reportindex
-    global node
+def send_key(modifiers, keycode, release_immediately=True):
+    global reportindex, node
 
-    buf = [0, 0, 0, 0, 0, 0, 0, 0]
-
+    buf = [0] * 8
     buf[0] = modifiers  # Modifier byte
     buf[2] = keycode    # Keycode
 
-    btfpy.Write_ctic(node, reportindex, buf, 0)  # Send the report
-
-    # Send key release (important!)
-    buf = [0, 0, 0, 0, 0, 0, 0, 0]  # All zeros for release
+    # Send the key press report.
     btfpy.Write_ctic(node, reportindex, buf, 0)
+
+    # Only send a release if explicitly requested.
+    if release_immediately:
+        buf = [0] * 8  # Create a release report (all zeros)
+        btfpy.Write_ctic(node, reportindex, buf, 0)
 
 ############ START ###########
 
