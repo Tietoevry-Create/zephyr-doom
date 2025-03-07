@@ -325,6 +325,9 @@ static const keymap_t key_map[] = {
     { 0x2B, KEY_TAB, 0 },
     { 0x2C, ' ', ' ' },
 
+	{ 0x36, ',', ',' },
+	{ 0x37, '.', '.' },
+
     { 0x4F, KEY_RIGHTARROW, 0 },
     { 0x50, KEY_LEFTARROW, 0 },
     { 0x51, KEY_DOWNARROW, 0 },
@@ -342,7 +345,6 @@ static const keymap_t key_map[] = {
     { 0x43, KEY_F10, 0 },
     { 0x44, KEY_F11, 0 },
     { 0x45, KEY_F12, 0 },
-    // Extend this table with additional mappings as needed
 };
 
 // Structure for modifier keys mapping
@@ -351,8 +353,6 @@ typedef struct {
     int doom;        // Doom key code (e.g. KEY_RCTRL, KEY_RSHIFT, KEY_RALT)
 } modmap_t;
 
-// Mapping table for modifiers.
-// Here we map both left and right modifiers to the same Doom key.
 static const modmap_t mod_map[] = {
     { 0x01, KEY_RCTRL },  // Left Ctrl
     { 0x02, KEY_RSHIFT }, // Left Shift
@@ -360,7 +360,6 @@ static const modmap_t mod_map[] = {
     { 0x10, KEY_RCTRL },  // Right Ctrl (mapped same as Ctrl)
     { 0x20, KEY_RSHIFT }, // Right Shift (mapped same as Shift)
     { 0x40, KEY_RALT },   // Right Alt (mapped same as Alt)
-    // GUI keys (0x08 and 0x80) can be added if needed
 };
 
 static uint8_t hogp_notify_cb(struct bt_hogp *hogp,
