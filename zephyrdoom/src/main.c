@@ -212,7 +212,7 @@ int sd_card_list_files(char const* const path, char* buf, size_t* buf_size) {
 //     NRF_RESET_S->NETWORK.FORCEOFF = 0;
 // }
 
-#include "bluetooth_control_xbox.h"
+#include "bluetooth_control_keyboard.h"
 
 int main(void) {
     LOG_INF("BOARD STARTING %s", CONFIG_BOARD);
@@ -252,7 +252,7 @@ int main(void) {
 
     M_ArgvInit();
 
-    bluetooth_main_xbox();
+    bluetooth_main_keyboard();
     // int i = 0;
 	// while(1) {
     //     k_msleep(1000);
