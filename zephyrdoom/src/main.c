@@ -223,7 +223,7 @@ int main(void) {
 
     clock_initialization();
 
-    // N_uart_init();
+    N_uart_init();
 
     printf("\n\n");
     printf("----------------------------------\n");
