@@ -15,7 +15,7 @@
 #include <zephyr/fs/fs.h>
 #include <zephyr/kernel.h>
 #include <zephyr/logging/log.h>
-#include <zephyr/sd/sd.h>
+// #include <zephyr/sd/sd.h>
 #include <zephyr/storage/disk_access.h>
 
 #include "deh_str.h"
