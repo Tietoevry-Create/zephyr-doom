@@ -223,12 +223,12 @@ int main(void) {
 
     clock_initialization();
 
-    N_uart_init();
+    // N_uart_init();
 
-    printf("\n\n");
-    printf("----------------------------------\n");
-    printf("UART Initialized\n");
-    printf("---------------------------------\n");
+    // printf("\n\n");
+    // printf("----------------------------------\n");
+    // printf("UART Initialized\n");
+    // printf("---------------------------------\n");
 
     uint32_t hfclkctrl = NRF_CLOCK_S->HFCLKCTRL;
     printf("HFCLK_S: %d\n", hfclkctrl);
