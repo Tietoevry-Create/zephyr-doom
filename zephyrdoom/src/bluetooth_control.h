@@ -103,7 +103,7 @@ uint8_t ble_data_received(struct bt_nus_client *nus, const uint8_t *data,
     printk("ADC0: %d, ADC1: %d, A: %d, B: %d, C: %d, D: %d, E: %d, F: %d\n",
            adc_buf0, adc_buf1, button_A, button_B, button_C, button_D, button_E,
            button_F);
-    
+
     int centered_adc = adc_buf0 - 470;
     if (centered_adc > -50 && centered_adc < 50) {
         adc_buf0 = 0;
@@ -111,7 +111,7 @@ uint8_t ble_data_received(struct bt_nus_client *nus, const uint8_t *data,
         adc_buf0 = centered_adc;
     }
     centered_adc = adc_buf1 - 481;
-    if (centered_adc > -40 && centered_adc < 40) {
+    if (centered_adc > -50 && centered_adc < 50) {
         adc_buf1 = 0;
     } else {
         adc_buf1 = centered_adc;
