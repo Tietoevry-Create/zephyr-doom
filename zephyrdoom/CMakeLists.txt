@@ -8,7 +8,6 @@ target_include_directories(app PRIVATE src/config)
 target_sources(app PRIVATE
                 src/main.c
                 src/retarget.c
-                src/n_uart.c
                 src/n_qspi.c
                 src/n_fs.c
                 src/n_mem.c

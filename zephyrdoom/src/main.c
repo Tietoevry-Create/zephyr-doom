@@ -22,6 +22,8 @@
 
 LOG_MODULE_REGISTER(doom_main, CONFIG_DOOM_MAIN_LOG_LEVEL);
 
+#include "bluetooth_control.h"
+
 /* 1000 msec = 1 sec */
 #define SLEEP_TIME_MS 1000
 
@@ -193,49 +195,18 @@ int sd_card_list_files(char const* const path, char* buf, size_t* buf_size) {
     return 0;
 }
 
-// void boot_net()
-// {
-//     printf("Booting NetMCU\n");
-
-//     // Network owns 30/31 (LED3/4)
-//     nrf_gpio_pin_mcu_select(LED_PIN_3, NRF_GPIO_PIN_MCUSEL_NETWORK);
-//     nrf_gpio_pin_mcu_select(LED_PIN_4, NRF_GPIO_PIN_MCUSEL_NETWORK);
-
-//     // Hand over UART GPIOs to NetMcu
-//     nrf_gpio_pin_mcu_select(LED_PIN_3, NRF_GPIO_PIN_MCUSEL_NETWORK);
-//     nrf_gpio_pin_mcu_select(LED_PIN_4, NRF_GPIO_PIN_MCUSEL_NETWORK);
-
-//     // Set NetMcu as secure
-//     NRF_SPU_S->EXTDOMAIN[0].PERM = 2 | (1<<4);
-
-//     // Wake up NetMcu
-//     NRF_RESET_S->NETWORK.FORCEOFF = 0;
-// }
-
-#include "bluetooth_control.h"
 
 int main(void) {
     LOG_INF("BOARD STARTING %s", CONFIG_BOARD);
-    // setup_lcd_pins_old();
-    // setup_lcd_pins_new();
 
     cpu_load_init();
 
     clock_initialization();
 
-    // N_uart_init();
-
-    // printf("\n\n");
-    // printf("----------------------------------\n");
-    // printf("UART Initialized\n");
-    // printf("---------------------------------\n");
-
     uint32_t hfclkctrl = NRF_CLOCK_S->HFCLKCTRL;
     printf("HFCLK_S: %d\n", hfclkctrl);
 
     NRF_CACHE_S->ENABLE = 1;
-
-    // boot_net();
 
     // sd_card_init(); // TODO: Get this working (all references to N_fs have been commented out in w_wad and m_misc) N_qspi_init();
 
