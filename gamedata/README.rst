@@ -30,10 +30,43 @@ If you want to play with modified DOOM WAD files:
 
 The qspi.hex file in this folder was created by:
 
-1. Downloading the DOOM shareware v1.9 WAD file
+1. Downloading `the DOOM shareware v1.9 WAD file <https://archive.org/details/DoomsharewareEpisode>`_.
 2. Following the steps above to upload the WAD file to the external QSPI flash
 3. Using the following command to read the contents of the QSPI flash and save it as qspi.hex:
 
 .. code-block:: console
 
     nrfjprog --family nrf53 --readqspi qspi.hex
+
+Editing WAD Files
+==================
+
+Here's how to edit and use your own WAD file:
+
+1. **Choose a WAD Editor**
+
+  Popular options include:
+
+  * `SLADE3 <https://slade.mancubus.net/>`_: A versatile editor that handles graphics, audio, textures, and map editing.
+  * `Ultimate Doom Builder <https://github.com/jewalky/UltimateDoomBuilder>`_: Primarily focused on creating and editing maps.
+
+2. **Edit the WAD file**
+
+  Open the WAD file using your chosen editor. You can:
+
+  * Replace textures or sprites.
+  * Edit or create new maps.
+  * Change sound effects or music.
+
+3. **Save your custom WAD**
+
+  Save your changes as a new WAD file (e.g., ``MYDOOM.WAD``).
+
+4. **Load your custom WAD onto the board**
+
+  Follow the steps outlined in the **Custom WAD Files** section above to transfer your edited WAD onto the board's external QSPI flash.
+
+**Tips:**
+  * Always back up the original WAD file before editing.
+  * Ensure your custom WAD file stays within the size limit supported by the external flash (8MiB).
+  * Test your custom WAD thoroughly on a desktop DOOM port (like Chocolate Doom) before deploying it to your board, making debugging easier.
