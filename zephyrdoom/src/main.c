@@ -18,8 +18,6 @@
 // #include <zephyr/sd/sd.h>
 #include <zephyr/storage/disk_access.h>
 
-#include "deh_str.h"
-
 LOG_MODULE_REGISTER(doom_main, CONFIG_DOOM_MAIN_LOG_LEVEL);
 
 #include "bluetooth_control.h"
@@ -38,18 +36,17 @@ static const struct gpio_dt_spec led = GPIO_DT_SPEC_GET(LED0_NODE, gpios);
 #define GPIO0 ((NRF_GPIO_Type*)0x50842500UL)
 #define GPIO1 ((NRF_GPIO_Type*)0x50842800UL)
 
-void clock_initialization() {
-    nrfx_clock_hfclk_start();
-    nrf_clock_hfclk_div_set(NRF_CLOCK_S, NRF_CLOCK_HFCLK_DIV_1);
-    nrfx_clock_divider_set(NRF_CLOCK_DOMAIN_HFCLK192M, NRF_CLOCK_HFCLK_DIV_1);
-    // nrfx_clock_divider_set(NRF_CLOCK_DOMAIN_HFCLK, NRF_CLOCK_HFCLK_DIV_1);
-}
-
 #define SD_ROOT_PATH "/SD:/"
 /* Maximum length for path support by Windows file system */
 #define PATH_MAX_LEN 260
 #define K_SEM_OPER_TIMEOUT_MS 500
 K_SEM_DEFINE(m_sem_sd_oper_ongoing, 1, 1);
+
+void clock_initialization() {
+    nrfx_clock_hfclk_start();
+    nrf_clock_hfclk_div_set(NRF_CLOCK_S, NRF_CLOCK_HFCLK_DIV_1);
+    nrfx_clock_divider_set(NRF_CLOCK_DOMAIN_HFCLK192M, NRF_CLOCK_HFCLK_DIV_1);
+}
 
 static const char* sd_root_path = "/SD:";
 static bool sd_init_success;
