@@ -137,9 +137,10 @@ MVP2
 MVP3
 ~~~~~~~~~
 
-* Goal - Migrate from current display (connected via GPIO) to SPI one. Support full-screen.
+* Goal - Migrate from current display (connected via GPIO) to SPI one. Support full screen.
 * Features:
  * New display
+ * Full screen
 * Required Hardware
  * Nordic Semiconductor `nRF5340`_ dev kit
  * 2.8" ILI9341 `SPI display`_
@@ -151,10 +152,10 @@ MVP3
 MVP4
 ~~~~~~~~~
 
-* Goal - Add option to connect BLE gamepad (Xbox wireless controller) and ideally BLE keyboard (built on RPi 400). This step will enable full game control (i.e. all the options).
+* Goal - Return back to 4.3" FT810 `SPI IPS display`_ used in original `nrf-doom`_ project.
 * Features:
- * If using BLE gamepad - TBD. 
- * If using BLE keayborad - full-fledged game control per original manual (inc. cheats). 
+ * New display supporting > 30FPS
+ * Full screen 
 * Required Hardware
  * Nordic Semiconductor `nRF5340`_ dev kit
  * 4.3" FT810 `SPI IPS display`_
