@@ -33,7 +33,7 @@ Table of Contents
 -------------------------------------------------------
 
 - `Status`_
-- `MVPS`_
+- `MVPs`_
 - `Getting Started`_
 - `Software`_
 
