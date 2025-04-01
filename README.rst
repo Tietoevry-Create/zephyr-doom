@@ -56,7 +56,7 @@ GPIO ILI9486 display support Done              Currently, there is a limitation 
 ---------------------------- ----------------- --------------------------------
 SPI ILI9341 display support  Done              FPS got significantly decreased due to the multiple hw/sw limitations
 ---------------------------- ----------------- --------------------------------
-SPI FT810 display support    Done              FPS got significantly decreased due to the multiple hw/sw limitations
+SPI FT810 display support    Done              FPS matching `nrf-doom`_ performance
 ---------------------------- ----------------- --------------------------------
 BLE game controller          Done              Transition from the original proprietary radio protocol to BLE using the Nordic UART Service (NUS) for data exchange
 ---------------------------- ----------------- --------------------------------
