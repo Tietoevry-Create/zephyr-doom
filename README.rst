@@ -45,27 +45,35 @@ Backlog
 ============================ ================= ================================
  Feature                     Status            Comment
 ============================ ================= ================================
-Read game data QSPI Flash    Done
+Game data in QSPI flash      Done
 ---------------------------- ----------------- --------------------------------
 Doom game engine running     Done
 ---------------------------- ----------------- --------------------------------
-Basic display support         Done             Currently, there is a limitation on the FPS and the picture is rotated by 90 degrees
----------------------------- ----------------- --------------------------------
 Devkit button control        Done
+---------------------------- ----------------- --------------------------------
+GPIO ILI9486 display support Done              Currently, there is a limitation on the FPS and the picture is rotated by 90 degrees
+---------------------------- ----------------- --------------------------------
+SPI ILI9341 display support  Done              FPS got significantly decreased due to the multiple hw/sw limitations
+---------------------------- ----------------- --------------------------------
+SPI FT810 display support    Done              FPS got significantly decreased due to the multiple hw/sw limitations
 ---------------------------- ----------------- --------------------------------
 BLE game controller          Done              Transition from the original proprietary radio protocol to BLE using the Nordic UART Service (NUS) for data exchange
 ---------------------------- ----------------- --------------------------------
-Display enhancements         In Progress       Migrate from 'GPIO' display to SPI one (without hardware accelerator)
+BLE HID support              In progress       Replace NUS communication with BLE HID standard to allow control via gamepad (test with Xbox wireless controller) and keyboard (test with BLE keyboard built on RPi 400)
 ---------------------------- ----------------- --------------------------------
-Game data (SD card to flash) Open              Automatically copy game data from SD card to flash during first start (or on demand). 
+Game data (SD card to flash) In progress       Automatically copy game data from SD card to flash during first start (or on demand). 
 ---------------------------- ----------------- --------------------------------
-BLE HID                      Open              Replace NUS communication with BLE HID standard to allow control via BLE keybords, gamepads etc. 
----------------------------- ----------------- --------------------------------
-Basic CI                     Open              Build the code for target platfrom(s) in GitHub actions
----------------------------- ----------------- --------------------------------
-Sound                        Open
+Game save and load           Open
 ---------------------------- ----------------- --------------------------------
 Pure Zephyr port             Open              Modify the code to make it compatible with any Zephyr device that meets the resource requirements by removing nrfx/ncs elements
+---------------------------- ----------------- --------------------------------
+Basic CI                     Open              Build the code for target platform(s) in GitHub actions
+---------------------------- ----------------- --------------------------------
+Static analysis              Open
+---------------------------- ----------------- --------------------------------
+Gamepad calibration          Open
+---------------------------- ----------------- --------------------------------
+Sound                        Open
 ---------------------------- ----------------- --------------------------------
 Multiplayer                  Open
 ---------------------------- ----------------- --------------------------------
@@ -75,19 +83,25 @@ Music                        Open
 Compatibility Matrix
 ~~~~~~~~~
 
-======================= ================= ================================ ================================ ================================
- Item                    Version           MVP1                             MVP2                             MVP3
-======================= ================= ================================ ================================ ================================
-`nRF5340`_ dev kit       2.0.1            X                                 X
------------------------ ----------------- -------------------------------- -------------------------------- --------------------------------
-3,5" `display`_          N/A              X                                 X
------------------------ ----------------- -------------------------------- -------------------------------- --------------------------------
-2.8" `SPI display`_      N/A              --                                --
------------------------ ----------------- -------------------------------- -------------------------------- --------------------------------
-`micro:bit v2`_          2.x              --                                X
------------------------ ----------------- -------------------------------- -------------------------------- --------------------------------
-`joystick v2`_           2                --                                X
-======================= ================= ================================ ================================ ================================
+=========================== ================= ================================ ================================ ================================ ================================ ================================
+ Item                        Version           MVP1                             MVP2                             MVP3                             MVP4                             MVP5
+=========================== ================= ================================ ================================ ================================ ================================ ================================
+`nRF5340`_ dev kit           2.0.1             X                                X                                X                                X                                X
+--------------------------- ----------------- -------------------------------- -------------------------------- -------------------------------- -------------------------------- --------------------------------
+3,5" ILI9486 `display`_      N/A               X                                X                                --                               --                               --
+--------------------------- ----------------- -------------------------------- -------------------------------- -------------------------------- -------------------------------- --------------------------------
+2.8" ILI9341 `SPI display`_  N/A               --                               --                               X                                --                               --
+--------------------------- ----------------- -------------------------------- -------------------------------- -------------------------------- -------------------------------- --------------------------------
+4.3" `SPI IPS display`_      N/A               --                               --                               --                               X                                X
+--------------------------- ----------------- -------------------------------- -------------------------------- -------------------------------- -------------------------------- --------------------------------
+`micro:bit v2`_              2.x               --                               X                                X                                X                                --
+--------------------------- ----------------- -------------------------------- -------------------------------- -------------------------------- -------------------------------- --------------------------------
+`joystick v2`_               2                 --                               X                                X                                X                                --
+--------------------------- ----------------- -------------------------------- -------------------------------- -------------------------------- -------------------------------- --------------------------------
+`Xbox controller`_           model 1914        --                               --                               --                               --                               X
+--------------------------- ----------------- -------------------------------- -------------------------------- -------------------------------- -------------------------------- --------------------------------
+`keyboard`_                  RPi 400           --                               --                               --                               --                               X
+=========================== ================= ================================ ================================ ================================ ================================ ================================
 -- means not supported, X means supported
 
 MVP1
@@ -115,7 +129,7 @@ MVP2
  * `micro:bit v2`_
  * ELECFREAKS `joystick v2`_
 
-.. _nRF Connect SDK : https://www.nordicsemi.com/Products/Development-software/nRF-Connect-SDK/GetStarted
+.. _nRF Connect SDK: https://www.nordicsemi.com/Products/Development-software/nRF-Connect-SDK/GetStarted
 .. _micro:bit v2: https://microbit.org/new-microbit/
 .. _joystick v2: https://shop.elecfreaks.com/products/elecfreaks-micro-bit-joystick-bit-v2-kit
 .. _display: https://www.laskakit.cz/320x480-barevny-lcd-tft-displej-3-5-shield-arduino-uno/
@@ -137,44 +151,58 @@ MVP3
 MVP4
 ~~~~~~~~~
 
-* Goal - Add option to connect BLE gamepad (e.g. Xbox controller) and ideally BLE keyboard. This step will enable full game control (i.e. all the options).
+* Goal - Add option to connect BLE gamepad (Xbox wireless controller) and ideally BLE keyboard (built on RPi 400). This step will enable full game control (i.e. all the options).
 * Features:
  * If using BLE gamepad - TBD. 
  * If using BLE keayborad - full-fledged game control per original manual (inc. cheats). 
 * Required Hardware
  * Nordic Semiconductor `nRF5340`_ dev kit
- * 2.8" ILI9341 `SPI display`_
- * BLE gamepad/keyboard
+ * 4.3" FT810 `SPI IPS display`_
+ * `micro:bit v2`_
+ * ELECFREAKS `joystick v2`_
+
+.. _SPI IPS display: https://www.hotmcu.com/43-graphical-ips-lcd-touchscreen-800x480-spi-ft810-p-333.html
 
 MVP5
 ~~~~~~~~~
 
-* Goal - Add sound via I2S.
+* Goal - Add option to connect BLE gamepad (Xbox wireless controller) and ideally BLE keyboard (built on RPi 400). This step will enable full game control (i.e. all the options).
 * Features:
- * Game sounds.
+ * If using BLE gamepad - TBD. 
+ * If using BLE keayborad - full-fledged game control per original manual (inc. cheats). 
 * Required Hardware
  * Nordic Semiconductor `nRF5340`_ dev kit
- * 2.8" ILI9341 `SPI display`_
- * TBD
+ * 4.3" FT810 `SPI IPS display`_
+ * `xbox controller`_ 
+ * `keyboard`_ 
+
+.. _Xbox controller: https://www.xbox.com/en-US/accessories/controllers/xbox-wireless-controller
+.. _keyboard: https://www.raspberrypi.com/products/raspberry-pi-400/
 
 Getting Started
 -------------------------------------------------------
 
 HW Configuration Index
 ~~~~~~~~~
-======================= ================= 
- Item                    Version          
-======================= ================= 
-`nRF5340`_ dev kit       2.0.1            
------------------------ ----------------- 
-3,5" `display`_          N/A              
------------------------ ----------------- 
-2.8" `SPI display`_      N/A              
------------------------ ----------------- 
-`micro:bit v2`_          2.x              
------------------------ ----------------- 
-`joystick v2`_           2                
-======================= =================
+============================= ================= 
+ Item                          Version          
+============================= ================= 
+`nRF5340`_ dev kit             2.0.1            
+----------------------------- ----------------- 
+3,5" ILI9486 `display`_        N/A              
+----------------------------- ---------------- 
+2.8" ILI9341 `SPI display`_    N/A              
+----------------------------- ----------------- 
+4.3" FT810 `SPI IPS display`_  N/A
+----------------------------- ----------------- 
+`micro:bit v2`_                2.x              
+----------------------------- ----------------- 
+`joystick v2`_                 2                
+----------------------------- ----------------- 
+`Xbox controller`_             model 1914    
+----------------------------- ----------------- 
+`keyboard`_                    RPi 400  
+============================ =================
 
 
 SW Configuration Index
@@ -187,10 +215,6 @@ Windows 11 Enterprise    10.0.22631       N/A
 ----------------------- ----------------- --------------------------------
 Visual Studio Code       1.93.1           N/A
 ----------------------- ----------------- --------------------------------
-nRF Connect for Desktop  v5.0.2           N/A
------------------------ ----------------- --------------------------------
-Toolchain Manager        v1.5.2           N/A
------------------------ ----------------- --------------------------------
 nRF Connect SDK          v2.6.2           N/A
 ----------------------- ----------------- --------------------------------
 nRF Connect for VS Code  v2024.9.87       Can be downloaded using the Toolchain Manager found in nRF Connect for Desktop. Alternatively, it can be downloaded directly from inside Visual Studio Code.
@@ -201,6 +225,7 @@ Prerequisites
 
 #. Install the `Visual Studio Code`_.
 #. Install the `nRF Connect for VS Code`_.
+#. Install the `nRF Connect SDK`_.
 
 Build
 ~~~~~~~~~
@@ -210,7 +235,7 @@ Game
 * VS Code -> nRF Connect extension -> APPLICATIONS -> Add build configuration -> select board target nrf5340dk_nrf5340_cpuapp -> Build Configuration.
 Gamepad
 ^^^^^^^^^
-* VS Code -> nRF Connect extension -> Add Folder as Application -> select gamepad\microbit folder.
+* VS Code -> nRF Connect extension -> Add Folder as Application -> select gamepad\\microbit folder.
 * VS Code -> nRF Connect extension -> APPLICATIONS -> Add build configuration -> select board target bbc_microbit_v2 -> Build Configuration.
 
 Flash
@@ -245,14 +270,23 @@ Known Bugs
 ~~~~~~~~~
 N/A
 
-Improvements
+Implemented Improvements
 ~~~~~~~~~
+MVP1
+^^^^^^^^^
+* N/A
 MVP2
 ^^^^^^^^^
 * FPS increase.
 * Moved from proprietary radio com between gamepad and game to BLE com.
+MVP3
+^^^^^^^^^
+* N/A
+MVP4
+^^^^^^^^^
+* Moved to 4.3" FT810 `SPI IPS display`_ used in original `nrf-doom`_ project
 
-To be Improved
+Known Limitations
 ~~~~~~~~~
 MVP1
 ^^^^^^^^^
@@ -262,6 +296,10 @@ MVP2
 ^^^^^^^^^
 * Low FPS (~14).
 * Picture is rotated by 90 degrees. Plus, we are not using full display area.
-* Limited game control ('not enough buttons on the gamepad').
-* Need to flash qspi before flashing the application.
-
+* BLE game controller requires manual setting of offsets (hard-coded) to eliminate drift. Calibration procedure could help to address this issue.
+MVP3
+^^^^^^^^^
+* Low FPS (~5).
+MVP4
+^^^^^^^^^
+* N/A
