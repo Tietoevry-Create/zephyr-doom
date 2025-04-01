@@ -62,9 +62,9 @@ BLE game controller          Done              Transition from the original prop
 ---------------------------- ----------------- --------------------------------
 BLE HID support              In progress       Replace NUS communication with BLE HID standard to allow control via gamepad (test with Xbox wireless controller) and keyboard (test with BLE keyboard built on RPi 400)
 ---------------------------- ----------------- --------------------------------
-Game data (SD card to flash) In progress       Automatically copy game data from SD card to flash during first start (or on demand). 
+Game data (SD card to flash) In progress       Automatically copy game data from SD card to flash during first start (or on demand)
 ---------------------------- ----------------- --------------------------------
-Game save and load           Open
+Game save and load           Open              Enable save and load functionality to store/restore gameplay progress
 ---------------------------- ----------------- --------------------------------
 Pure Zephyr port             Open              Modify the code to make it compatible with any Zephyr device that meets the resource requirements by removing nrfx/ncs elements
 ---------------------------- ----------------- --------------------------------
