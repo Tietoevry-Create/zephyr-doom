@@ -302,7 +302,7 @@ MVP4
 
 * Goal - Return back to 4.3" FT810 `SPI IPS display`_ used in original `nrf-doom`_ project.
 * Features:
- * New display supporting > 30FPS
+ * Display supporting > 30FPS
  * Full screen 
 * Required Hardware
  * Nordic Semiconductor `nRF5340`_ dev kit
@@ -517,7 +517,8 @@ MVP3
 * N/A
 MVP4
 ^^^^^^^^^
-* Moved to 4.3" FT810 `SPI IPS display`_ used in original `nrf-doom`_ project
+* Moved to 4.3" FT810 `SPI IPS display`_ used in original `nrf-doom`_ project.
+* FPS > 30
 
 Known Limitations
 ~~~~~~~~~
