@@ -15,12 +15,12 @@
 #include <zephyr/fs/fs.h>
 #include <zephyr/kernel.h>
 #include <zephyr/logging/log.h>
-#include <zephyr/sd/sd.h>
+// #include <zephyr/sd/sd.h>
 #include <zephyr/storage/disk_access.h>
 
-#include "deh_str.h"
-
 LOG_MODULE_REGISTER(doom_main, CONFIG_DOOM_MAIN_LOG_LEVEL);
+
+#include "bluetooth_control_xbox.h"
 
 /* 1000 msec = 1 sec */
 #define SLEEP_TIME_MS 1000
@@ -36,18 +36,17 @@ static const struct gpio_dt_spec led = GPIO_DT_SPEC_GET(LED0_NODE, gpios);
 #define GPIO0 ((NRF_GPIO_Type*)0x50842500UL)
 #define GPIO1 ((NRF_GPIO_Type*)0x50842800UL)
 
-void clock_initialization() {
-    nrfx_clock_hfclk_start();
-    nrf_clock_hfclk_div_set(NRF_CLOCK_S, NRF_CLOCK_HFCLK_DIV_1);
-    nrfx_clock_divider_set(NRF_CLOCK_DOMAIN_HFCLK192M, NRF_CLOCK_HFCLK_DIV_1);
-    // nrfx_clock_divider_set(NRF_CLOCK_DOMAIN_HFCLK, NRF_CLOCK_HFCLK_DIV_1);
-}
-
 #define SD_ROOT_PATH "/SD:/"
 /* Maximum length for path support by Windows file system */
 #define PATH_MAX_LEN 260
 #define K_SEM_OPER_TIMEOUT_MS 500
 K_SEM_DEFINE(m_sem_sd_oper_ongoing, 1, 1);
+
+void clock_initialization() {
+    nrfx_clock_hfclk_start();
+    nrf_clock_hfclk_div_set(NRF_CLOCK_S, NRF_CLOCK_HFCLK_DIV_1);
+    nrfx_clock_divider_set(NRF_CLOCK_DOMAIN_HFCLK192M, NRF_CLOCK_HFCLK_DIV_1);
+}
 
 static const char* sd_root_path = "/SD:";
 static bool sd_init_success;
@@ -193,52 +192,21 @@ int sd_card_list_files(char const* const path, char* buf, size_t* buf_size) {
     return 0;
 }
 
-// void boot_net()
-// {
-//     printf("Booting NetMCU\n");
 
-//     // Network owns 30/31 (LED3/4)
-//     nrf_gpio_pin_mcu_select(LED_PIN_3, NRF_GPIO_PIN_MCUSEL_NETWORK);
-//     nrf_gpio_pin_mcu_select(LED_PIN_4, NRF_GPIO_PIN_MCUSEL_NETWORK);
-
-//     // Hand over UART GPIOs to NetMcu
-//     nrf_gpio_pin_mcu_select(LED_PIN_3, NRF_GPIO_PIN_MCUSEL_NETWORK);
-//     nrf_gpio_pin_mcu_select(LED_PIN_4, NRF_GPIO_PIN_MCUSEL_NETWORK);
-
-//     // Set NetMcu as secure
-//     NRF_SPU_S->EXTDOMAIN[0].PERM = 2 | (1<<4);
-
-//     // Wake up NetMcu
-//     NRF_RESET_S->NETWORK.FORCEOFF = 0;
-// }
-
-#include "bluetooth_control_xbox.h"
 
 int main(void) {
     LOG_INF("BOARD STARTING %s", CONFIG_BOARD);
-    // setup_lcd_pins_old();
-    // setup_lcd_pins_new();
 
     cpu_load_init();
 
     clock_initialization();
-
-    // N_uart_init();
-
-    printf("\n\n");
-    printf("----------------------------------\n");
-    printf("UART Initialized\n");
-    printf("---------------------------------\n");
 
     uint32_t hfclkctrl = NRF_CLOCK_S->HFCLKCTRL;
     printf("HFCLK_S: %d\n", hfclkctrl);
 
     NRF_CACHE_S->ENABLE = 1;
 
-    // boot_net();
-
-    // sd_card_init(); // TODO: Get this working (all references to N_fs have
-    // been commented out in w_wad and m_misc) N_qspi_init();
+    // sd_card_init(); // TODO: Get this working (all references to N_fs have been commented out in w_wad and m_misc) N_qspi_init();
 
     // if (!no_sdcard) {
     //     N_fs_init();
@@ -253,19 +221,6 @@ int main(void) {
     M_ArgvInit();
 
     bluetooth_main_xbox();
-    // int i = 0;
-	// while(1) {
-    //     k_msleep(1000);
-	// 	if (i % 10000000 == 0) {
-	// 		printk("i = %d\n", i);
-	// 	}
-	// 	i++;
-	// 	if (i == 1000000) {
-	// 		i = 0;
-	// 	}
-	// }
-
-    // bluetooth_init();
 
     D_DoomMain();
 

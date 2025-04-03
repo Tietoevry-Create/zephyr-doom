@@ -19,8 +19,7 @@
 
 // NRFD-EXCLUDE: #include "icon.c"
 
-#include <string.h>
-#include <hal/nrf_gpio.h>
+#include <string.h> 
 
 #include "doom_config.h"
 #include "d_loop.h"
@@ -42,14 +41,9 @@
 
 #include "n_buttons.h"
 #include "n_display.h"
-#include "n_uart.h"
 #include "n_rjoy.h"
 
 #include "FT810.h"
-
-#define GPIO0 ((NRF_GPIO_Type*) 0x50842500UL)
-#define GPIO1 ((NRF_GPIO_Type*) 0x50842800UL)
-
 
 static uint32_t pixel_format;
 
@@ -148,7 +142,7 @@ const boolean screensaver_mode = false;
 
 const boolean screenvisible = true;
 
-// If true, we display dots at the bottom of the screen to
+// If true, we display dots at the bottom of the screen to 
 // indicate FPS.
 
 const boolean display_fps_dots = false;
@@ -168,280 +162,13 @@ unsigned int joywait = 0;
 void PrintVBuffer(void)
 {
     // pixel_t *vb = I_VideoBuffer;
-    // printf("%.2X %.2X %.2X %2X %.2X %.2X %.2X %2X\n",
+    // printf("%.2X %.2X %.2X %2X %.2X %.2X %.2X %2X\n", 
     //     vb[0], vb[1], vb[2], vb[3],
-    //     vb[4], vb[5], vb[6], vb[7]);
-    // printf("%.2X %.2X %.2X %2X %.2X %.2X %.2X %2X\n",
+    //     vb[4], vb[5], vb[6], vb[7]); 
+    // printf("%.2X %.2X %.2X %2X %.2X %.2X %.2X %2X\n", 
     //     vb[1*SCREENWIDTH+0], vb[1*SCREENWIDTH+1], vb[1*SCREENWIDTH+2], vb[1*SCREENWIDTH+3],
-    //     vb[1*SCREENWIDTH+4], vb[1*SCREENWIDTH+5], vb[1*SCREENWIDTH+6], vb[1*SCREENWIDTH+7]);
+    //     vb[1*SCREENWIDTH+4], vb[1*SCREENWIDTH+5], vb[1*SCREENWIDTH+6], vb[1*SCREENWIDTH+7]); 
 }
-
-/**
- * Write byte on pins and inform LCD - write data to LCD
- *
- * @param byte data to send
- * @param data_pin true if sending data, false if sending command
- *
- * @return  void
- */
-void write_byte(uint8_t byte, bool data_pin)
-{
-    // Check wheter we are sending data or command - flip pin 6 on GPIO0 accordingly
-    if (data_pin) {
-        NRF_P0_S->OUT = (NRF_P0_S->OUT & ~(1 << 6)) | (data_pin << 6);
-    } else {
-        NRF_P0_S->OUT = (NRF_P0_S->OUT & ~(1 << 6));
-    }
-
-
-    // Prepare byte - we have to swap bit 1,2 with 7,8, because the LCD board has it flipped
-    uint16_t aligned_byte = byte;
-    aligned_byte |= ((aligned_byte & 3) << 8);
-    aligned_byte >>= 2;
-    // Push byte onto PINs via register directly (starting with bit 4 - pin 4 on GPIO1)
-    NRF_P1_S->OUT = (NRF_P1_S->OUT & ~(0xFF << 4)) | (aligned_byte << 4);
-
-    // Inform LCD that it can read it pin values - flip pin 5 on GPIO0 LOW then HIGH
-    // LCD controller reads on rising edge
-    NRF_P0_S->OUT = (NRF_P0_S->OUT & ~(1 << 5));
-    NRF_P0_S->OUT = (NRF_P0_S->OUT & ~(1 << 5)) | (1 << 5);
-}
-
-/**
- * Initialization function stolen from Arduino driver, no idea what it does.
- *
- * @return  void
- */
-void init_lcd(void)
-{
-    //TODO: Find out why exactly we doing each step (commands) from datasheet
-    //gpio_pin_set_raw(gpio_dev0, 25, 1);
-    NRF_P0_S->OUT = (NRF_P0_S->OUT & ~(1 << 25)) | (1 << 25);
-    I_Sleep(5);
-    //gpio_pin_set_raw(gpio_dev0, 25, 0);
-    NRF_P0_S->OUT = (NRF_P0_S->OUT & ~(1 << 25));
-    I_Sleep(15);
-    //gpio_pin_set_raw(gpio_dev0, 25, 1);
-    NRF_P0_S->OUT = (NRF_P0_S->OUT & ~(1 << 25)) | (1 << 25);
-    I_Sleep(15);
-
-    //gpio_pin_set_raw(gpio_dev0, 7, 1);
-    NRF_P0_S->OUT = (NRF_P0_S->OUT & ~(1 << 7)) | (1 << 7);
-    //gpio_pin_set_raw(gpio_dev0, 5, 1);
-    NRF_P0_S->OUT = (NRF_P0_S->OUT & ~(1 << 5)) | (1 << 5);
-    //gpio_pin_set_raw(gpio_dev0, 7, 0); // CS
-    NRF_P0_S->OUT = (NRF_P0_S->OUT & ~(1 << 7));
-
-    write_byte(0xF9, false);
-    write_byte(0x00, true);
-    write_byte(0x08, true);
-    write_byte(0xC0, false);
-    write_byte(0x19, true);
-    write_byte(0x1A, true);
-    write_byte(0xC1, false);
-    write_byte(0x45, true);
-    write_byte(0X00, true);
-    write_byte(0xC2, false);
-    write_byte(0x33, true);
-    write_byte(0xC5, false);
-    write_byte(0x00, true);
-    write_byte(0x28, true);
-    write_byte(0xB1, false);
-    write_byte(0x90, true);
-    write_byte(0x11, true);
-    write_byte(0xB4, false);
-    write_byte(0x02, true);
-    write_byte(0xB6, false);
-    write_byte(0x00, true);
-    write_byte(0x42, true);
-    write_byte(0x3B, true);
-    write_byte(0xB7, false);
-    write_byte(0x07, true);
-    write_byte(0xE0, false);
-    write_byte(0x1F, true);
-    write_byte(0x25, true);
-    write_byte(0x22, true);
-    write_byte(0x0B, true);
-    write_byte(0x06, true);
-    write_byte(0x0A, true);
-    write_byte(0x4E, true);
-    write_byte(0xC6, true);
-    write_byte(0x39, true);
-    write_byte(0x00, true);
-    write_byte(0x00, true);
-    write_byte(0x00, true);
-    write_byte(0x00, true);
-    write_byte(0x00, true);
-    write_byte(0x00, true);
-    write_byte(0xE1, false);
-    write_byte(0x1F, true);
-    write_byte(0x3F, true);
-    write_byte(0x3F, true);
-    write_byte(0x0F, true);
-    write_byte(0x1F, true);
-    write_byte(0x0F, true);
-    write_byte(0x46, true);
-    write_byte(0x49, true);
-    write_byte(0x31, true);
-    write_byte(0x05, true);
-    write_byte(0x09, true);
-    write_byte(0x03, true);
-    write_byte(0x1C, true);
-    write_byte(0x1A, true);
-    write_byte(0x00, true);
-    write_byte(0xF1, false);
-    write_byte(0x36, true);
-    write_byte(0x04, true);
-    write_byte(0x00, true);
-    write_byte(0x3C, true);
-    write_byte(0x0F, true);
-    write_byte(0x0F, true);
-    write_byte(0xA4, true);
-    write_byte(0x02, true);
-    write_byte(0xF2, false);
-    write_byte(0x18, true);
-    write_byte(0xA3, true);
-    write_byte(0x12, true);
-    write_byte(0x02, true);
-    write_byte(0x32, true);
-    write_byte(0x12, true);
-    write_byte(0xFF, true);
-    write_byte(0x32, true);
-    write_byte(0x00, true);
-    write_byte(0xF4, false);
-    write_byte(0x40, true);
-    write_byte(0x00, true);
-    write_byte(0x08, true);
-    write_byte(0x91, true);
-    write_byte(0x04, true);
-    write_byte(0xF8, false);
-    write_byte(0x21, true);
-    write_byte(0x04, true);
-    write_byte(0x36, false);
-    write_byte(0x48, true);
-    write_byte(0x3A, false);
-    write_byte(0x55, true);
-
-    write_byte(0x11, false); // Exit Sleep
-    I_Sleep(120);
-    write_byte(0x29, false); // Display on
-    printf("GPIO Display initialized\n");
-}
-
-
-/**
- * Address_set function stolen from Arduino driver that
- * sets starting and ending position for future image data
- *
- * @param   x1  Starting position X
- * @param   y1  Starting position Y
- * @param   x2  Ending position X
- * @param   y2  Ending position Y
- *
- * @return  void
- */
-void Address_set(unsigned int x1, unsigned int y1, unsigned int x2, unsigned int y2)
-{
-    // Todo: figure out exactly what's happening in here
-    write_byte(0x2a, false);
-    write_byte(x1 >> 8, true);
-    write_byte(x1, true);
-    write_byte(x2 >> 8, true);
-    write_byte(x2, true);
-    write_byte(0x2b, false);
-    write_byte(y1 >> 8, true);
-    write_byte(y1, true);
-    write_byte(y2 >> 8, true);
-    write_byte(y2, true);
-    write_byte(0x2c, false);
-}
-
-
-/**
- * Fill provided framebuffer with provided color in RGB16 (5-6-5) format
- *
- * @param   fb      Framebuffer array
- * @param   color   Color in RGB16 (5-6-5) format
- *
- * @return  void
- */
-void framebuffer_fill(uint16_t fb[], uint16_t color) {
-    for (int i = 0; i < 320*201; i++) {
-        fb[i] = color;
-    }
-}
-
-#include "ili_screen_controller.h"
-#include "ili_display.h"
-
-#include <zephyr/device.h>
-
-const struct device *screen;
-
-void framebuffer_send(const uint8_t fb[], int len) {
-   	struct display_buffer_descriptor desc;
-
-	desc.buf_size = 320 * 200;
-	desc.width = 320;
-	desc.height = 200;
-	desc.pitch = 320;
-
-    int err = screen_write_8bit(screen, 0, 0, &desc, fb, display_pal);
-}
-
-/**
- * Send provided framebuffer into LCD.
- * This function allows to skip repeated write_byte invokation for every pixel twice and can
- * save some time.
- *
- * @param   fb      Framebuffer array
- *
- * @return  void
- */
-// void framebuffer_send(uint8_t fb[], int len) {
-//     Address_set(0, 0, 320, 199);
-//     write_byte(0x02c, false); //write_memory_start
-//     // digitalWrite(LCD_RS,HIGH);
-//     NRF_P0_S->OUT = (NRF_P0_S->OUT & ~(1 << 6)) | (1 << 6); // CS pin 6
-//     NRF_P0_S->OUT = (NRF_P0_S->OUT & ~(1 << 7));
-
-//     NRF_P0_S->OUT = (NRF_P0_S->OUT | (1 << 6));
-
-//     for (int j = 199; j >= 0; j--) {
-//         for (int k= 0; k < 320; k++) {
-//             int i = k + j * 320;
-//             // This generates too much tint and lowers contrast significantly
-//             /*uint16_t cur = ((display_pal[fb[i]*4+0]>>3)&0x1f) << 11 |
-//                             ((display_pal[fb[i]*4+1]>>3)&0x3f)<<5 |
-//                             ((display_pal[fb[i]*4+2]>>3)&0x1f);*/
-//             /*uint16_t cur = (display_pal[fb[i]*4+0]>>4)<<11 |
-//                             (display_pal[fb[i]*4+1]>>3)<<5 |
-//                             (display_pal[fb[i]*4+2]>>4);*/
-
-//             // Best RGB888 -> RGB565 conversion
-//             uint16_t cur = ((display_pal[fb[i]*4+0] * 249 + 1024) >> 11) << 11 |
-//                             ((display_pal[fb[i]*4+1] * 253 + 512) >> 10) <<5 |
-//                             ((display_pal[fb[i]*4+2] * 249 + 1024) >> 11);
-
-//             uint16_t aligned_byte = (uint8_t) (cur >> 8);
-//             aligned_byte |= ((aligned_byte & 3) << 8);
-//             aligned_byte >>= 2;
-
-//             NRF_P1_S->OUT = (NRF_P1_S->OUT & ~(0xFF << 4)) | (aligned_byte << 4);
-//             NRF_P0_S->OUT = (NRF_P0_S->OUT & ~(1 << 5));
-//             NRF_P0_S->OUT = (NRF_P0_S->OUT & ~(1 << 5)) | (1 << 5);
-
-//             aligned_byte = (uint8_t) cur;
-//             aligned_byte |= ((aligned_byte & 3) << 8);
-//             aligned_byte >>= 2;
-//             NRF_P1_S->OUT = (NRF_P1_S->OUT & ~(0xFF << 4)) | (aligned_byte << 4);
-
-//             NRF_P0_S->OUT = (NRF_P0_S->OUT & ~(1 << 5));
-//             NRF_P0_S->OUT = (NRF_P0_S->OUT & ~(1 << 5)) | (1 << 5);
-//         }
-//     }
-//     NRF_P0_S->OUT = (NRF_P0_S->OUT & ~(1 << 7)) | (1 << 7); // CS pin 7
-// }
 
 
 // Set the variable controlling FPS dots.
@@ -478,14 +205,13 @@ static void I_ToggleFullScreen(void)
 void I_GenerateEvents(void)
 {
     N_ReadButtons();
-    // N_ReadUart(); // TODO: why
 
-    //printf("%d %d\n", joywait, I_GetTime());
+    // printf("%d %d\n", joywait, I_GetTime());
     if (joywait < I_GetTime())
     {
         joywait = 0;
         N_rjoy_read();
-        //I_UpdateJoystick();
+        // I_UpdateJoystick();
     }
 
     /* NRFD-TODO: mouse?
@@ -521,7 +247,7 @@ void I_UpdateNoBlit (void)
 
 void I_WriteDisplayList(uint32_t pal_loc, uint32_t display_loc)
 {
-    /*dl_start();
+    dl_start();
 
     dl(FT810_CLEAR_COLOR_RGB(0x00, 0x00, 0x00));
     dl(FT810_CLEAR(1,1,1));  // Clear color, stencil, tag
@@ -568,7 +294,7 @@ void I_WriteDisplayList(uint32_t pal_loc, uint32_t display_loc)
 
     dl_end();
 
-    N_display_dlswap_frame();*/
+    N_display_dlswap_frame();
 }
 
 //
@@ -580,9 +306,7 @@ void I_FinishUpdate (void)
     int tics;
     int i;
 
-    framebuffer_send((uint8_t*)I_VideoBuffer, SCREENWIDTH*SCREENHEIGHT);
-
-    /*// draws little dots on the bottom of the screen
+    // draws little dots on the bottom of the screen
     if (display_fps_dots)
     {
         i = I_GetTime();
@@ -612,7 +336,7 @@ void I_FinishUpdate (void)
     N_display_spi_transfer_finish();
 
     // Start frame buffer transfer
-    N_display_spi_wr(display_vbuffer_locs[current_dl], SCREENWIDTH*SCREENHEIGHT, (uint8_t*)I_VideoBuffer);*/
+    N_display_spi_wr(display_vbuffer_locs[current_dl], SCREENWIDTH*SCREENHEIGHT, (uint8_t*)I_VideoBuffer);
 
     // Restore background and undo the disk indicator, if it was drawn.
     // NRFD-TODO: V_RestoreDiskBackground();
@@ -688,7 +412,7 @@ int I_GetPaletteIndex(int r, int g, int b)
 
     */
 
-//
+// 
 // Set the window title
 //
 
@@ -713,7 +437,7 @@ void I_GraphicsCheckCommandLine(void)
     // noblit = M_CheckParm ("-noblit");
 
     // //!
-    // // @category video
+    // // @category video 
     // //
     // // Don't grab the mouse when running in windowed mode.
     // //
@@ -721,7 +445,7 @@ void I_GraphicsCheckCommandLine(void)
     // nograbmouse_override = M_ParmExists("-nograbmouse");
 
     //!
-    // @category video
+    // @category video 
     //
     // Disable the mouse.
     //
@@ -734,44 +458,18 @@ void I_GraphicsCheckCommandLine(void)
 void I_InitGraphics(void)
 {
     printf("I_InitGraphics\n");
-
-    // init_lcd();
-
-    int err;
-
-	struct display_capabilities cap;
-
-	/* STEP 12 - Obtain the screen node from device tree */
-	screen = DEVICE_DT_GET(DT_NODELABEL(ili9340));
-	if (!device_is_ready(screen)) {
-		printk("Device %s not found; Aborting", screen->name);
-		return 0;
-	}
-
-	/* Setting orientation 1 (W=320 H=240) */
-	err = display_set_orientation(screen, 1);
-	if (err < 0) {
-		printk("Error %d",err);
-		return 0;
-	}
-
-	/* Setting pixel format 1 (16 bit) */
-	err = display_set_pixel_format(screen, PANEL_PIXEL_FORMAT_RGB_565);
-	if (err < 0) {
-		printk("Error %d",err);
-		return 0;
-	}
-
-	/* Obtain and display screen capabilities */
-	display_get_capabilities(screen, &cap);
-
-	printk("Display Sample on %s: Orientation=%d,  Pixel-format=%d,   X-res=%d,   Y-res=%d", \
-							screen->name, cap.current_orientation, cap.current_pixel_format,  \
-							cap.x_resolution, cap.y_resolution);
-
-    display_blanking_off(screen);
+    N_display_init();
+    display_palette_locs[0] = N_display_ram_alloc(DISPLAY_PALETTE_SIZE);
+    display_palette_locs[1] = N_display_ram_alloc(DISPLAY_PALETTE_SIZE);
+    display_palette_locs[2] = N_display_ram_alloc(DISPLAY_PALETTE_SIZE);
+    display_vbuffer_locs[0] = N_display_ram_alloc(SCREENWIDTH*SCREENHEIGHT);
+    display_vbuffer_locs[1] = N_display_ram_alloc(SCREENWIDTH*SCREENHEIGHT);
+    display_vbuffer_locs[2] = N_display_ram_alloc(SCREENWIDTH*SCREENHEIGHT);
 
     current_dl = 1;
+
+    // I_WriteDisplayList(display_palette_locs[0], display_vbuffer_locs[0]);
+    // I_WriteDisplayList(display_palette_locs[1], display_vbuffer_locs[1]);
 
     I_VideoBuffer = I_VideoBuffers[1];
     I_VideoBackBuffer = I_VideoBuffers[0];
@@ -819,7 +517,7 @@ void I_ClearVideoBuffer(void)
     }
     V_RestoreBuffer();
 
-    /*for (int i=0; i<SCREENHEIGHT*SCREENWIDTH; i++) {
-        I_VideoBuffer[i] = 251; // pink
-    }*/
+    // for (int i=0; i<SCREENHEIGHT*SCREENWIDTH; i++) {
+    //     I_VideoBuffer[i] = 251; // pink
+    // }
 }

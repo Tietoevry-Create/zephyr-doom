@@ -2,7 +2,6 @@
 #include <stdio.h>
 #include <stdint.h>
 
-#include "n_uart.h"
 
 //  Retargeting (for printf etc)
 // ------------------------------------
@@ -19,7 +18,6 @@ int __getchar(__printf_tag_ptr p_file)
 int __putchar(int ch, __printf_tag_ptr p_file)
 {
     // UNUSED_PARAMETER(p_file);
-    N_uart_putc(ch);
     return ch;
 }
 #else
@@ -33,7 +31,6 @@ int __getchar(FILE * p_file)
 int __putchar(int ch, FILE * p_file)
 {
     // UNUSED_PARAMETER(p_file);
-    N_uart_putc(ch);
     return ch;
 }
 #endif
@@ -45,7 +42,6 @@ int _write(int file, const char * p_char, int len)
     // UNUSED_PARAMETER(file);
     for (i = 0; i < len; i++)
     {
-        N_uart_putc(*p_char++);
     }
     return len;
 }
