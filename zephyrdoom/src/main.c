@@ -43,6 +43,8 @@ void clock_initialization() {
     // nrfx_clock_divider_set(NRF_CLOCK_DOMAIN_HFCLK, NRF_CLOCK_HFCLK_DIV_1);
 }
 
+int no_sdcard = 1;
+
 #define SD_ROOT_PATH "/SD:/"
 /* Maximum length for path support by Windows file system */
 #define PATH_MAX_LEN 260
@@ -214,6 +216,73 @@ int sd_card_list_files(char const* const path, char* buf, size_t* buf_size) {
 
 #include "bluetooth_control.h"
 
+#include <ff.h>
+#include <zephyr/kernel.h>
+#include <zephyr/device.h>
+#include <zephyr/storage/disk_access.h>
+#include <zephyr/logging/log.h>
+#include <zephyr/fs/fs.h>
+
+static int lsdir(const char *path)
+{
+	int res;
+	struct fs_dir_t dirp;
+	static struct fs_dirent entry;
+	int count = 0;
+
+	fs_dir_t_init(&dirp);
+
+	/* Verify fs_opendir() */
+	res = fs_opendir(&dirp, path);
+	if (res) {
+		printk("Error opening dir %s [%d]\n", path, res);
+		return res;
+	}
+
+	printk("\nListing dir %s ...\n", path);
+	for (;;) {
+		/* Verify fs_readdir() */
+		res = fs_readdir(&dirp, &entry);
+
+		/* entry.name[0] == 0 means end-of-dir */
+		if (res || entry.name[0] == 0) {
+			break;
+		}
+
+		if (entry.type == FS_DIR_ENTRY_DIR) {
+			printk("[DIR ] %s\n", entry.name);
+		} else {
+			printk("[FILE] %s (size = %zu)\n",
+				entry.name, entry.size);
+		}
+		count++;
+	}
+
+	/* Verify fs_closedir() */
+	fs_closedir(&dirp);
+	if (res == 0) {
+		res = count;
+	}
+
+	return res;
+}
+
+
+/*
+ *  Note the fatfs library is able to mount only strings inside _VOLUME_STRS
+ *  in ffconf.h
+ */
+#define DISK_DRIVE_NAME "SD"
+#define DISK_MOUNT_PT "/"DISK_DRIVE_NAME":"
+
+static FATFS fat_fs;
+/* mounting info */
+static struct fs_mount_t mp = {
+	.type = FS_FATFS,
+	.fs_data = &fat_fs,
+};
+static const char *disk_mount_pt = DISK_MOUNT_PT;
+
 int main(void) {
     LOG_INF("BOARD STARTING %s", CONFIG_BOARD);
     // setup_lcd_pins_old();
@@ -235,9 +304,26 @@ int main(void) {
 
     NRF_CACHE_S->ENABLE = 1;
 
-    // boot_net();
-
     // sd_card_init(); // TODO: Get this working (all references to N_fs have been commented out in w_wad and m_misc) N_qspi_init();
+    mp.mnt_point = disk_mount_pt;
+
+	int res = fs_mount(&mp);
+
+	if (res == FR_OK) {
+		printk("Disk mounted.\n");
+        // no_sdcard = 0;
+		if (lsdir(disk_mount_pt) == 0) {
+		}
+	} else {
+		printk("Error mounting disk.\n");
+	}
+
+	// fs_unmount(&mp);
+    
+    // while (1) {
+	// 	k_sleep(K_MSEC(1000));
+	// }
+
 
     // if (!no_sdcard) {
     //     N_fs_init();

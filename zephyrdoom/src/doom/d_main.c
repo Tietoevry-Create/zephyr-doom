@@ -74,8 +74,8 @@
 
 #include <zephyr/kernel.h>
 
-// extern int no_sdcard;  // NRFD-NOTE: from main.c
-int no_sdcard = 1;
+extern int no_sdcard;  // NRFD-NOTE: from main.c
+// int no_sdcard = 1;
 
 //
 // D-DoomLoop()
@@ -1358,6 +1358,7 @@ void D_DoomMain(void) {
     } else {
         iwadfile = D_FindIWAD(IWAD_MASK_DOOM, &gamemission);
     }
+    // iwadfile = "doom.wad";
 
     // None found?
 
