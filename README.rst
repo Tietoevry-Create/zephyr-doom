@@ -454,11 +454,11 @@ SW Configuration Index
 ======================= ================= ================================
 Windows 11 Enterprise    10.0.22631       N/A     
 ----------------------- ----------------- --------------------------------
-Visual Studio Code       1.93.1           N/A
+Visual Studio Code       1.98.2           N/A
 ----------------------- ----------------- --------------------------------
 nRF Connect SDK          v2.6.2           N/A
 ----------------------- ----------------- --------------------------------
-nRF Connect for VS Code  v2024.9.87       Can be downloaded using the Toolchain Manager found in nRF Connect for Desktop. Alternatively, it can be downloaded directly from inside Visual Studio Code.
+nRF Connect for VS Code  2025.1.127       Can be downloaded using the Toolchain Manager found in nRF Connect for Desktop. Alternatively, it can be downloaded directly from inside Visual Studio Code.
 ======================= ================= ================================
 
 Prerequisites
