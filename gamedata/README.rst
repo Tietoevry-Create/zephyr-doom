@@ -4,7 +4,10 @@ Zephyr Doom - Game Data
 
 Version Notice
 ====================
-This README is valid for the code from commit 4e4f9a4 (MVP1) and requires the Arduino 3.5" TFT LCD Shield.
+This README is valid for the code from MVP1 (commit `4e4f9a4`_) and requires the 3,5" ILI9486 Arduino `display`_ shield.
+
+.. _4e4f9a4: https://github.com/Tietoevry-Create/zephyr-doom/commit/2d67542479c1c68f5c80fa8096c246c1313c7bf0
+.. _display: https://www.laskakit.cz/320x480-barevny-lcd-tft-displej-3-5-shield-arduino-uno/
 
 Shield Pin Mapping
 ====================
