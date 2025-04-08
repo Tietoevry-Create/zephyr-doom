@@ -479,7 +479,7 @@ void D_DoomLoop(void) {
 
         S_UpdateSounds(players[consoleplayer].mo);  // move positional sounds
 
-        printk("FPS: %d\n", frame_time_fps);
+        // printk("FPS: %d\n", frame_time_fps);
 
         // Update display, next frame, with current state.
         if (screenvisible) D_Display();
