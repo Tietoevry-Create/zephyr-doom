@@ -29,13 +29,8 @@ Doom 2                  Not Tested
 .. _Visual Studio Code: https://code.visualstudio.com/download
 .. _nRF Connect for VS Code: https://www.nordicsemi.com/Products/Development-tools/nRF-Connect-for-VS-Code/Download#infotabs
 
-Table of Contents
--------------------------------------------------------
-
-- `Status`_
-- `MVPs`_
-- `Getting Started`_
-- `Software`_
+.. contents:: Table of Contents
+    :depth: 2
 
 Status
 -------------------------------------------------------
@@ -85,8 +80,47 @@ Multiplayer                  Open
 Music                        Open
 ============================ ================= ================================
 
-MVPs
+Getting Started
 -------------------------------------------------------
+
+HW Configuration Index
+~~~~~~~~~
+
+============================= ================= ================================
+ Item                          Version            Comment
+============================= ================= ================================
+`nRF5340`_ dev kit             2.0.1            N/A
+----------------------------- ----------------- --------------------------------
+3,5" ILI9486 `display`_        N/A              N/A
+----------------------------- ----------------- --------------------------------
+2.8" ILI9341 `SPI display`_    N/A              N/A
+----------------------------- ----------------- -------------------------------- 
+4.3" FT810 `SPI IPS display`_  N/A              N/A
+----------------------------- ----------------- --------------------------------
+`micro:bit v2`_                2.x              N/A
+----------------------------- ----------------- --------------------------------
+`joystick v2`_                 2                N/A
+----------------------------- ----------------- --------------------------------
+`Xbox controller`_             model 1914       N/A
+----------------------------- ----------------- --------------------------------
+`keyboard`_                    RPi 400          N/A   
+============================= ================= ================================
+
+
+SW Configuration Index
+~~~~~~~~~
+
+======================= ================= ================================
+ Item                    Version            Comment
+======================= ================= ================================
+Windows 11 Enterprise    10.0.22631       N/A     
+----------------------- ----------------- --------------------------------
+Visual Studio Code       1.98.2           N/A
+----------------------- ----------------- --------------------------------
+nRF Connect SDK          v2.6.2           N/A
+----------------------- ----------------- --------------------------------
+nRF Connect for VS Code  2025.1.127       Can be downloaded using the Toolchain Manager found in nRF Connect for Desktop. Alternatively, it can be downloaded directly from inside Visual Studio Code.
+======================= ================= ================================
 
 Compatibility Matrix
 ~~~~~~~~~
@@ -111,6 +145,48 @@ Compatibility Matrix
 `keyboard`_                  RPi 400           --                               --                               --                               --                               X
 =========================== ================= ================================ ================================ ================================ ================================ ================================
 -- means not supported, X means supported
+
+Prerequisites
+~~~~~~~~~
+
+#. Install the `Visual Studio Code`_.
+#. Install the `nRF Connect for VS Code`_.
+#. Install the `nRF Connect SDK`_.
+
+Build
+~~~~~~~~~
+Game
+^^^^^^^^^
+* VS Code -> nRF Connect extension -> Add Folder as Application -> select zephyrdoom folder.
+* VS Code -> nRF Connect extension -> APPLICATIONS -> Add build configuration -> select board target nrf5340dk_nrf5340_cpuapp -> Build Configuration.
+Gamepad
+^^^^^^^^^
+* VS Code -> nRF Connect extension -> Add Folder as Application -> select gamepad\\microbit folder.
+* VS Code -> nRF Connect extension -> APPLICATIONS -> Add build configuration -> select board target bbc_microbit_v2 -> Build Configuration.
+
+Flash
+~~~~~~~~~
+Game
+^^^^^^^^^
+#. Connect Nordic Semiconductor `nRF5340`_ dev kit.
+#. Flash data (contains WAD file) to external flash::
+   
+     nrfjprog --family nrf53 --qspicustominit --program qspi.hex --verify
+#. Select game app.  VS Code -> nRF Connect extension -> APPLICATIONS -> Select zephyrdoom.
+#. Flash the game. VS Code -> nRF Connect extension -> ACTIONS -> Flash.
+
+Gamepad
+^^^^^^^^^
+#. Connect `micro:bit v2`_.
+#. Select gamepad app.  VS Code -> nRF Connect extension -> APPLICATIONS -> Select microbit.
+#. Copy file gamepad/microbit/build/zephyr/zephyr.hex to micro:bit (acting as a removable usb device).
+
+Monitor
+~~~~~~~~~
+* VS Code -> nRF Connect extension -> CONNECTED DEVICES -> VCOM1 -> Connect to Serial Port.
+
+MVPs
+-------------------------------------------------------
 
 MVP1
 ~~~~~~~~~
@@ -420,87 +496,7 @@ SPI/FT810 Display       PD_N              P0.26
 .. _Xbox controller: https://www.xbox.com/en-US/accessories/controllers/xbox-wireless-controller
 .. _keyboard: https://www.raspberrypi.com/products/raspberry-pi-400/
 
-Getting Started
--------------------------------------------------------
-
-HW Configuration Index
-~~~~~~~~~
-============================= ================= 
- Item                          Version          
-============================= ================= 
-`nRF5340`_ dev kit             2.0.1            
------------------------------ ----------------- 
-3,5" ILI9486 `display`_        N/A              
------------------------------ ---------------- 
-2.8" ILI9341 `SPI display`_    N/A              
------------------------------ ----------------- 
-4.3" FT810 `SPI IPS display`_  N/A
------------------------------ ----------------- 
-`micro:bit v2`_                2.x              
------------------------------ ----------------- 
-`joystick v2`_                 2                
------------------------------ ----------------- 
-`Xbox controller`_             model 1914    
------------------------------ ----------------- 
-`keyboard`_                    RPi 400  
-============================ =================
-
-
-SW Configuration Index
-~~~~~~~~~
-
-======================= ================= ================================
- Item                    Version            Comment
-======================= ================= ================================
-Windows 11 Enterprise    10.0.22631       N/A     
------------------------ ----------------- --------------------------------
-Visual Studio Code       1.98.2           N/A
------------------------ ----------------- --------------------------------
-nRF Connect SDK          v2.6.2           N/A
------------------------ ----------------- --------------------------------
-nRF Connect for VS Code  2025.1.127       Can be downloaded using the Toolchain Manager found in nRF Connect for Desktop. Alternatively, it can be downloaded directly from inside Visual Studio Code.
-======================= ================= ================================
-
-Prerequisites
-~~~~~~~~~
-
-#. Install the `Visual Studio Code`_.
-#. Install the `nRF Connect for VS Code`_.
-#. Install the `nRF Connect SDK`_.
-
-Build
-~~~~~~~~~
-Game
-^^^^^^^^^
-* VS Code -> nRF Connect extension -> Add Folder as Application -> select zephyrdoom folder.
-* VS Code -> nRF Connect extension -> APPLICATIONS -> Add build configuration -> select board target nrf5340dk_nrf5340_cpuapp -> Build Configuration.
-Gamepad
-^^^^^^^^^
-* VS Code -> nRF Connect extension -> Add Folder as Application -> select gamepad\\microbit folder.
-* VS Code -> nRF Connect extension -> APPLICATIONS -> Add build configuration -> select board target bbc_microbit_v2 -> Build Configuration.
-
-Flash
-~~~~~~~~~
-Game
-^^^^^^^^^
-#. Connect Nordic Semiconductor `nRF5340`_ dev kit.
-#. Flash data (contains WAD file) to external flash::
-   
-     nrfjprog --family nrf53 --qspicustominit --program qspi.hex --verify
-#. Select game app.  VS Code -> nRF Connect extension -> APPLICATIONS -> Select zephyrdoom.
-#. Flash the game. VS Code -> nRF Connect extension -> ACTIONS -> Flash.
-
-Gamepad
-^^^^^^^^^
-#. Connect `micro:bit v2`_.
-#. Select gamepad app.  VS Code -> nRF Connect extension -> APPLICATIONS -> Select microbit.
-#. Copy file gamepad/microbit/build/zephyr/zephyr.hex to micro:bit (acting as a removable usb device).
-
-Monitor
-~~~~~~~~~
-* VS Code -> nRF Connect extension -> CONNECTED DEVICES -> VCOM1 -> Connect to Serial Port.
-
-Software
+Release Notes
 -------------------------------------------------------
 
 Fixed Bugs
