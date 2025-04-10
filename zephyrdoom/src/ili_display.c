@@ -8,7 +8,7 @@
 #include "ili_screen_controller.h"
 
 
-LOG_MODULE_REGISTER(Lesson5_Exercise2, LOG_LEVEL_INF);
+LOG_MODULE_REGISTER(ili_display, LOG_LEVEL_INF);
 
 #define BKGCOLOR 	0x0000U		// 16-bit RGB value for background
 #define HLINECOLOR	0xF800		// 16-bit RGB value for line-color (5-6-5 RGB)
@@ -40,10 +40,10 @@ int set_background_color(const struct device *screen, struct display_capabilitie
 	buf_desc.height = h_step;
 	buf_desc.pitch = cap.x_resolution;
 
-	/* STEP 8 - Write background values to screen (row by row) and free buffer */
 	for (int idx = 0; idx < cap.y_resolution; idx += h_step) {
 		err = screen_write(screen, 0, idx, &buf_desc, buf);
 		if (err < 0){
+			k_free(buf);
 			return err;
 		}
 	}
@@ -75,11 +75,11 @@ int draw_diagonal_line(const struct device *screen, uint8_t x, uint8_t y, uint8_
 	fill_buf_16bit(DLINECOLOR, buf, buf_size);
 
 	LOG_INF("Displaying diagonal line, starting pixel (x, y) = %2d, %2d", x, y);
-	/* STEP 9 - Display a diagonal line given a starting location (x,y) */
 	for (int i = 0; i < nump; i++)
 	{
 		err = screen_write(screen, x++, y++, &buf_desc, buf);
 		if (err < 0) {
+			k_free(buf);
 			return err;
 		}
 		display_blanking_off(screen);
@@ -115,11 +115,11 @@ int draw_lines(const struct device *screen, uint8_t x, uint8_t y, uint8_t dy, ui
 	fill_buf_16bit(HLINECOLOR, buf, buf_size);
 
 	LOG_INF("Displaying series of lines (1 line at a time), starting line (x, y) = %2d, %2d", x, y);
-	/* STEP 10 - Display multiple straight lines with screen_write() */
 	for (int i = 0; i < numl; i++)
 	{
 		err = screen_write(screen, x, y, &buf_desc, buf);
 		if (err < 0) {
+			k_free(buf);
 			return err;
 		}
 		y -= dy;
@@ -156,9 +156,9 @@ int draw_box(const struct device *screen, uint8_t x, uint8_t y, uint8_t w, uint8
 	fill_buf_16bit(BOXCOLOR, buf, buf_size);
 
 	LOG_INF("Displaying a rectangular box, top left corner (x,y) = %2d, %2d", x, y);
-	/* STEP 11 - Draw a  rectangular box, given the top left hand corner (x,y) */
 	err = screen_write(screen, x, y, &buf_desc, buf);
 	if (err < 0) {
+		k_free(buf);
 		return err;
 	}
 
@@ -204,7 +204,7 @@ int draw_pixel(const struct device *screen, uint8_t x, uint8_t y, uint32_t color
 
 	// Free the allocated memory after use
 	k_free(buf);
-	
+
 	// Turn off display blanking to ensure the pixel is visible
 	display_blanking_off(screen);
 
@@ -224,7 +224,6 @@ int ili_do_stuff(void)
 	uint8_t num_pixels = 100;
 	uint8_t num_lines = 25;
 
-	/* STEP 12 - Obtain the screen node from device tree */
 	screen = DEVICE_DT_GET(DT_NODELABEL(ili9340));
 	if (!device_is_ready(screen)) {
 		LOG_ERR("Device %s not found; Aborting", screen->name);
@@ -252,8 +251,6 @@ int ili_do_stuff(void)
 							screen->name, cap.current_orientation, cap.current_pixel_format,  \
 							cap.x_resolution, cap.y_resolution);
 
-	/* STEP 13 - Observe that we call the previously define functions one-by-one */
-	/* Set the background color */
 	err = set_background_color(screen, cap);
 	if (err < 0) {
 		LOG_ERR("Error %d",err);

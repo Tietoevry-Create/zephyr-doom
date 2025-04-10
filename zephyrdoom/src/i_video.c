@@ -16,37 +16,41 @@
 //	DOOM graphics stuff for NRF.
 //
 
-
 // NRFD-EXCLUDE: #include "icon.c"
 
-#include <string.h> 
+#include "i_video.h"
 
-#include "doom_config.h"
+#include <string.h>
+#include <zephyr/logging/log.h>
+
+#include "FT810.h"
 #include "d_loop.h"
 #include "deh_str.h"
+#include "doom_config.h"
 #include "doomtype.h"
 #include "i_input.h"
 #include "i_joystick.h"
 #include "i_system.h"
 #include "i_timer.h"
-#include "i_video.h"
 #include "m_argv.h"
 #include "m_config.h"
 #include "m_misc.h"
+#include "n_buttons.h"
+#include "n_display.h"
+#include "n_rjoy.h"
+#include "n_uart.h"
 #include "tables.h"
 #include "v_diskicon.h"
 #include "v_video.h"
 #include "w_wad.h"
 #include "z_zone.h"
 
-#include "n_buttons.h"
-#include "n_display.h"
-#include "n_rjoy.h"
+LOG_MODULE_REGISTER(i_video, LOG_LEVEL_INF);
 
-#include "FT810.h"
+#define GPIO0 ((NRF_GPIO_Type *)0x50842500UL)
+#define GPIO1 ((NRF_GPIO_Type *)0x50842800UL)
 
 static uint32_t pixel_format;
-
 
 // display has been set up?
 
@@ -121,17 +125,17 @@ const int usemouse = 1;
 
 // The screen buffer; this is modified to draw things to the screen
 
-pixel_t *I_VideoBuffer; //[320*200];
-pixel_t *I_VideoBackBuffer; //[320*200];
-pixel_t I_VideoBuffers[2][320*200];
+pixel_t *I_VideoBuffer;      //[320*200];
+pixel_t *I_VideoBackBuffer;  //[320*200];
+pixel_t I_VideoBuffers[2][320 * 200];
 
-uint8_t  display_pal[DISPLAY_PALETTE_SIZE];
+uint8_t display_pal[DISPLAY_PALETTE_SIZE];
 
 static int current_dl;
 
 // Memory references for display driver memory
-static uint32_t display_vbuffer_locs[3]; // Frame buffer
-static uint32_t display_palette_locs[3]; // Pallette
+static uint32_t display_vbuffer_locs[3];  // Frame buffer
+static uint32_t display_palette_locs[3];  // Pallette
 
 // If true, game is running as a screensaver
 
@@ -142,7 +146,7 @@ const boolean screensaver_mode = false;
 
 const boolean screenvisible = true;
 
-// If true, we display dots at the bottom of the screen to 
+// If true, we display dots at the bottom of the screen to
 // indicate FPS.
 
 const boolean display_fps_dots = false;
@@ -159,56 +163,313 @@ byte usegamma = 1;
 // Joystick/gamepad hysteresis
 unsigned int joywait = 0;
 
-void PrintVBuffer(void)
-{
+void PrintVBuffer(void) {
     // pixel_t *vb = I_VideoBuffer;
-    // printf("%.2X %.2X %.2X %2X %.2X %.2X %.2X %2X\n", 
+    // printf("%.2X %.2X %.2X %2X %.2X %.2X %.2X %2X\n",
     //     vb[0], vb[1], vb[2], vb[3],
-    //     vb[4], vb[5], vb[6], vb[7]); 
-    // printf("%.2X %.2X %.2X %2X %.2X %.2X %.2X %2X\n", 
-    //     vb[1*SCREENWIDTH+0], vb[1*SCREENWIDTH+1], vb[1*SCREENWIDTH+2], vb[1*SCREENWIDTH+3],
-    //     vb[1*SCREENWIDTH+4], vb[1*SCREENWIDTH+5], vb[1*SCREENWIDTH+6], vb[1*SCREENWIDTH+7]); 
+    //     vb[4], vb[5], vb[6], vb[7]);
+    // printf("%.2X %.2X %.2X %2X %.2X %.2X %.2X %2X\n",
+    //     vb[1*SCREENWIDTH+0], vb[1*SCREENWIDTH+1], vb[1*SCREENWIDTH+2],
+    //     vb[1*SCREENWIDTH+3], vb[1*SCREENWIDTH+4], vb[1*SCREENWIDTH+5],
+    //     vb[1*SCREENWIDTH+6], vb[1*SCREENWIDTH+7]);
 }
 
+/**
+ * Write byte on pins and inform LCD - write data to LCD
+ *
+ * @param byte data to send
+ * @param data_pin true if sending data, false if sending command
+ *
+ * @return  void
+ */
+void write_byte(uint8_t byte, bool data_pin) {
+    // Check wheter we are sending data or command - flip pin 6 on GPIO0
+    // accordingly
+    if (data_pin) {
+        NRF_P0_S->OUT = (NRF_P0_S->OUT & ~(1 << 6)) | (data_pin << 6);
+    } else {
+        NRF_P0_S->OUT = (NRF_P0_S->OUT & ~(1 << 6));
+    }
+
+    // Prepare byte - we have to swap bit 1,2 with 7,8, because the LCD board
+    // has it flipped
+    uint16_t aligned_byte = byte;
+    aligned_byte |= ((aligned_byte & 3) << 8);
+    aligned_byte >>= 2;
+    // Push byte onto PINs via register directly (starting with bit 4 - pin 4 on
+    // GPIO1)
+    NRF_P1_S->OUT = (NRF_P1_S->OUT & ~(0xFF << 4)) | (aligned_byte << 4);
+
+    // Inform LCD that it can read it pin values - flip pin 5 on GPIO0 LOW then
+    // HIGH LCD controller reads on rising edge
+    NRF_P0_S->OUT = (NRF_P0_S->OUT & ~(1 << 5));
+    NRF_P0_S->OUT = (NRF_P0_S->OUT & ~(1 << 5)) | (1 << 5);
+}
+
+/**
+ * Initialization function stolen from Arduino driver, no idea what it does.
+ *
+ * @return  void
+ */
+void init_lcd(void) {
+    // TODO: Find out why exactly we doing each step (commands) from datasheet
+    // gpio_pin_set_raw(gpio_dev0, 25, 1);
+    NRF_P0_S->OUT = (NRF_P0_S->OUT & ~(1 << 25)) | (1 << 25);
+    I_Sleep(5);
+    // gpio_pin_set_raw(gpio_dev0, 25, 0);
+    NRF_P0_S->OUT = (NRF_P0_S->OUT & ~(1 << 25));
+    I_Sleep(15);
+    // gpio_pin_set_raw(gpio_dev0, 25, 1);
+    NRF_P0_S->OUT = (NRF_P0_S->OUT & ~(1 << 25)) | (1 << 25);
+    I_Sleep(15);
+
+    // gpio_pin_set_raw(gpio_dev0, 7, 1);
+    NRF_P0_S->OUT = (NRF_P0_S->OUT & ~(1 << 7)) | (1 << 7);
+    // gpio_pin_set_raw(gpio_dev0, 5, 1);
+    NRF_P0_S->OUT = (NRF_P0_S->OUT & ~(1 << 5)) | (1 << 5);
+    // gpio_pin_set_raw(gpio_dev0, 7, 0); // CS
+    NRF_P0_S->OUT = (NRF_P0_S->OUT & ~(1 << 7));
+
+    write_byte(0xF9, false);
+    write_byte(0x00, true);
+    write_byte(0x08, true);
+    write_byte(0xC0, false);
+    write_byte(0x19, true);
+    write_byte(0x1A, true);
+    write_byte(0xC1, false);
+    write_byte(0x45, true);
+    write_byte(0X00, true);
+    write_byte(0xC2, false);
+    write_byte(0x33, true);
+    write_byte(0xC5, false);
+    write_byte(0x00, true);
+    write_byte(0x28, true);
+    write_byte(0xB1, false);
+    write_byte(0x90, true);
+    write_byte(0x11, true);
+    write_byte(0xB4, false);
+    write_byte(0x02, true);
+    write_byte(0xB6, false);
+    write_byte(0x00, true);
+    write_byte(0x42, true);
+    write_byte(0x3B, true);
+    write_byte(0xB7, false);
+    write_byte(0x07, true);
+    write_byte(0xE0, false);
+    write_byte(0x1F, true);
+    write_byte(0x25, true);
+    write_byte(0x22, true);
+    write_byte(0x0B, true);
+    write_byte(0x06, true);
+    write_byte(0x0A, true);
+    write_byte(0x4E, true);
+    write_byte(0xC6, true);
+    write_byte(0x39, true);
+    write_byte(0x00, true);
+    write_byte(0x00, true);
+    write_byte(0x00, true);
+    write_byte(0x00, true);
+    write_byte(0x00, true);
+    write_byte(0x00, true);
+    write_byte(0xE1, false);
+    write_byte(0x1F, true);
+    write_byte(0x3F, true);
+    write_byte(0x3F, true);
+    write_byte(0x0F, true);
+    write_byte(0x1F, true);
+    write_byte(0x0F, true);
+    write_byte(0x46, true);
+    write_byte(0x49, true);
+    write_byte(0x31, true);
+    write_byte(0x05, true);
+    write_byte(0x09, true);
+    write_byte(0x03, true);
+    write_byte(0x1C, true);
+    write_byte(0x1A, true);
+    write_byte(0x00, true);
+    write_byte(0xF1, false);
+    write_byte(0x36, true);
+    write_byte(0x04, true);
+    write_byte(0x00, true);
+    write_byte(0x3C, true);
+    write_byte(0x0F, true);
+    write_byte(0x0F, true);
+    write_byte(0xA4, true);
+    write_byte(0x02, true);
+    write_byte(0xF2, false);
+    write_byte(0x18, true);
+    write_byte(0xA3, true);
+    write_byte(0x12, true);
+    write_byte(0x02, true);
+    write_byte(0x32, true);
+    write_byte(0x12, true);
+    write_byte(0xFF, true);
+    write_byte(0x32, true);
+    write_byte(0x00, true);
+    write_byte(0xF4, false);
+    write_byte(0x40, true);
+    write_byte(0x00, true);
+    write_byte(0x08, true);
+    write_byte(0x91, true);
+    write_byte(0x04, true);
+    write_byte(0xF8, false);
+    write_byte(0x21, true);
+    write_byte(0x04, true);
+    write_byte(0x36, false);
+    write_byte(0x48, true);
+    write_byte(0x3A, false);
+    write_byte(0x55, true);
+
+    write_byte(0x11, false);  // Exit Sleep
+    I_Sleep(120);
+    write_byte(0x29, false);  // Display on
+    printf("GPIO Display initialized\n");
+}
+
+/**
+ * Address_set function stolen from Arduino driver that
+ * sets starting and ending position for future image data
+ *
+ * @param   x1  Starting position X
+ * @param   y1  Starting position Y
+ * @param   x2  Ending position X
+ * @param   y2  Ending position Y
+ *
+ * @return  void
+ */
+void Address_set(unsigned int x1, unsigned int y1, unsigned int x2,
+                 unsigned int y2) {
+    // Todo: figure out exactly what's happening in here
+    write_byte(0x2a, false);
+    write_byte(x1 >> 8, true);
+    write_byte(x1, true);
+    write_byte(x2 >> 8, true);
+    write_byte(x2, true);
+    write_byte(0x2b, false);
+    write_byte(y1 >> 8, true);
+    write_byte(y1, true);
+    write_byte(y2 >> 8, true);
+    write_byte(y2, true);
+    write_byte(0x2c, false);
+}
+
+/**
+ * Fill provided framebuffer with provided color in RGB16 (5-6-5) format
+ *
+ * @param   fb      Framebuffer array
+ * @param   color   Color in RGB16 (5-6-5) format
+ *
+ * @return  void
+ */
+void framebuffer_fill(uint16_t fb[], uint16_t color) {
+    for (int i = 0; i < 320 * 201; i++) {
+        fb[i] = color;
+    }
+}
+
+#include <zephyr/device.h>
+
+#include "ili_display.h"
+#include "ili_screen_controller.h"
+
+const struct device *screen;
+
+void framebuffer_send(const uint8_t fb[], int len) {
+    struct display_buffer_descriptor desc;
+
+    desc.buf_size = 320 * 200;
+    desc.width = 320;
+    desc.height = 200;
+    desc.pitch = 320;
+
+    int err = screen_write_8bit(screen, 0, 0, &desc, fb, display_pal);
+}
+
+/**
+ * Send provided framebuffer into LCD.
+ * This function allows to skip repeated write_byte invokation for every pixel
+ * twice and can save some time.
+ *
+ * @param   fb      Framebuffer array
+ *
+ * @return  void
+ */
+// void framebuffer_send(uint8_t fb[], int len) {
+//     Address_set(0, 0, 320, 199);
+//     write_byte(0x02c, false); //write_memory_start
+//     // digitalWrite(LCD_RS,HIGH);
+//     NRF_P0_S->OUT = (NRF_P0_S->OUT & ~(1 << 6)) | (1 << 6); // CS pin 6
+//     NRF_P0_S->OUT = (NRF_P0_S->OUT & ~(1 << 7));
+
+//     NRF_P0_S->OUT = (NRF_P0_S->OUT | (1 << 6));
+
+//     for (int j = 199; j >= 0; j--) {
+//         for (int k= 0; k < 320; k++) {
+//             int i = k + j * 320;
+//             // This generates too much tint and lowers contrast significantly
+//             /*uint16_t cur = ((display_pal[fb[i]*4+0]>>3)&0x1f) << 11 |
+//                             ((display_pal[fb[i]*4+1]>>3)&0x3f)<<5 |
+//                             ((display_pal[fb[i]*4+2]>>3)&0x1f);*/
+//             /*uint16_t cur = (display_pal[fb[i]*4+0]>>4)<<11 |
+//                             (display_pal[fb[i]*4+1]>>3)<<5 |
+//                             (display_pal[fb[i]*4+2]>>4);*/
+
+//             // Best RGB888 -> RGB565 conversion
+//             uint16_t cur = ((display_pal[fb[i]*4+0] * 249 + 1024) >> 11) <<
+//             11 |
+//                             ((display_pal[fb[i]*4+1] * 253 + 512) >> 10) <<5
+//                             |
+//                             ((display_pal[fb[i]*4+2] * 249 + 1024) >> 11);
+
+//             uint16_t aligned_byte = (uint8_t) (cur >> 8);
+//             aligned_byte |= ((aligned_byte & 3) << 8);
+//             aligned_byte >>= 2;
+
+//             NRF_P1_S->OUT = (NRF_P1_S->OUT & ~(0xFF << 4)) | (aligned_byte <<
+//             4); NRF_P0_S->OUT = (NRF_P0_S->OUT & ~(1 << 5)); NRF_P0_S->OUT =
+//             (NRF_P0_S->OUT & ~(1 << 5)) | (1 << 5);
+
+//             aligned_byte = (uint8_t) cur;
+//             aligned_byte |= ((aligned_byte & 3) << 8);
+//             aligned_byte >>= 2;
+//             NRF_P1_S->OUT = (NRF_P1_S->OUT & ~(0xFF << 4)) | (aligned_byte <<
+//             4);
+
+//             NRF_P0_S->OUT = (NRF_P0_S->OUT & ~(1 << 5));
+//             NRF_P0_S->OUT = (NRF_P0_S->OUT & ~(1 << 5)) | (1 << 5);
+//         }
+//     }
+//     NRF_P0_S->OUT = (NRF_P0_S->OUT & ~(1 << 7)) | (1 << 7); // CS pin 7
+// }
 
 // Set the variable controlling FPS dots.
 
-void I_DisplayFPSDots(boolean dots_on)
-{
+void I_DisplayFPSDots(boolean dots_on) {
     // display_fps_dots = dots_on;
 }
 
-
-void I_ShutdownGraphics(void)
-{
-    if (initialized)
-    {
+void I_ShutdownGraphics(void) {
+    if (initialized) {
         initialized = false;
     }
 }
 
-
-
 //
 // I_StartFrame
 //
-void I_StartFrame (void)
-{
+void I_StartFrame(void) {
     // N_display_spi_transfer_finish();
 }
 
-static void I_ToggleFullScreen(void)
-{
-    //NRFD-EXCLUDE
+static void I_ToggleFullScreen(void) {
+    // NRFD-EXCLUDE
 }
 
-void I_GenerateEvents(void)
-{
+void I_GenerateEvents(void) {
     N_ReadButtons();
 
     // printf("%d %d\n", joywait, I_GetTime());
-    if (joywait < I_GetTime())
-    {
+    if (joywait < I_GetTime()) {
         joywait = 0;
         N_rjoy_read();
         // I_UpdateJoystick();
@@ -224,70 +485,64 @@ void I_GenerateEvents(void)
 //
 // I_StartTic
 //
-void I_StartTic (void)
-{
+void I_StartTic(void) {
     N_ldbg("NRFD-TODO: I_StartTic\n");
-    if (!initialized)
-    {
+    if (!initialized) {
         return;
     }
 
     I_GenerateEvents();
-
 }
-
 
 //
 // I_UpdateNoBlit
 //
-void I_UpdateNoBlit (void)
-{
+void I_UpdateNoBlit(void) {
     // what is this?
 }
 
-void I_WriteDisplayList(uint32_t pal_loc, uint32_t display_loc)
-{
+void I_WriteDisplayList(uint32_t pal_loc, uint32_t display_loc) {
     dl_start();
 
     dl(FT810_CLEAR_COLOR_RGB(0x00, 0x00, 0x00));
-    dl(FT810_CLEAR(1,1,1));  // Clear color, stencil, tag
+    dl(FT810_CLEAR(1, 1, 1));  // Clear color, stencil, tag
     dl(FT810_CLEAR_COLOR_RGB(0x00, 0x00, 0x00));
-    dl(FT810_CLEAR(1,0,0));  // Clear color
+    dl(FT810_CLEAR(1, 0, 0));  // Clear color
 
-    dl(FT810_BITMAP_HANDLE(0)) ;
-    dl(FT810_BITMAP_LAYOUT(PALETTED8, SCREENWIDTH, SCREENHEIGHT)) ;
-    int16_t trans_a = (int16_t)(256/2.0);
-    int16_t trans_b = (int16_t)(256/2.4);
+    dl(FT810_BITMAP_HANDLE(0));
+    dl(FT810_BITMAP_LAYOUT(PALETTED8, SCREENWIDTH, SCREENHEIGHT));
+    int16_t trans_a = (int16_t)(256 / 2.0);
+    int16_t trans_b = (int16_t)(256 / 2.4);
     dl(FT810_BITMAP_TRANSFORM_A(trans_a));
     dl(FT810_BITMAP_TRANSFORM_E(trans_b));
-    dl(FT810_BITMAP_SIZE(NEAREST, BORDER, BORDER, 640&0x1FF, 480));
-    dl(FT810_BITMAP_SIZE_H(640>>9, 0));
-    dl(FT810_BITMAP_SOURCE(display_loc)) ;
+    dl(FT810_BITMAP_SIZE(NEAREST, BORDER, BORDER, 640 & 0x1FF, 480));
+    dl(FT810_BITMAP_SIZE_H(640 >> 9, 0));
+    dl(FT810_BITMAP_SOURCE(display_loc));
 
     dl(FT810_COLOR_RGB(0xFF, 0xFF, 0xFF));
 
     dl(FT810_BEGIN(BITMAPS));
     {
-        dl(FT810_VERTEX_TRANSLATE_X(80*16));
+        dl(FT810_VERTEX_TRANSLATE_X(80 * 16));
         // dl(FT810_VERTEX_TRANSLATE_Y(0*16));
 
         dl(FT810_BLEND_FUNC(ONE, ZERO));
 
-        dl(FT810_COLOR_MASK(0,0,0,1));
-        dl(FT810_PALETTE_SOURCE(pal_loc+3));
+        dl(FT810_COLOR_MASK(0, 0, 0, 1));
+        dl(FT810_PALETTE_SOURCE(pal_loc + 3));
         dl(FT810_VERTEX2II(0, 0, 0, 0));
 
         dl(FT810_BLEND_FUNC(DST_ALPHA, ONE_MINUS_DST_ALPHA));
-        dl(FT810_COLOR_MASK(1,0,0,0));
+        dl(FT810_COLOR_MASK(1, 0, 0, 0));
         dl(FT810_PALETTE_SOURCE(pal_loc));
         dl(FT810_VERTEX2II(0, 0, 0, 0));
 
-        dl(FT810_COLOR_MASK(0,1,0,0));
-        dl(FT810_PALETTE_SOURCE(pal_loc+1));
+        dl(FT810_COLOR_MASK(0, 1, 0, 0));
+        dl(FT810_PALETTE_SOURCE(pal_loc + 1));
         dl(FT810_VERTEX2II(0, 0, 0, 0));
 
-        dl(FT810_COLOR_MASK(0,0,1,0));
-        dl(FT810_PALETTE_SOURCE(pal_loc+2));
+        dl(FT810_COLOR_MASK(0, 0, 1, 0));
+        dl(FT810_PALETTE_SOURCE(pal_loc + 2));
         dl(FT810_VERTEX2II(0, 0, 0, 0));
     }
     dl(FT810_END());
@@ -300,24 +555,22 @@ void I_WriteDisplayList(uint32_t pal_loc, uint32_t display_loc)
 //
 // I_FinishUpdate
 //
-void I_FinishUpdate (void)
-{
+void I_FinishUpdate(void) {
     static int lasttic;
     int tics;
     int i;
 
     // draws little dots on the bottom of the screen
-    if (display_fps_dots)
-    {
+    if (display_fps_dots) {
         i = I_GetTime();
         tics = i - lasttic;
         lasttic = i;
         if (tics > 20) tics = 20;
 
-        for (i=0 ; i<tics*4 ; i+=4)
-            I_VideoBuffer[ (SCREENHEIGHT-1)*SCREENWIDTH + i] = 0xff;
-        for ( ; i<20*4 ; i+=4)
-            I_VideoBuffer[ (SCREENHEIGHT-1)*SCREENWIDTH + i] = 0x0;
+        for (i = 0; i < tics * 4; i += 4)
+            I_VideoBuffer[(SCREENHEIGHT - 1) * SCREENWIDTH + i] = 0xff;
+        for (; i < 20 * 4; i += 4)
+            I_VideoBuffer[(SCREENHEIGHT - 1) * SCREENWIDTH + i] = 0x0;
     }
 
     // Draw disk icon before blit, if necessary.
@@ -327,55 +580,52 @@ void I_FinishUpdate (void)
     N_display_spi_transfer_finish();
 
     // Instruct display to start drawing previous frame
-    I_WriteDisplayList(display_palette_locs[current_dl], display_vbuffer_locs[current_dl]);
+    I_WriteDisplayList(display_palette_locs[current_dl],
+                       display_vbuffer_locs[current_dl]);
 
-    current_dl = (current_dl+1)%3;
+    current_dl = (current_dl + 1) % 3;
 
     // Do complete palette data transfer
-    N_display_spi_wr(display_palette_locs[current_dl], DISPLAY_PALETTE_SIZE, display_pal);
+    N_display_spi_wr(display_palette_locs[current_dl], DISPLAY_PALETTE_SIZE,
+                     display_pal);
     N_display_spi_transfer_finish();
 
     // Start frame buffer transfer
-    N_display_spi_wr(display_vbuffer_locs[current_dl], SCREENWIDTH*SCREENHEIGHT, (uint8_t*)I_VideoBuffer);
+    N_display_spi_wr(display_vbuffer_locs[current_dl],
+                     SCREENWIDTH * SCREENHEIGHT, (uint8_t *)I_VideoBuffer);
 
     // Restore background and undo the disk indicator, if it was drawn.
     // NRFD-TODO: V_RestoreDiskBackground();
 }
 
-
 //
 // I_ReadScreen
 //
-void I_ReadScreen (pixel_t* scr)
-{
-    memcpy(scr, I_VideoBuffer, SCREENWIDTH*SCREENHEIGHT*sizeof(*scr));
+void I_ReadScreen(pixel_t *scr) {
+    memcpy(scr, I_VideoBuffer, SCREENWIDTH * SCREENHEIGHT * sizeof(*scr));
 }
-
 
 //
 // I_SetPalette
 //
-void I_SetPalette (byte *doompalette)
-{
+void I_SetPalette(byte *doompalette) {
     int i;
     // printf("I_SetPalette %X\n", (unsigned int)(doompalette));
 
     // Convert Doom palette to FT810 palette
 
     // TODO: Do conversion right before transferring to save memory?
-    for (i=0; i<256; ++i)
-    {
+    for (i = 0; i < 256; ++i) {
         // Zero out the bottom two bits of each channel - the PC VGA
         // controller only supports 6 bits of accuracy.
 
         uint8_t r = gammatable[usegamma][*doompalette++] & ~3;
         uint8_t g = gammatable[usegamma][*doompalette++] & ~3;
         uint8_t b = gammatable[usegamma][*doompalette++] & ~3;
-        display_pal[i*4+0] = r;
-        display_pal[i*4+1] = g;
-        display_pal[i*4+2] = b;
-        display_pal[i*4+3] = 0xFF;
-
+        display_pal[i * 4 + 0] = r;
+        display_pal[i * 4 + 1] = g;
+        display_pal[i * 4 + 2] = b;
+        display_pal[i * 4 + 3] = 0xFF;
     }
 }
 
@@ -412,18 +662,13 @@ int I_GetPaletteIndex(int r, int g, int b)
 
     */
 
-// 
+//
 // Set the window title
 //
 
-void I_SetWindowTitle(char *title)
-{
-    /* NRFD-EXCLUDE */
-}
+void I_SetWindowTitle(char *title) { /* NRFD-EXCLUDE */ }
 
-
-void I_GraphicsCheckCommandLine(void)
-{
+void I_GraphicsCheckCommandLine(void) {
     int i;
 
     //!
@@ -437,7 +682,7 @@ void I_GraphicsCheckCommandLine(void)
     // noblit = M_CheckParm ("-noblit");
 
     // //!
-    // // @category video 
+    // // @category video
     // //
     // // Don't grab the mouse when running in windowed mode.
     // //
@@ -445,7 +690,7 @@ void I_GraphicsCheckCommandLine(void)
     // nograbmouse_override = M_ParmExists("-nograbmouse");
 
     //!
-    // @category video 
+    // @category video
     //
     // Disable the mouse.
     //
@@ -453,18 +698,46 @@ void I_GraphicsCheckCommandLine(void)
     // nomouse = M_CheckParm("-nomouse") > 0;
 }
 
-
-
-void I_InitGraphics(void)
-{
+void I_InitGraphics(void) {
     printf("I_InitGraphics\n");
-    N_display_init();
-    display_palette_locs[0] = N_display_ram_alloc(DISPLAY_PALETTE_SIZE);
-    display_palette_locs[1] = N_display_ram_alloc(DISPLAY_PALETTE_SIZE);
-    display_palette_locs[2] = N_display_ram_alloc(DISPLAY_PALETTE_SIZE);
-    display_vbuffer_locs[0] = N_display_ram_alloc(SCREENWIDTH*SCREENHEIGHT);
-    display_vbuffer_locs[1] = N_display_ram_alloc(SCREENWIDTH*SCREENHEIGHT);
-    display_vbuffer_locs[2] = N_display_ram_alloc(SCREENWIDTH*SCREENHEIGHT);
+
+    // init_lcd();
+
+    int err;
+
+    struct display_capabilities cap;
+
+    /* STEP 12 - Obtain the screen node from device tree */
+    screen = DEVICE_DT_GET(DT_NODELABEL(ili9340));
+    if (!device_is_ready(screen)) {
+        printk("Device %s not found; Aborting", screen->name);
+        return 0;
+    }
+
+    /* Setting orientation 1 (W=320 H=240) */
+    err = display_set_orientation(screen, 1);
+    if (err < 0) {
+        printk("Error %d", err);
+        return 0;
+    }
+
+    /* Setting pixel format 1 (16 bit) */
+    err = display_set_pixel_format(screen, PANEL_PIXEL_FORMAT_RGB_565);
+    if (err < 0) {
+        printk("Error %d", err);
+        return 0;
+    }
+
+    /* Obtain and display screen capabilities */
+    display_get_capabilities(screen, &cap);
+
+    printk(
+        "Display Sample on %s: Orientation=%d,  Pixel-format=%d,   X-res=%d,   "
+        "Y-res=%d",
+        screen->name, cap.current_orientation, cap.current_pixel_format,
+        cap.x_resolution, cap.y_resolution);
+
+    display_blanking_off(screen);
 
     current_dl = 1;
 
@@ -478,8 +751,7 @@ void I_InitGraphics(void)
 
 // Bind all variables controlling video options into the configuration
 // file system.
-void I_BindVideoVariables(void)
-{
+void I_BindVideoVariables(void) {
     // NRFD-TODO:?
     // M_BindIntVariable("use_mouse",                 &usemouse);
     // M_BindIntVariable("fullscreen",                &fullscreen);
@@ -491,9 +763,9 @@ void I_BindVideoVariables(void)
     // M_BindIntVariable("fullscreen_width",          &fullscreen_width);
     // M_BindIntVariable("fullscreen_height",         &fullscreen_height);
     // M_BindIntVariable("force_software_renderer",   &force_software_renderer);
-    // M_BindIntVariable("max_scaling_buffer_pixels", &max_scaling_buffer_pixels);
-    // M_BindIntVariable("window_width",              &window_width);
-    // M_BindIntVariable("window_height",             &window_height);
+    // M_BindIntVariable("max_scaling_buffer_pixels",
+    // &max_scaling_buffer_pixels); M_BindIntVariable("window_width",
+    // &window_width); M_BindIntVariable("window_height", &window_height);
     // M_BindIntVariable("grabmouse",                 &grabmouse);
     // M_BindStringVariable("video_driver",           &video_driver);
     // M_BindStringVariable("window_position",        &window_position);
@@ -502,16 +774,14 @@ void I_BindVideoVariables(void)
 }
 
 // Rename to StartUpdate?
-void I_ClearVideoBuffer(void)
-{
+void I_ClearVideoBuffer(void) {
     // N_display_spi_transfer_finish();
 
     // Swap buffers
     if (I_VideoBuffer == I_VideoBuffers[0]) {
         I_VideoBuffer = I_VideoBuffers[1];
         I_VideoBackBuffer = I_VideoBuffers[0];
-    }
-    else {
+    } else {
         I_VideoBuffer = I_VideoBuffers[0];
         I_VideoBackBuffer = I_VideoBuffers[1];
     }
