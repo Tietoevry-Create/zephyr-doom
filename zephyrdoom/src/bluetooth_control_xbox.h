@@ -386,13 +386,13 @@ static uint8_t hogp_notify_cb(struct bt_hogp *hogp,
 
     // printk("Old X: %d, Y: %d\n", joyX, joyY);
 
-    joyX = ((joyX - 32767) / (double)32767) * 70;
-    joyY = ((joyY - 32767) / (double)32767) * 70;
+    joyX = ((joyX - 32767) / (double)32767) * 65;
+    joyY = ((joyY - 32767) / (double)32767) * 65;
 
-    if (joyX > -10 && joyX < 10) {
+    if (joyX > -8 && joyX < 8) {
         joyX = 0;
     }
-    if (joyY > -10 && joyY < 10) {
+    if (joyY > -8 && joyY < 8) {
         joyY = 0;
     }
 
@@ -410,7 +410,7 @@ static uint8_t hogp_notify_cb(struct bt_hogp *hogp,
 
     // k_work_reschedule(&reset_work, K_MSEC(RESET_TIMEOUT_MS));
 
-    printk("\n");
+    // printk("\n");
     return BT_GATT_ITER_CONTINUE;
 }
 
