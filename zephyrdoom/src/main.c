@@ -49,12 +49,6 @@ void clock_initialization() {
     nrfx_clock_divider_set(NRF_CLOCK_DOMAIN_HFCLK192M, NRF_CLOCK_HFCLK_DIV_1);
 }
 
-void clock_initialization() {
-    nrfx_clock_hfclk_start();
-    nrf_clock_hfclk_div_set(NRF_CLOCK_S, NRF_CLOCK_HFCLK_DIV_1);
-    nrfx_clock_divider_set(NRF_CLOCK_DOMAIN_HFCLK192M, NRF_CLOCK_HFCLK_DIV_1);
-}
-
 static const char* sd_root_path = "/SD:";
 static bool sd_init_success;
 
