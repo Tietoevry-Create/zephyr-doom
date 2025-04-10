@@ -16,7 +16,6 @@
 #include <zephyr/kernel.h>
 #include <zephyr/logging/log.h>
 // #include <zephyr/sd/sd.h>
-// #include <zephyr/sd/sd.h>
 #include <zephyr/storage/disk_access.h>
 
 LOG_MODULE_REGISTER(doom_main, CONFIG_DOOM_MAIN_LOG_LEVEL);
