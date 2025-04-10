@@ -16,6 +16,7 @@
 #include <zephyr/kernel.h>
 #include <zephyr/logging/log.h>
 // #include <zephyr/sd/sd.h>
+// #include <zephyr/sd/sd.h>
 #include <zephyr/storage/disk_access.h>
 
 LOG_MODULE_REGISTER(doom_main, CONFIG_DOOM_MAIN_LOG_LEVEL);
@@ -41,6 +42,12 @@ static const struct gpio_dt_spec led = GPIO_DT_SPEC_GET(LED0_NODE, gpios);
 #define PATH_MAX_LEN 260
 #define K_SEM_OPER_TIMEOUT_MS 500
 K_SEM_DEFINE(m_sem_sd_oper_ongoing, 1, 1);
+
+void clock_initialization() {
+    nrfx_clock_hfclk_start();
+    nrf_clock_hfclk_div_set(NRF_CLOCK_S, NRF_CLOCK_HFCLK_DIV_1);
+    nrfx_clock_divider_set(NRF_CLOCK_DOMAIN_HFCLK192M, NRF_CLOCK_HFCLK_DIV_1);
+}
 
 void clock_initialization() {
     nrfx_clock_hfclk_start();
@@ -203,6 +210,8 @@ int main(void) {
     printf("HFCLK_S: %d\n", hfclkctrl);
 
     NRF_CACHE_S->ENABLE = 1;
+
+    // boot_net();
 
     // sd_card_init(); // TODO: Get this working (all references to N_fs have
     // been commented out in w_wad and m_misc) N_qspi_init();

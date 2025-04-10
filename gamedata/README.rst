@@ -2,6 +2,32 @@
 Zephyr Doom - Game Data
 ##############################
 
+Version Notice
+====================
+This README is valid for the code from MVP1 (commit `4e4f9a4`_) and requires the 3,5" ILI9486 Arduino `display`_ shield.
+
+.. _4e4f9a4: https://github.com/Tietoevry-Create/zephyr-doom/commit/2d67542479c1c68f5c80fa8096c246c1313c7bf0
+.. _display: https://www.laskakit.cz/320x480-barevny-lcd-tft-displej-3-5-shield-arduino-uno/
+
+Shield Pin Mapping
+====================
+ ============= ========== ===============
+  Peripheral    Function   nRF5340 Pin
+ ============= ========== ===============
+  SPI/SD card   SS         P1.12
+  SPI/SD card   DI         P1.13
+  SPI/SD card   DO         P1.14
+  SPI/SD card   SCK        P1.15
+  LCD           Bit 1-2    P1.10 - P1.11
+  LCD           Bit 3-8    P1.04 - P1.09
+  LCD           RST        P0.25
+  LCD           CS         P0.07
+  LCD           RS         P0.06
+  LCD           WR         P0.05
+  LCD           RD         P0.04
+ ============= ========== ===============
+
+
 QSPI Flash Upload
 ====================
 
