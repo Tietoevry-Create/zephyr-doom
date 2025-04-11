@@ -1358,7 +1358,7 @@ void D_DoomMain(void) {
     } else {
         iwadfile = D_FindIWAD(IWAD_MASK_DOOM, &gamemission);
     }
-    // iwadfile = "doom.wad";
+    iwadfile = "/SD:/doom.wad";
 
     // None found?
 
