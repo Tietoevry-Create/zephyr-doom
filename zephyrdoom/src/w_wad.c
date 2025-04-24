@@ -142,364 +142,247 @@ unsigned int W_LumpNameHash(const char *s)
     return result;
 }
 
-wad_file_t *W_AddFile (char *filename)
+wad_file_t *W_AddFile(char *filename)
 {
-    // wadinfo_t header; // This was read via direct pointer later
-    // lumpindex_t i; // loop counter 'i' redefined below
-    wad_file_t *wad_file_data = NULL;
-    int rc = 0; // Result code
+    lumpindex_t i;
+    wad_file_t *wad_file_data;
+    boolean do_wad_transfer = false;
 
-    struct fs_file_t sd_file;
-    struct fs_dirent file_entry;
-    off_t file_size = 0;
-
-    const struct device *flash_dev = DEVICE_DT_GET(FLASH_NODE);
-    struct flash_pages_info page_info;
-    size_t flash_erase_block_size = 0; // Typically sector size
-    uint8_t *transfer_buffer = NULL;
-    size_t buffer_size = 0; // Will be set to flash_erase_block_size
-
-    boolean do_wad_transfer = false; // Keep original transfer logic trigger
-
-    // --- Check Flash Device ---
+    const struct device *flash_dev = DEVICE_DT_GET(DT_ALIAS(spi_flash0));
     if (!device_is_ready(flash_dev)) {
         LOG_ERR("Flash device %s is not ready", flash_dev->name);
         return NULL;
     }
-    LOG_INF("Flash device %s found and ready.", flash_dev->name);
 
-    // --- Get Flash Erase Block Size ---
-    // We need this to allocate buffer and perform erases efficiently
-    rc = flash_get_page_info_by_offs(flash_dev, 0, &page_info);
-    if (rc != 0) {
-        LOG_ERR("Failed to get flash page info (err %d)", rc);
-        return NULL;
-    }
-    flash_erase_block_size = page_info.size;
-    if (flash_erase_block_size == 0) {
-         LOG_ERR("Invalid flash erase block size (0). Check driver/DT.");
-         return NULL;
-    }
-    buffer_size = flash_erase_block_size; // Use erase block size for buffer
-    LOG_INF("Flash erase block (sector) size: %zu bytes", flash_erase_block_size);
-
-
-    // --- Original Button Check Logic (Optional) ---
     N_ReadButtons();
     I_Sleep(1);
     N_ReadButtons();
+
     if (N_ButtonState(0)) {
         do_wad_transfer = true;
-        LOG_INF("Button pressed, forcing WAD transfer to QSPI flash.");
-    } else {
-        do_wad_transfer = false;
     }
 
-
-    // --- Check for existing WADs (Original Logic) ---
-     if (numlumps != 0) {
-         // This error suggests the original system only loaded one WAD at a time directly into memory/flash map.
-         // Depending on how you manage lumpinfo, this might still be relevant.
-         I_Error("W_AddFile: Only one WAD file supported in this configuration.\n");
-         // If you adapt lumpinfo management, you might remove this check.
-         return NULL; // Or handle appending lumps if logic is changed
-     }
-
-    LOG_INF("W_AddFile: Processing %s", filename);
-
-    // --- Open File on SD Card ---
-    fs_file_t_init(&sd_file);
-    rc = fs_open(&sd_file, filename, FS_O_READ);
-    if (rc < 0) {
-        LOG_ERR("Couldn't open SD file %s (err %d)", filename, rc);
-        return NULL;
+    if (numlumps != 0) {
+        I_Error("Only one wad file supported\n");
     }
-    LOG_INF("Opened SD file: %s", filename);
 
-    // --- Get File Size ---
-    rc = fs_stat(filename, &file_entry);
-    if (rc < 0) {
-        LOG_ERR("Couldn't get file stats for %s (err %d)", filename, rc);
-        fs_close(&sd_file);
-        return NULL;
-    }
-    file_size = file_entry.size;
-    if (file_size <= 0) {
-         LOG_ERR("File %s is empty or size could not be determined.", filename);
-         fs_close(&sd_file);
-         return NULL;
-    }
-    LOG_INF("File size: %lld bytes", (long long)file_size);
+    printf("W_AddFile: Reading %s\n", filename);
 
+    struct fs_file_t fs_file;
+    fs_file_t_init(&fs_file);
 
-    // --- Allocate WAD metadata structure ---
-    // Using Z_Malloc as in original, assuming it maps to k_malloc or similar
-    wad_file_data = Z_Malloc(sizeof(wad_file_t), PU_STATIC, 0);
-    if (!wad_file_data) {
-        LOG_ERR("Failed to allocate memory for wad_file_data");
-        fs_close(&sd_file);
-        return NULL;
-    }
-    // Initialize basic wad_file_data info
-    wad_file_data->path = filename; // Note: filename pointer might not be valid long-term if it's transient
-    wad_file_data->length = (long)file_size; // Store file size
-
-
-    // --- Check if it's a WAD file (Original Logic) ---
-    // This check happens before transfer in original, keep it here.
-    if (strcasecmp(filename + strlen(filename) - 3, "wad"))
-    {
-        // Original code handled single lump files differently.
-        // This example focuses on WAD transfer. Add single lump handling if needed.
-        LOG_ERR("File %s does not have '.wad' extension. Single lump files not handled in this example.", filename);
-        Z_Free(wad_file_data); // Free metadata allocated earlier
-        fs_close(&sd_file);
-        return NULL; // Or implement single lump logic
-    }
-    else // It's a WAD file, proceed with potential transfer
-    {
-        // --- Allocate Transfer Buffer ---
-        transfer_buffer = k_malloc(buffer_size);
-        if (!transfer_buffer) {
-            LOG_ERR("Failed to allocate transfer buffer (%zu bytes)", buffer_size);
-            Z_Free(wad_file_data);
-            fs_close(&sd_file);
-            return NULL;
-        }
-        LOG_INF("Transfer buffer allocated (%zu bytes).", buffer_size);
-
-        // --- Transfer Data if Needed ---
-        // Original code had a check for data mismatch here.
-        // We use the 'do_wad_transfer' flag determined earlier.
-        if (do_wad_transfer) {
-            LOG_INF("Starting WAD transfer from SD card to QSPI flash...");
-
-            off_t current_flash_offset = 0;
-            size_t bytes_remaining = file_size;
-            size_t bytes_transferred = 0;
-            uint8_t *verify_buffer = k_malloc(buffer_size);
-            
-            if (!verify_buffer) {
-                LOG_ERR("Failed to allocate verification buffer");
-                rc = -ENOMEM;
-                goto transfer_cleanup;
-            }
-
-            while (bytes_remaining > 0) {
-                size_t bytes_to_read = MIN(bytes_remaining, buffer_size);
-                ssize_t bytes_read;
-
-                // --- Read block from SD Card ---
-                bytes_read = fs_read(&sd_file, transfer_buffer, bytes_to_read);
-                if (bytes_read < 0) {
-                    LOG_ERR("Failed to read from SD file %s (err %d)", filename, (int)bytes_read);
-                    rc = (int)bytes_read;
-                    k_free(verify_buffer);
-                    goto transfer_cleanup; // Go to cleanup section
-                }
-                if (bytes_read == 0) {
-                    // Should not happen if file_size > 0 and bytes_remaining > 0
-                    LOG_ERR("Unexpected end of file reached for %s", filename);
-                    rc = -1; // Input/output error
-                    k_free(verify_buffer);
-                    goto transfer_cleanup;
-                }
-
-                // Print first 40 bytes of the buffer (or less if buffer is smaller)
-                LOG_INF("First bytes of transfer buffer:");
-                for (int i = 0; i < MIN(40, bytes_read); i++) {
-                    printk("%02X ", transfer_buffer[i]);
-                    if ((i + 1) % 8 == 0) printk(" ");
-                    if ((i + 1) % 16 == 0) printk("\n");
-                }
-                printk("\n");
-
-                // Read existing data from flash to verify if it's the same
-                rc = flash_read(flash_dev, current_flash_offset, verify_buffer, bytes_read);
-                if (rc != 0) {
-                    LOG_ERR("Failed to read from flash at offset %lld (err %d)", (long long)current_flash_offset, rc);
-                    k_free(verify_buffer);
-                    goto transfer_cleanup;
-                }
-
-                // Compare data before writing
-                if (memcmp(transfer_buffer, verify_buffer, bytes_read) == 0) {
-                    LOG_INF("Data at offset %lld already matches - skipping write", (long long)current_flash_offset);
-                } else {
-                    LOG_INF("Data mismatch at offset %lld - erasing and writing", (long long)current_flash_offset);
-
-                    // --- Erase Necessary Flash Sector(s) BEFORE Writing ---
-                    rc = flash_erase(flash_dev, current_flash_offset, flash_erase_block_size);
-                    if (rc != 0) {
-                        LOG_ERR("Failed to erase flash at offset %lld (err %d)", (long long)current_flash_offset, rc);
-                        k_free(verify_buffer);
-                        goto transfer_cleanup;
-                    }
-
-                    // --- Write block to QSPI Flash ---
-                    rc = flash_write(flash_dev, current_flash_offset, transfer_buffer, bytes_read);
-                    if (rc != 0) {
-                        LOG_ERR("Failed to write to flash at offset %lld (err %d)", (long long)current_flash_offset, rc);
-                        k_free(verify_buffer);
-                        goto transfer_cleanup;
-                    }
-                }
-
-                // --- Update counters ---
-                bytes_remaining -= bytes_read;
-                current_flash_offset += bytes_read;
-                bytes_transferred += bytes_read;
-
-                // Optional: Add progress indicator
-                LOG_INF("Transferred %zu / %lld bytes...", bytes_transferred, (long long)file_size);
-            }
-
-            k_free(verify_buffer);
-
-            LOG_INF("WAD transfer completed successfully (%lld bytes written).", (long long)bytes_transferred);
-
-        } else {
-             LOG_INF("Skipping WAD transfer to QSPI flash (do_wad_transfer is false). Assuming existing data is valid.");
-             // If skipping, the rest of the function assumes flash already holds the correct data.
-        }
-
-
-transfer_cleanup: // Label for cleanup after transfer attempt
-        k_free(transfer_buffer); // Free buffer regardless of success/failure of transfer
-        transfer_buffer = NULL; // Avoid double free
-
-        if (rc != 0) { // If an error occurred during transfer loop
-             LOG_ERR("WAD transfer failed with error %d.", rc);
-             Z_Free(wad_file_data);
-             fs_close(&sd_file);
-             return NULL;
-        }
-
-        // --- IMPORTANT: WAD Parsing Logic Needs Rework ---
-        // The following code from the original W_AddFile relies on getting
-        // direct pointers into the QSPI flash memory (N_qspi_data_pointer).
-        // The standard Zephyr flash API (flash_read) does NOT provide this.
-        // You MUST rewrite this section to:
-        // 1. Allocate memory buffers (e.g., using k_malloc).
-        // 2. Use flash_read() to copy data from flash (header, lump directory)
-        //    into these buffers.
-        // 3. Parse the data from the memory buffers.
-        // 4. Adjust lumpinfo setup to store data read from flash, or pointers
-        //    to allocated buffers containing the data, rather than direct flash pointers.
-
-        LOG_WRN("------ Starting WAD parsing section - Requires rework! ------");
-        LOG_WRN("Original code used direct flash pointers (N_qspi_data_pointer).");
-        LOG_WRN("You must replace N_qspi_data_pointer calls with flash_read() into buffers.");
-
-        // --- Start of original WAD parsing logic (NEEDS REWORK) ---
-
-        // Example: Reading header (REWORK NEEDED)
-        wadinfo_t header_buffer; // Allocate a buffer on stack or heap
-        rc = flash_read(flash_dev, 0, &header_buffer, sizeof(header_buffer));
+    if (!no_sdcard) {
+        int rc = fs_open(&fs_file, filename, FS_O_READ);
         if (rc != 0) {
-            LOG_ERR("Failed to read WAD header from flash (err %d)", rc);
-            Z_Free(wad_file_data);
-            fs_close(&sd_file);
+            printf(" couldn't open %s (err %d)\n", filename, rc);
             return NULL;
         }
-        // Now use header_buffer instead of header_ptr
-        wadinfo_t *header_ptr = &header_buffer; // Pointer to buffer for compatibility with original code style
+    } else {
+        printf("no_sdcard = 1 - skipping file open\n");
+    }
 
-        // Original debug print (uses buffer now)
-        LOG_INF("Header ID read from flash: %.4s", header_ptr->identification);
+    wad_file_data = Z_Malloc(sizeof(wad_file_t), PU_STATIC, 0);
 
-        // Original WAD identification check (uses buffer now)
-        if (strncmp(header_ptr->identification,"IWAD",4) && strncmp(header_ptr->identification,"PWAD",4)) {
-             LOG_ERR("Wad file %s doesn't have IWAD or PWAD id (read from flash)", filename);
-             I_Error("Wad file %s doesn't have IWAD or PWAD id\n", filename); // Original error call
-             Z_Free(wad_file_data);
-             fs_close(&sd_file);
-             return NULL; // Or handle appropriately
+    if (strcasecmp(filename+strlen(filename)-3, "wad")) {
+        I_Error("NRFD-TODO: W_AddFile\n");
+    } else {
+        // Copy entire WAD file to Flash memory
+        long file_size = 4196366;
+
+        if (!no_sdcard) {
+            struct fs_dirent dirent;
+            int rc = fs_stat(filename, &dirent);
+            if (rc == 0) {
+                file_size = dirent.size;
+            }
+        }
+        printf("File size: %ld\n", file_size);
+
+        int num_blocks = (file_size + N_QSPI_BLOCK_SIZE - 1) / N_QSPI_BLOCK_SIZE;
+        N_qspi_reserve_blocks(num_blocks);
+
+        if (!no_sdcard) {
+            uint8_t *block_data = N_malloc(N_QSPI_BLOCK_SIZE);
+            int block_loc = 0;
+            boolean data_mismatch = do_wad_transfer;
+
+            if (data_mismatch) {
+                printf("Uploading WAD data to QSPI flash memory..");
+                block_loc = 0;
+
+                for (i = 0; i < num_blocks; i++) {
+                    printf("Copying block %d of %d\n", i, num_blocks);
+                    int block_next = block_loc + N_QSPI_BLOCK_SIZE;
+                    int block_size = block_next > file_size ? (file_size % N_QSPI_BLOCK_SIZE) : N_QSPI_BLOCK_SIZE;
+
+                    // Read from SD card
+                    fs_seek(&fs_file, block_loc, FS_SEEK_SET);
+                    int bytes_read = fs_read(&fs_file, block_data, block_size);
+                    if (bytes_read < 0) {
+                        printf("Error reading file: %d\n", bytes_read);
+                        N_free(block_data);
+                        fs_close(&fs_file);
+                        return NULL;
+                    }
+
+                    printf("First 40b of block: \n");
+                    int pt = 0;
+                    int tmp = 0;
+                    for (int i = 0; i < 4; i++) {
+                        for (int j = 0; j < 10; j++) {
+                            printf("%x ", block_data[pt]);
+                            pt++;
+                        }
+                        printf("| ");
+                        for (int j = 0; j < 10; j++) {
+                            if (block_data[tmp] >= 33 && block_data[tmp] <= 126) {
+                                printf("%c ", block_data[tmp]);
+                            } else {
+                                printf(". ");
+                            }
+                            tmp++;
+                        }
+                        printf("\n");
+                    }
+                    printf("\n");
+
+                    // Write to QSPI flash
+                    off_t flash_offset = block_loc;
+
+                    // Erase flash sector before writing
+                    int rc = flash_erase(flash_dev, flash_offset, block_size);
+                    if (rc != 0) {
+                        printf("Flash erase failed (err %d)\n", rc);
+                        N_free(block_data);
+                        fs_close(&fs_file);
+                        return NULL;
+                    }
+
+                    // Write data to flash
+                    rc = flash_write(flash_dev, flash_offset, block_data, block_size);
+                    if (rc != 0) {
+                        printf("Flash write failed (err %d)\n", rc);
+                        N_free(block_data);
+                        fs_close(&fs_file);
+                        return NULL;
+                    }
+
+                    // Read back for verification
+                    rc = flash_read(flash_dev, flash_offset, block_data, block_size);
+                    if (rc != 0) {
+                        printf("Flash read failed (err %d)\n", rc);
+                        N_free(block_data);
+                        fs_close(&fs_file);
+                        return NULL;
+                    }
+
+                    printf("First 40b of block in flash: \n");
+                    pt = 0;
+                    tmp = 0;
+                    for (int i = 0; i < 4; i++) {
+                        for (int j = 0; j < 10; j++) {
+                            printf("%x ", block_data[pt]);
+                            pt++;
+                        }
+                        printf("| ");
+                        for (int j = 0; j < 10; j++) {
+                            if (block_data[tmp] >= 33 && block_data[tmp] <= 126) {
+                                printf("%c ", block_data[tmp]);
+                            } else {
+                                printf(". ");
+                            }
+                            tmp++;
+                        }
+                        printf("\n");
+                    }
+
+                    block_loc = block_next;
+                }
+            }
+            N_free(block_data);
+            fs_close(&fs_file);
         }
 
-        // Convert fields from Little Endian (as they are stored in WAD) to CPU format
+        // Read header from QSPI flash
+        wadinfo_t header_buffer;
+        flash_read(flash_dev, 0, &header_buffer, sizeof(wadinfo_t));
+        wadinfo_t *header_ptr = &header_buffer;
+
+        uint8_t *dat_buffer = k_malloc(300);
+        if (dat_buffer != NULL) {
+            flash_read(flash_dev, 0, dat_buffer, 300);
+
+            printf("Dumping flash data: \n");
+            int pt = 0;
+            int tmp = 0;
+            for (int i = 0; i < 30; i++) {
+                for (int j = 0; j < 10; j++) {
+                    printf("%x ", dat_buffer[pt]);
+                    pt++;
+                }
+                printf("| ");
+                for (int j = 0; j < 10; j++) {
+                    if (dat_buffer[tmp] >= 33 && dat_buffer[tmp] <= 126) {
+                        printf("%c ", dat_buffer[tmp]);
+                    } else {
+                        printf(". ");
+                    }
+                    tmp++;
+                }
+                printf("\n");
+            }
+            k_free(dat_buffer);
+        }
+
+        printf("Header: %x %x %x %x\n", header_ptr->identification[0],
+               header_ptr->identification[1],
+               header_ptr->identification[2],
+               header_ptr->identification[3]);
+
+        if (strncmp(header_ptr->identification, "IWAD", 4)) {
+            // Homebrew levels?
+            if (strncmp(header_ptr->identification, "PWAD", 4)) {
+                I_Error("Wad file %s doesn't have IWAD or PWAD id\n", filename);
+            }
+        }
+
         header_ptr->numlumps = LONG(header_ptr->numlumps);
+
+        // Vanilla Doom doesn't like WADs with more than 4046 lumps
+        if (!strncmp(header_ptr->identification, "PWAD", 4) && header_ptr->numlumps > 4046) {
+            I_Error("Error: Vanilla limit for lumps in a WAD is 4046, "
+                    "PWAD %s has %d", filename, header_ptr->numlumps);
+        }
+
         header_ptr->infotableofs = LONG(header_ptr->infotableofs);
 
-        // Original header info print
-        LOG_INF("WAD Header (from flash buffer):");
-        LOG_INF("  ID: %.4s", header_ptr->identification);
-        LOG_INF("  Num lumps: %d", header_ptr->numlumps);
-        LOG_INF("  Info table offset: %d", header_ptr->infotableofs);
+        printf("WAD header_ptr\n");
+        printf("ID: %.4s\n", header_ptr->identification);
+        printf("Num lumps: %d\n", header_ptr->numlumps);
+        printf("Info table: %d\n", header_ptr->infotableofs);
 
-
-        // Example: Setting up lump directory pointer (REWORK NEEDED)
-        // Original: filelumps = (filelump_t*)N_qspi_data_pointer(header_ptr->infotableofs);
-        // Rework: You need to calculate the size of the lump directory, allocate a buffer,
-        //         and use flash_read to load the directory into that buffer.
-        size_t dir_size = header_ptr->numlumps * sizeof(filelump_t);
-        filelump_t *lump_dir_buffer = k_malloc(dir_size);
-        if (!lump_dir_buffer) {
-             LOG_ERR("Failed to allocate buffer for lump directory (%zu bytes)", dir_size);
-             Z_Free(wad_file_data);
-             fs_close(&sd_file);
-             return NULL;
+        if (numlumps != 0) {
+            I_Error("NRFD-TODO: Multiple WADs not supported yet\n");
         }
-        rc = flash_read(flash_dev, header_ptr->infotableofs, lump_dir_buffer, dir_size);
-         if (rc != 0) {
-             LOG_ERR("Failed to read lump directory from flash (err %d)", rc);
-             k_free(lump_dir_buffer);
-             Z_Free(wad_file_data);
-             fs_close(&sd_file);
-             return NULL;
-         }
-         LOG_INF("Lump directory read from flash into buffer at %p", lump_dir_buffer);
 
-        // Point the global/static filelumps to the buffer *for this load*.
-        // Consider how multiple WADs or dynamic loading affects this if filelumps is truly global.
-        filelumps = lump_dir_buffer; // DANGER: If W_AddFile is called again, this buffer needs managing/freeing.
-                                     // A better approach might involve dynamic allocation within lumpinfo itself.
-
-        // Update global numlumps count
-        numlumps += header_ptr->numlumps; // Assuming numlumps was 0 initially based on earlier check
-
-        // --- Loop through lumps (original logic adapted for buffer) ---
-        // The original code iterated and set up lumpinfo[]. The critical change
-        // is that lump_p->cache CANNOT be a direct flash pointer. It should either be
-        // NULL (requiring W_CacheLumpNum to read from flash on demand) or point to
-        // data pre-cached from flash into RAM (if memory permits).
-
-        LOG_WRN("Lump setup needs review: lumpinfo[].cache cannot be a direct flash pointer.");
-        // Example - Setting cache to NULL (on-demand loading needed later):
-        /*
-        for (int i = 0; i < header_ptr->numlumps; i++) {
-            lumpinfo_t *lump_p = &lumpinfo[startlump + i]; // Assuming startlump is 0 here
-            filelump_t *filelump_entry = &filelumps[i]; // From the buffer we read
-
-            lump_p->position = LONG(filelump_entry->filepos); // Store flash offset
-            lump_p->size = LONG(filelump_entry->size);
-            strncpy(lump_p->name, filelump_entry->name, 8);
-            lump_p->name[8] = '\0'; // Ensure null termination
-
-            lump_p->cache = NULL; // *** CRITICAL: No direct pointer possible ***
-                                  // W_CacheLumpNum must implement flash_read using lump_p->position
-
-            // LOG_INF("Lump %.8s: size %d, flash_offset %d", lump_p->name, lump_p->size, lump_p->position);
+        if ((numlumps + header_ptr->numlumps) > MAX_NUMLUMPS) {
+            I_Error("W_AddFile: MAX_NUMLUMPS reached\n");
         }
-        */
-        LOG_WRN("--- End of WAD parsing section needing rework ---");
 
-        // --- End of original WAD parsing logic ---
+        first_lump_pos = header_ptr->infotableofs;
+        filelumps = (filelump_t*)N_qspi_data_pointer(first_lump_pos);
+        numlumps +=  header_ptr->numlumps;
+
+        wad_file_data->path = filename;
+        wad_file_data->length = file_size;
     }
 
-    // --- Cleanup and Final Steps ---
-    fs_close(&sd_file); // Close the file handle
-
-    // Original lumphash cleanup
-    if (lumphash != NULL)
-    {
-        // Assuming Z_Free maps to k_free or similar
+    if (lumphash != NULL) {
         Z_Free(lumphash);
         lumphash = NULL;
     }
 
-    LOG_INF("W_AddFile completed for %s", filename);
-    return wad_file_data; // Return metadata pointer
+    return wad_file_data;
 }
 
 

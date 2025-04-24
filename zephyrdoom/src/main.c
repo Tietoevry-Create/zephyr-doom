@@ -311,7 +311,7 @@ int main(void) {
 
 	if (res == FR_OK) {
 		printk("Disk mounted.\n");
-        // no_sdcard = 0;
+        no_sdcard = 0;
 		if (lsdir(disk_mount_pt) == 0) {
 		}
 	} else {
