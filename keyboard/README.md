@@ -4,10 +4,10 @@ The code in this folder allows you to make a Raspberry Pi act as a bluetooth key
 
 ## Hardware Requirements
 
-* Any Raspberry Pi with bluetooth support and a USB-A port (tested on Raspberry Pi 4 Model B 1GB RAM)
+* Any Raspberry Pi with Bluetooth support and a USB-A port (tested on Raspberry Pi 4 Model B 1GB RAM and Raspberry Pi 400 — the model that includes a built-in keyboard)
 * Raspberry Pi power supply
 * Raspberry Pi SD card
-* Any USB-A keyboard (tested on Dell KB-216)
+* Any USB-A keyboard (tested on Dell KB-216; not required when using the Raspberry Pi 400 since it includes a built-in keyboard)
 
 
 ## Setup
@@ -34,5 +34,5 @@ pip install evdev
 sudo python3 keyboard.py
 ```
 
-2. Turn on zephyr-doom. It should connect to the RPI and start receiving key presses
+2. Turn on the board running zephyr-doom. It should connect to the RPI and start receiving key presses.
 
