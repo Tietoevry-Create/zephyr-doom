@@ -377,24 +377,14 @@ void framebuffer_fill(uint16_t fb[], uint16_t color) {
 }
 
 #include "ili_screen_controller.h"
-#include "ili_display.h"
+// #include "ili_display.h"
 
 #include <zephyr/device.h>
 
 const struct device *screen;
 
 void framebuffer_send(const uint8_t fb[], int len) {
-   	struct display_buffer_descriptor desc;
-
-	desc.buf_size = 320 * 200;
-	desc.width = 320;
-	desc.height = 200;
-	desc.pitch = 320;
-
-    int err = screen_write_8bit(screen, 0, 0, &desc, fb, display_pal);
-    if (err < 0) {
-        LOG_ERR("Failed to write to screen");
-    }
+    printk("framebuffer_send\n");    
 }
 
 /**
@@ -741,48 +731,7 @@ void I_GraphicsCheckCommandLine(void)
 
 void I_InitGraphics(void)
 {
-    printf("I_InitGraphics\n");
-
-    // init_lcd();
-
-    int err;
-
-	struct display_capabilities cap;
-
-	screen = DEVICE_DT_GET(DT_NODELABEL(ili9340));
-	if (!device_is_ready(screen)) {
-		printk("Device %s not found; Aborting", screen->name);
-		return 0;
-	}
-
-	/* Setting orientation 1 (W=320 H=240) */
-	err = display_set_orientation(screen, 1);
-	if (err < 0) {
-		printk("Error %d",err);
-		return 0;
-	}
-
-	/* Setting pixel format 1 (16 bit) */
-	err = display_set_pixel_format(screen, PANEL_PIXEL_FORMAT_RGB_565);
-	if (err < 0) {
-		printk("Error %d",err);
-		return 0;
-	}
-
-	/* Obtain and display screen capabilities */
-	display_get_capabilities(screen, &cap);
-
-	printk("Display Sample on %s: Orientation=%d,  Pixel-format=%d,   X-res=%d,   Y-res=%d", \
-							screen->name, cap.current_orientation, cap.current_pixel_format,  \
-							cap.x_resolution, cap.y_resolution);
-
-    display_blanking_off(screen);
-
-    current_dl = 1;
-
-    I_VideoBuffer = I_VideoBuffers[1];
-    I_VideoBackBuffer = I_VideoBuffers[0];
-    initialized = true;
+    printk("I_InitGraphics\n");
 }
 
 // Bind all variables controlling video options into the configuration

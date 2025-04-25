@@ -319,7 +319,7 @@ int main(void) {
 	}
 
 	// fs_unmount(&mp);
-    
+
     // while (1) {
 	// 	k_sleep(K_MSEC(1000));
 	// }

@@ -295,7 +295,7 @@ wad_file_t *W_AddFile(char *filename)
                         }
                         printf("\n");
                     }
-
+ 
                     block_loc = block_next;
                 }
             }
@@ -329,7 +329,7 @@ wad_file_t *W_AddFile(char *filename)
                     }
                     tmp++;
                 }
-                printf("\n");
+                printf("\n\n");
             }
             k_free(dat_buffer);
         }
@@ -463,7 +463,7 @@ lumpindex_t W_GetNumForName(const char* name)
     {
         I_Error ("W_GetNumForName: %s not found!", name);
     }
- 
+
     return i;
 }
 
@@ -536,7 +536,7 @@ void W_ReadLump(lumpindex_t lump, void *dest)
 // the lump data.
 //
 // 'tag' is the type of zone memory buffer to allocate for the lump
-// (usually PU_STATIC or PU_CACHE).  If the lump is loaded as 
+// (usually PU_STATIC or PU_CACHE).  If the lump is loaded as
 // PU_STATIC, it should be released back using W_ReleaseLumpNum
 // when no longer needed (do not use Z_ChangeTag).
 //
@@ -612,12 +612,12 @@ void *W_CacheLumpName(char *name, int tag)
     return W_CacheLumpNum(W_GetNumForName(name), tag);
 }
 
-// 
-// Release a lump back to the cache, so that it can be reused later 
+//
+// Release a lump back to the cache, so that it can be reused later
 // without having to read from disk again, or alternatively, discarded
 // if we run out of memory.
 //
-// Back in Vanilla Doom, this was just done using Z_ChangeTag 
+// Back in Vanilla Doom, this was just done using Z_ChangeTag
 // directly, but now that we have WAD mmap, things are a bit more
 // complicated ...
 //
@@ -668,10 +668,10 @@ void W_Profile (void)
     FILE*       f;
     int         j;
     char        name[9];
-        
-        
+
+
     for (i=0 ; i<numlumps ; i++)
-    {   
+    {
         ptr = lumpinfo[i].cache;
         if (!ptr)
         {
@@ -689,7 +689,7 @@ void W_Profile (void)
         info[i][profilecount] = ch;
     }
     profilecount++;
-        
+
     f = fopen ("waddump.txt","w");
     name[8] = 0;
 
@@ -816,7 +816,7 @@ void W_DebugLump(int lump)
     printf("W_DebugLump: %d size: %d\n", lump, filelump->size);
 
     byte *cache = N_malloc(filelump->size);
-    
+
     // N_fs_read(wad_file, filelump->filepos, cache, filelump->size);
     byte *qspi_data = W_LumpDataPointer(lump);
     for (int i=0;i<filelump->size;i++) {

@@ -9,31 +9,32 @@
     rx-delay-supported;
     rx-delay = < 0x2 >;
     status = "okay";
-    cs-gpios = < &arduino_header 0x10 0x1 >, < &arduino_header 0xa 0x1 >;
+    // cs-gpios = < &arduino_header 0x10 0x1 >, < &arduino_header 0xa 0x1 >;
+    cs-gpios = < &arduino_header 0xa 0x1 >;
     pinctrl-0 = < &spi4_default >;
     pinctrl-1 = < &spi4_sleep >;
     pinctrl-names = "default", "sleep";
-    ili9340: ili9340@0 {
-        compatible = "ilitek,ili9340";
-        spi-max-frequency = < 0x28f5c28 >;
-        // spi-max-frequency = < 0x2625a00 >;
-        // spi-max-frequency = < 0xe7319b >;
-        reg = < 0x0 >;
-        cmd-data-gpios = < &arduino_header 0xf 0x1 >;
-        width = < 0x140 >;
-        height = < 0xf0 >;
-        pixel-format = < 0x1 >;
-        rotation = < 0x5a >;
-        frmctr1 = [ 00 18 ];
-        pwctrl1 = [ 23 00 ];
-        vmctrl1 = [ 3E 28 ];
-        vmctrl2 = [ 86 ];
-        pgamctrl = [ 0F 31 2B 0C 0E 08 4E F1 37 07 10 03 0E 09 00 ];
-        ngamctrl = [ 00 0E 14 03 11 07 31 C1 48 08 0F 0C 31 36 0F ];
-    };
-    adafruit_2_8_tft_touch_v2_sdhc: sdhc@1 {
+    // ili9340: ili9340@0 {
+    //     compatible = "ilitek,ili9340";
+    //     spi-max-frequency = < 0x28f5c28 >;
+    //     // spi-max-frequency = < 0x2625a00 >;
+    //     // spi-max-frequency = < 0xe7319b >;
+    //     reg = < 0x0 >;
+    //     cmd-data-gpios = < &arduino_header 0xf 0x1 >;
+    //     width = < 0x140 >;
+    //     height = < 0xf0 >;
+    //     pixel-format = < 0x1 >;
+    //     rotation = < 0x5a >;
+    //     frmctr1 = [ 00 18 ];
+    //     pwctrl1 = [ 23 00 ];
+    //     vmctrl1 = [ 3E 28 ];
+    //     vmctrl2 = [ 86 ];
+    //     pgamctrl = [ 0F 31 2B 0C 0E 08 4E F1 37 07 10 03 0E 09 00 ];
+    //     ngamctrl = [ 00 0E 14 03 11 07 31 C1 48 08 0F 0C 31 36 0F ];
+    // };
+    adafruit_2_8_tft_touch_v2_sdhc: sdhc@0 {
         compatible = "zephyr,sdhc-spi-slot";
-        reg = < 0x1 >;
+        reg = < 0x0 >;
         status = "okay";
         spi-max-frequency = < 0x16e3600 >;
         mmc {
