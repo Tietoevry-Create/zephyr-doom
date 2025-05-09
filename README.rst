@@ -493,6 +493,30 @@ SPI/FT810 Display       CS_N              P0.07
 SPI/FT810 Display       PD_N              P0.26
 ======================= ================= ================================
 
+* Xbox Controller Mapping
+======================= =======================================
+Xbox Button             Description
+======================= =======================================
+Left Stick              Move forward/backward, look left/right
+----------------------- ---------------------------------------
+A Button                Cycle through available weapons
+----------------------- ---------------------------------------
+B Button                Fire current weapon
+----------------------- ---------------------------------------
+X Button                Hold to run
+----------------------- ---------------------------------------
+Y Button                Open doors, activate switches
+----------------------- ---------------------------------------
+Left Trigger            Strafe left
+----------------------- ---------------------------------------
+Right Trigger           Strafe right
+----------------------- ---------------------------------------
+Back Button             Toggle automap view
+----------------------- ---------------------------------------
+Start Button            Show menu
+======================= =======================================
+
+
 .. _Xbox controller: https://www.xbox.com/en-US/accessories/controllers/xbox-wireless-controller
 .. _keyboard: https://www.raspberrypi.com/products/raspberry-pi-400/
 
