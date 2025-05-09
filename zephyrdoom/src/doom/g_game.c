@@ -224,7 +224,7 @@ static int      dclicks2;
 // joystick values are repeated
 static short      joyxmove;
 static short      joyymove;
-// static short      joystrafemove;
+static short      joystrafemove;
 static boolean  joyarray[MAX_JOY_BUTTONS + 1];
 static boolean *joybuttons = &joyarray[1];              // allow [-1]
 
@@ -456,8 +456,8 @@ void G_BuildTiccmd (ticcmd_t* cmd, int maketic)
 
     if (gamekeydown(key_strafeleft)
      || joybuttons[joybstrafeleft]
-     //|| joystrafemove < 0
-     //|| mousebuttons[mousebstrafeleft]
+     || joystrafemove < 0
+    //  || mousebuttons[mousebstrafeleft]
      )
     {
         side -= sidemove[speed];
@@ -465,7 +465,7 @@ void G_BuildTiccmd (ticcmd_t* cmd, int maketic)
 
     if (gamekeydown(key_straferight)
      || joybuttons[joybstraferight]
-     //|| joystrafemove > 0
+     || joystrafemove > 0
      //|| mousebuttons[mousebstraferight]
      )
     {
@@ -723,7 +723,7 @@ void G_DoLoadLevel (void)
     gamekeydown_clear();
 
     joyxmove = joyymove = 0;
-    // joystrafemove = 0;
+    joystrafemove = 0;
     memset(joyarray, 0, sizeof(joyarray));
 
     // NRFD-TODO: mouse
@@ -905,7 +905,7 @@ boolean G_Responder (event_t* ev)
         SetJoyButtons(ev->data1);
         joyxmove = ev->data2;
         joyymove = ev->data3;
-        // joystrafemove = ev->data4;
+        joystrafemove = ev->data4;
 
         return true;    // eat events
       default:

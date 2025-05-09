@@ -369,6 +369,7 @@ static uint8_t hogp_notify_cb(struct bt_hogp *hogp,
     // for (i = 0; i < size; ++i) {
     // 	printk(" 0x%x", data[i]);
     // }
+    // printk("\n");
 
     event_t e;
     e.type = ev_joystick;
@@ -381,25 +382,32 @@ static uint8_t hogp_notify_cb(struct bt_hogp *hogp,
     e.data1 =
         (button_A << 4) | (button_B << 5) | (button_X << 2) | (button_Y << 3);
 
-    int32_t joyX = (data[1] << 8 | data[0]);
-    int32_t joyY = (data[3] << 8 | data[2]);
+    // Left joystick used for movement and turning
+    int32_t leftJoyX = (data[1] << 8 | data[0]);
+    int32_t leftJoyY = (data[3] << 8 | data[2]);
 
-    // printk("Old X: %d, Y: %d\n", joyX, joyY);
+    leftJoyX = ((leftJoyX - 32767) / (double)32767) * 65;
+    leftJoyY = ((leftJoyY - 32767) / (double)32767) * 65;
 
-    joyX = ((joyX - 32767) / (double)32767) * 65;
-    joyY = ((joyY - 32767) / (double)32767) * 65;
-
-    if (joyX > -8 && joyX < 8) {
-        joyX = 0;
+    if (leftJoyX > -8 && leftJoyX < 8) {
+        leftJoyX = 0;
     }
-    if (joyY > -8 && joyY < 8) {
-        joyY = 0;
+    if (leftJoyY > -8 && leftJoyY < 8) {
+        leftJoyY = 0;
     }
 
-    // printk("New X: %d, Y: %d\n", joyX, joyY);
+    e.data2 = leftJoyX;
+    e.data3 = leftJoyY;
 
-    e.data2 = joyX;
-    e.data3 = joyY;
+    // Right Joystick used for strafing
+    int32_t rightJoyX = (data[5] << 8 | data[4]); 
+    rightJoyX = ((rightJoyX - 32767) / (double)32767) * 65;
+
+    if (rightJoyX > -8 && rightJoyX < 8) {
+        rightJoyX = 0;
+    }
+
+    e.data4 = rightJoyX;
 
     if (e.data1 != prev_event.data1 || e.data2 != prev_event.data2 ||
         e.data3 != prev_event.data3 || e.data4 != prev_event.data4 ||
@@ -410,7 +418,6 @@ static uint8_t hogp_notify_cb(struct bt_hogp *hogp,
 
     // k_work_reschedule(&reset_work, K_MSEC(RESET_TIMEOUT_MS));
 
-    // printk("\n");
     return BT_GATT_ITER_CONTINUE;
 }
 
