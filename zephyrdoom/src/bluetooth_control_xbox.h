@@ -11,6 +11,7 @@
 #include <bluetooth/services/hogp.h>
 #include <errno.h>
 #include <stddef.h>
+#include <stdint.h>
 #include <zephyr/bluetooth/bluetooth.h>
 #include <zephyr/bluetooth/conn.h>
 #include <zephyr/bluetooth/gatt.h>
@@ -26,6 +27,7 @@
 #include <zephyr/types.h>
 
 #include "d_event.h"
+#include "m_controls.h"
 
 #define RESET_TIMEOUT_MS 500
 
@@ -33,13 +35,13 @@ static struct k_work_delayable reset_work;
 static void reset_inputs(struct k_work *work) {
     printk("Resetting joystick and button states\n");
 
-    event_t e;
-    e.type = ev_joystick;
-    e.data1 = 0;  // No buttons pressed
-    e.data2 = 0;  // Joystick X reset
-    e.data3 = 0;  // Joystick Y reset
+    event_t joystick_event;
+    joystick_event.type = ev_joystick;
+    joystick_event.data1 = 0;  // No buttons pressed
+    joystick_event.data2 = 0;  // Joystick X reset
+    joystick_event.data3 = 0;  // Joystick Y reset
 
-    D_PostEvent(&e);
+    D_PostEvent(&joystick_event);
 }
 
 #define SW0_NODE DT_ALIAS(sw0)
@@ -355,7 +357,7 @@ static void scan_init(void) {
 static uint8_t hogp_notify_cb(struct bt_hogp *hogp,
                               struct bt_hogp_rep_info *rep, uint8_t err,
                               const uint8_t *data) {
-    static event_t prev_event;
+    static event_t prev_joystick_event;
 
     if (!data) {
         return BT_GATT_ITER_STOP;
@@ -371,15 +373,19 @@ static uint8_t hogp_notify_cb(struct bt_hogp *hogp,
     // }
     // printk("\n");
 
-    event_t e;
-    e.type = ev_joystick;
+    event_t joystick_event;
+    event_t keyboard_event;
+    joystick_event.type = ev_joystick;
+    keyboard_event.type = ev_keydown;
 
     // data[13] contains A (0x01), B (0x02), X (0x08), Y (0x10) buttons
     bool button_A = data[13] & 0x01;
     bool button_B = data[13] & 0x02;
     bool button_X = data[13] & 0x08;
     bool button_Y = data[13] & 0x10;
-    e.data1 =
+    bool button_back = data[14] & 0x04;
+    bool button_start = data[14] & 0x08;
+    joystick_event.data1 =
         (button_A << 4) | (button_B << 5) | (button_X << 2) | (button_Y << 3);
 
     // Left joystick used for movement and turning
@@ -396,26 +402,35 @@ static uint8_t hogp_notify_cb(struct bt_hogp *hogp,
         leftJoyY = 0;
     }
 
-    e.data2 = leftJoyX;
-    e.data3 = leftJoyY;
+    joystick_event.data2 = leftJoyX;
+    joystick_event.data3 = leftJoyY;
 
-    // Right Joystick used for strafing
-    int32_t rightJoyX = (data[5] << 8 | data[4]); 
-    rightJoyX = ((rightJoyX - 32767) / (double)32767) * 65;
+    // Used for strafing
+    int16_t LT = data[8];
+    int16_t RT = data[10];
 
-    if (rightJoyX > -8 && rightJoyX < 8) {
-        rightJoyX = 0;
+    if (LT > 5) {
+        joystick_event.data4 = -LT;
+    } else if (RT > 5) {
+        joystick_event.data4 = RT;
+    } else {
+        joystick_event.data4 = 0;
     }
 
-    e.data4 = rightJoyX;
-
-    if (e.data1 != prev_event.data1 || e.data2 != prev_event.data2 ||
-        e.data3 != prev_event.data3 || e.data4 != prev_event.data4 ||
-        e.data5 != prev_event.data5) {
-        D_PostEvent(&e);
-        prev_event = e;
+    if (joystick_event.data1 != prev_joystick_event.data1 || joystick_event.data2 != prev_joystick_event.data2 ||
+        joystick_event.data3 != prev_joystick_event.data3 || joystick_event.data4 != prev_joystick_event.data4 ||
+        joystick_event.data5 != prev_joystick_event.data5) {
+        D_PostEvent(&joystick_event);
+        prev_joystick_event = joystick_event;
     }
-
+    if (button_back) {
+        keyboard_event.data1 = key_map_toggle;
+        D_PostEvent(&keyboard_event);
+    }
+    if (button_start) {
+        keyboard_event.data1 = key_menu_activate;
+        D_PostEvent(&keyboard_event);
+    }
     // k_work_reschedule(&reset_work, K_MSEC(RESET_TIMEOUT_MS));
 
     return BT_GATT_ITER_CONTINUE;
