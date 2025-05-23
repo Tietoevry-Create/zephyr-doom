@@ -204,8 +204,6 @@ int main(void) {
 
     NRF_CACHE_S->ENABLE = 1;
 
-    // boot_net();
-
     // sd_card_init(); // TODO: Get this working (all references to N_fs have
     // been commented out in w_wad and m_misc) N_qspi_init();
 

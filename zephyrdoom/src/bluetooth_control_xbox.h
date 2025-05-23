@@ -31,6 +31,9 @@
 
 #define RESET_TIMEOUT_MS 500
 
+#define DEADZONE_X 8
+#define DEADZONE_Y 8
+
 static struct k_work_delayable reset_work;
 static void reset_inputs(struct k_work *work) {
     printk("Resetting joystick and button states\n");
@@ -394,11 +397,10 @@ static uint8_t hogp_notify_cb(struct bt_hogp *hogp,
 
     leftJoyX = ((leftJoyX - 32767) / (double)32767) * 65;
     leftJoyY = ((leftJoyY - 32767) / (double)32767) * 65;
-
-    if (leftJoyX > -8 && leftJoyX < 8) {
+    if (leftJoyX > -DEADZONE_X && leftJoyX < DEADZONE_X) {
         leftJoyX = 0;
     }
-    if (leftJoyY > -8 && leftJoyY < 8) {
+    if (leftJoyY > -DEADZONE_Y && leftJoyY < DEADZONE_Y) {
         leftJoyY = 0;
     }
 
