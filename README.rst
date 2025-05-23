@@ -522,7 +522,7 @@ Start Button            Show menu
 
 * Xbox Controller Setup
 1. Hold the pairing button on the front of the controller, until the light starts blinking quickly.
-2. Restart the board running `nrf-doom`_ project.
+2. Restart the board running the zephyrdoom project.
 3. Wait for 5-10 seconds.
 4. Hold the pairing button again, until the light stops blinking and stays on.
 
