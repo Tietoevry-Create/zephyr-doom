@@ -360,6 +360,10 @@ static void scan_init(void) {
 static uint8_t hogp_notify_cb(struct bt_hogp *hogp,
                               struct bt_hogp_rep_info *rep, uint8_t err,
                               const uint8_t *data) {
+    static bool prev_dpad_up = false;
+    static bool prev_dpad_down = false;
+    static bool prev_button_back = false;
+    static bool prev_button_start = false;
     static event_t prev_joystick_event;
 
     if (!data) {
@@ -368,11 +372,10 @@ static uint8_t hogp_notify_cb(struct bt_hogp *hogp,
 
     // uint8_t size = bt_hogp_rep_size(rep);
     // uint8_t i;
-    // printk("Notification, id: %u, size: %u, data:", bt_hogp_rep_id(rep),
-    // size);
+    // printk("Notification, id: %u, size: %u, data:", bt_hogp_rep_id(rep), size);
 
     // for (i = 0; i < size; ++i) {
-    // 	printk(" 0x%x", data[i]);
+    //     printk(" 0x%x", data[i]);
     // }
     // printk("\n");
 
@@ -381,13 +384,14 @@ static uint8_t hogp_notify_cb(struct bt_hogp *hogp,
     joystick_event.type = ev_joystick;
     keyboard_event.type = ev_keydown;
 
-    // data[13] contains A (0x01), B (0x02), X (0x08), Y (0x10) buttons
-    bool button_A = data[13] & 0x01;
-    bool button_B = data[13] & 0x02;
-    bool button_X = data[13] & 0x08;
-    bool button_Y = data[13] & 0x10;
-    bool button_back = data[14] & 0x04;
-    bool button_start = data[14] & 0x08;
+    bool dpad_up = data[12] == 0x01;
+    bool dpad_down = data[12] == 0x05;
+    bool button_A = data[13] == 0x01;
+    bool button_B = data[13] == 0x02;
+    bool button_X = data[13] == 0x08;
+    bool button_Y = data[13] == 0x10;
+    bool button_back = data[14] == 0x04;
+    bool button_start = data[14] == 0x08;
     joystick_event.data1 =
         (button_A << 4) | (button_B << 5) | (button_X << 2) | (button_Y << 3);
 
@@ -419,20 +423,36 @@ static uint8_t hogp_notify_cb(struct bt_hogp *hogp,
         joystick_event.data4 = 0;
     }
 
-    if (joystick_event.data1 != prev_joystick_event.data1 || joystick_event.data2 != prev_joystick_event.data2 ||
-        joystick_event.data3 != prev_joystick_event.data3 || joystick_event.data4 != prev_joystick_event.data4 ||
+    if (joystick_event.data1 != prev_joystick_event.data1 ||
+        joystick_event.data2 != prev_joystick_event.data2 ||
+        joystick_event.data3 != prev_joystick_event.data3 ||
+        joystick_event.data4 != prev_joystick_event.data4 ||
         joystick_event.data5 != prev_joystick_event.data5) {
         D_PostEvent(&joystick_event);
         prev_joystick_event = joystick_event;
     }
-    if (button_back) {
+    if (dpad_up && !prev_dpad_up) {
+        keyboard_event.data1 = key_up;
+        D_PostEvent(&keyboard_event);
+    }
+    if (dpad_down && !prev_dpad_down) {
+        keyboard_event.data1 = key_down;
+        D_PostEvent(&keyboard_event);
+    }
+    if (button_back && !prev_button_back) {
         keyboard_event.data1 = key_map_toggle;
         D_PostEvent(&keyboard_event);
     }
-    if (button_start) {
+    if (button_start && !prev_button_start) {
         keyboard_event.data1 = key_menu_activate;
         D_PostEvent(&keyboard_event);
     }
+
+    prev_dpad_up = dpad_up;
+    prev_dpad_down = dpad_down;
+    prev_button_back = button_back;
+    prev_button_start = button_start;
+
     // k_work_reschedule(&reset_work, K_MSEC(RESET_TIMEOUT_MS));
 
     return BT_GATT_ITER_CONTINUE;
