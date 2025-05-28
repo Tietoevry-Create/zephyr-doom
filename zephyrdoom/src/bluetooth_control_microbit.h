@@ -38,6 +38,9 @@
 #define UART_RX_TIMEOUT \
     50000 /* Wait for RX complete event time in microseconds. */
 
+#define DEADZONE_X 50
+#define DEADZONE_Y 40
+
 const struct device *uart = DEVICE_DT_GET(DT_NODELABEL(uart0));
 struct k_work_delayable uart_work;
 
@@ -103,15 +106,14 @@ uint8_t ble_data_received(struct bt_nus_client *nus, const uint8_t *data,
     printk("ADC0: %d, ADC1: %d, A: %d, B: %d, C: %d, D: %d, E: %d, F: %d\n",
            adc_buf0, adc_buf1, button_A, button_B, button_C, button_D, button_E,
            button_F);
-
     int centered_adc = adc_buf0 - 470;
-    if (centered_adc > -50 && centered_adc < 50) {
+    if (centered_adc > -DEADZONE_X && centered_adc < DEADZONE_X) {
         adc_buf0 = 0;
     } else {
         adc_buf0 = centered_adc;
     }
     centered_adc = adc_buf1 - 481;
-    if (centered_adc > -50 && centered_adc < 50) {
+    if (centered_adc > -DEADZONE_Y && centered_adc < DEADZONE_Y) {
         adc_buf1 = 0;
     } else {
         adc_buf1 = centered_adc;
@@ -130,7 +132,8 @@ uint8_t ble_data_received(struct bt_nus_client *nus, const uint8_t *data,
     event_t joystick_event;
     joystick_event.type = ev_joystick;
     joystick_event.data1 = !button_A | (!button_B << 1) | (!button_C << 2) |
-                           (!button_D << 3) | (!button_E << 4) | (!button_F << 5);
+                           (!button_D << 3) | (!button_E << 4) |
+                           (!button_F << 5);
     joystick_event.data2 = adc_buf0;
     joystick_event.data3 = adc_buf1;
 
