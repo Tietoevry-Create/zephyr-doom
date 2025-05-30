@@ -7,8 +7,11 @@
 source "${ZEPHYR_BASE}/share/sysbuild/Kconfig"
 # source "Kconfig.zephyr"
 
-config NRF_DEFAULT_IPC_RADIO
+config NRF_DEFAULT_BLUETOOTH
 	default y
 
-config NETCORE_IPC_RADIO_BT_HCI_IPC
-	default y
+# config NRF_DEFAULT_IPC_RADIO
+# 	default y
+
+# config NETCORE_IPC_RADIO_BT_HCI_IPC
+# 	default y

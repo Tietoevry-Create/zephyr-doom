@@ -20,7 +20,8 @@
 
 LOG_MODULE_REGISTER(doom_main, CONFIG_DOOM_MAIN_LOG_LEVEL);
 
-#include "bluetooth_control_xbox.h"
+#include "bluetooth_control_keyboard.h"
+// #include "bluetooth_control_xbox.h"
 
 /* 1000 msec = 1 sec */
 #define SLEEP_TIME_MS 1000
@@ -204,22 +205,11 @@ int main(void) {
 
     NRF_CACHE_S->ENABLE = 1;
 
-    // sd_card_init(); // TODO: Get this working (all references to N_fs have
-    // been commented out in w_wad and m_misc) N_qspi_init();
-
-    // if (!no_sdcard) {
-    //     N_fs_init();
-    //     printf("\n\n");
-    //     printf("----------------------------------\n");
-    //     printf("NFS Initialized\n");
-    //     printf("---------------------------------\n");
-    // }
-
     N_ButtonsInit();
 
     M_ArgvInit();
 
-    bluetooth_main_xbox();
+    bluetooth_main_keyboard();
 
     D_DoomMain();
 
