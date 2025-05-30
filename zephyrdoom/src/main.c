@@ -20,7 +20,8 @@
 
 LOG_MODULE_REGISTER(doom_main, CONFIG_DOOM_MAIN_LOG_LEVEL);
 
-#include "bluetooth_control_xbox.h"
+#include "bluetooth_control_keyboard.h"
+// #include "bluetooth_control_xbox.h"
 
 /* 1000 msec = 1 sec */
 #define SLEEP_TIME_MS 1000
@@ -219,7 +220,8 @@ int main(void) {
 
     M_ArgvInit();
 
-    bluetooth_main_xbox();
+    bluetooth_main_keyboard();
+    // bluetooth_main_xbox();
     // int i = 0;
     // while(1) {
     //     k_msleep(1000);
