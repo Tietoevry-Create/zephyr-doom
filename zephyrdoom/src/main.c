@@ -205,36 +205,11 @@ int main(void) {
 
     NRF_CACHE_S->ENABLE = 1;
 
-    // sd_card_init(); // TODO: Get this working (all references to N_fs have
-    // been commented out in w_wad and m_misc) N_qspi_init();
-
-    // if (!no_sdcard) {
-    //     N_fs_init();
-    //     printf("\n\n");
-    //     printf("----------------------------------\n");
-    //     printf("NFS Initialized\n");
-    //     printf("---------------------------------\n");
-    // }
-
     N_ButtonsInit();
 
     M_ArgvInit();
 
     bluetooth_main_keyboard();
-    // bluetooth_main_xbox();
-    // int i = 0;
-    // while(1) {
-    //     k_msleep(1000);
-    // 	if (i % 10000000 == 0) {
-    // 		printk("i = %d\n", i);
-    // 	}
-    // 	i++;
-    // 	if (i == 1000000) {
-    // 		i = 0;
-    // 	}
-    // }
-
-    // bluetooth_init();
 
     D_DoomMain();
 
