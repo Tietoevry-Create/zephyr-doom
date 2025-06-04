@@ -1,0 +1,37 @@
+---
+name: Pre-commit checks
+run-name: >
+  ${{ github.workflow }} — Triggered by
+  ${{ github.actor }} on ${{ github.ref_name }}
+
+on:
+  workflow_dispatch:
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  pre-commit-check:
+    name: Run pre-commit checks
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Prepare runner env for pre-commit
+        run: sudo apt-get update && sudo apt-get install -y pre-commit
+
+      - name: Run pre-commit checks
+        run: |
+          pre-commit run \
+          --verbose \
+          --show-diff-on-failure \
+          --all-files 2>&1 | tee pre-commit.log
+
+      - name: Upload gamepad log
+        uses: actions/upload-artifact@v4
+        with:
+          name: pre-commit-log
+          path: pre-commit.log
