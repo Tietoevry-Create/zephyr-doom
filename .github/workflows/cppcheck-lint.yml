@@ -1,0 +1,65 @@
+---
+name: Cppcheck linter
+run-name: >
+  ${{ github.workflow }} — Triggered by
+  ${{ github.actor }} on ${{ github.ref_name }}
+
+on:
+  workflow_dispatch:
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  cppcheck-lint:
+    name: Run Cppcheck linter
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Prepare runner env for Cppcheck
+        run: sudo apt-get update && sudo apt-get install -y cppcheck
+
+      - name: Run cppcheck command for zephyrdoom source files
+        run: |
+          cppcheck \
+          --force \
+          --language=c \
+          --std=c89 \
+          --platform=unix32 \
+          --check-level=exhaustive \
+          --enable=warning \
+          --enable=style \
+          -I ./zephyrdoom/src/ \
+          -I ./zephyrdoom/src/config/ \
+          -I ./zephyrdoom/src/doom/ \
+          --showtime=summary \
+          ./zephyrdoom/src 2>&1 | tee zephyrdoom-cppcheck.log
+
+      - name: Run cppcheck command for gamepad source files
+        run: |
+          cppcheck \
+          --force \
+          --language=c \
+          --std=c89 \
+          --platform=unix32 \
+          --check-level=exhaustive \
+          --enable=warning \
+          --enable=style \
+          --showtime=summary \
+          ./gamepad/microbit/src 2>&1 | tee gamepad-cppcheck.log
+
+      - name: Upload zephyrdoom log
+        uses: actions/upload-artifact@v4
+        with:
+          name: zephyrdoom-cppcheck-log
+          path: zephyrdoom-cppcheck.log
+
+      - name: Upload gamepad log
+        uses: actions/upload-artifact@v4
+        with:
+          name: gamepad-cppcheck-log
+          path: gamepad-cppcheck.log
