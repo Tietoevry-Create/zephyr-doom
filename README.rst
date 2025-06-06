@@ -70,6 +70,8 @@ Pure Zephyr port             Open              Modify the code to make it compat
 Multiplayer                  Open
 ---------------------------- ----------------- --------------------------------
 Music                        Open
+---------------------------- ----------------- --------------------------------
+QSPI Memory Map              Open              Address depends on the hardware
 ============================ ================= ================================
 
 Compatibility Matrix

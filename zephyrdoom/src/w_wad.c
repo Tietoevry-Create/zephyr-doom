@@ -158,7 +158,7 @@ wad_file_t *W_AddFile(char *filename)
     I_Sleep(1);
     N_ReadButtons();
 
-    if (N_ButtonState(0)) {
+    if (N_ButtonState(3)) {
         do_wad_transfer = true;
     }
 
