@@ -5,6 +5,7 @@ run-name: >
   ${{ github.actor }} on ${{ github.ref_name }}
 
 on:
+  pull_request:
   workflow_dispatch:
 
 defaults:
