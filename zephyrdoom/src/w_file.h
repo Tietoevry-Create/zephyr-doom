@@ -13,7 +13,7 @@
 // GNU General Public License for more details.
 //
 // DESCRIPTION:
-//	WAD I/O functions.
+//  WAD I/O functions.
 //
 
 
@@ -33,7 +33,7 @@ typedef struct
     // Close the specified file.
     void (*CloseFile)(wad_file_t *file);
 
-    // Read data from the specified position in the file into the 
+    // Read data from the specified position in the file into the
     // provided buffer.  Returns the number of bytes read.
     size_t (*Read)(wad_file_t *file, unsigned int offset,
                    void *buffer, size_t buffer_len);
@@ -57,7 +57,7 @@ struct _wad_file_s
 };
 
 /*
-// Open the specified file. Returns a pointer to a new wad_file_t 
+// Open the specified file. Returns a pointer to a new wad_file_t
 // handle for the WAD file, or NULL if it could not be opened.
 
 wad_file_t *W_OpenFile(char *path);

@@ -13,7 +13,7 @@
 // GNU General Public License for more details.
 //
 // DESCRIPTION:
-//	WAD I/O functions.
+//  WAD I/O functions.
 //
 
 #include <stdio.h>
@@ -65,4 +65,3 @@ size_t W_Read(wad_file_t *wad, unsigned int offset,
     return 0;
     // return wad->file_class->Read(wad, offset, buffer, buffer_len);
 }
-

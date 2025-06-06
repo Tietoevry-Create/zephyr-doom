@@ -28,8 +28,8 @@
 // Retrieve column data for span blitting.
 byte*
 R_GetColumn
-( int		tex,
-  int		col );
+( int       tex,
+  int       col );
 
 byte*
 R_GetCachedColumn

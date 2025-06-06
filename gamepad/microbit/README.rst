@@ -1,7 +1,7 @@
 Bluetooth Gamepad
 ##################
 
-This sample connects a gamepad to an nRF5340 board over Bluetooth® Low Energy (LE). 
+This sample connects a gamepad to an nRF5340 board over Bluetooth® Low Energy (LE).
 The gamepad sends joystick position and button state data at regular intervals to the board.
 
 Requirements

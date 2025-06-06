@@ -26,7 +26,7 @@
 
 #include "z_zone.h"
 
-typedef struct 
+typedef struct
 {
     char *from_text;
     char *to_text;
@@ -42,7 +42,7 @@ static unsigned int strhash(char *s)
 {
     char *p = s;
     unsigned int h = *p;
-  
+
     if (h)
     {
         for (p += 1; *p; p++)
@@ -58,7 +58,7 @@ static deh_substitution_t *SubstitutionForString(char *s)
 
     // Fallback if we have not initialized the hash table yet
     if (hash_table_length < 0)
-	return NULL;
+    return NULL;
 
     entry = strhash(s) % hash_table_length;
 
@@ -99,7 +99,7 @@ char *DEH_String(char *s)
 static void InitHashTable(void)
 {
     // init hash table
-    
+
     hash_table_entries = 0;
     hash_table_length = 16;
     hash_table = Z_Malloc(sizeof(deh_substitution_t *) * hash_table_length,
@@ -114,13 +114,13 @@ static void IncreaseHashtable(void)
     deh_substitution_t **old_table;
     int old_table_length;
     int i;
-    
+
     // save the old table
 
     old_table = hash_table;
     old_table_length = hash_table_length;
-    
-    // double the size 
+
+    // double the size
 
     hash_table_length *= 2;
     hash_table = Z_Malloc(sizeof(deh_substitution_t *) * hash_table_length,
@@ -430,4 +430,3 @@ void DEH_snprintf(char *buffer, size_t len, char *fmt, ...)
 
     va_end(args);
 }
-

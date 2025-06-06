@@ -26,7 +26,7 @@
 #include "am_map.h"
 #include "st_stuff.h"
 
-typedef struct 
+typedef struct
 {
     char *name;
     cheatseq_t *seq;
@@ -56,7 +56,7 @@ static deh_cheat_t allcheats[] =
 static deh_cheat_t *FindCheatByName(char *name)
 {
     size_t i;
-    
+
     for (i=0; i<arrlen(allcheats); ++i)
     {
         if (!strcasecmp(allcheats[i].name, name))
@@ -113,10 +113,10 @@ static void DEH_CheatParseLine(deh_context_t *context, char *line, void *tag)
             break;
         }
 
-	if (deh_apply_cheats)
-	{
-	    cheat->seq->sequence[i] = unsvalue[i];
-	}
+    if (deh_apply_cheats)
+    {
+        cheat->seq->sequence[i] = unsvalue[i];
+    }
         ++i;
 
         // Absolute limit - don't exceed
@@ -143,4 +143,3 @@ deh_section_t deh_section_cheat =
     NULL,
     NULL,
 };
-
