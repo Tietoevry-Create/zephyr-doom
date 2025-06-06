@@ -16,7 +16,7 @@
 //
 
 #ifndef NET_DEFS_H
-#define NET_DEFS_H 
+#define NET_DEFS_H
 
 #include <stdio.h>
 
@@ -42,7 +42,7 @@
 
 // Networking and tick handling related.
 
-/* NRFD-TODO !! BACKUPTICS 128 */ 
+/* NRFD-TODO !! BACKUPTICS 128 */
 #define BACKUPTICS 4
 
 typedef struct _net_module_s net_module_t;
@@ -231,7 +231,7 @@ typedef struct
 
 // Complete set of ticcmds from all players
 
-typedef struct 
+typedef struct
 {
     signed int latency;
     unsigned int seq;

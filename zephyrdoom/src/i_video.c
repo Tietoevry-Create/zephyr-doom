@@ -13,13 +13,13 @@
 // GNU General Public License for more details.
 //
 // DESCRIPTION:
-//	DOOM graphics stuff for NRF.
+//  DOOM graphics stuff for NRF.
 //
 
 
 // NRFD-EXCLUDE: #include "icon.c"
 
-#include <string.h> 
+#include <string.h>
 
 #include "doom_config.h"
 #include "d_loop.h"
@@ -142,7 +142,7 @@ const boolean screensaver_mode = false;
 
 const boolean screenvisible = true;
 
-// If true, we display dots at the bottom of the screen to 
+// If true, we display dots at the bottom of the screen to
 // indicate FPS.
 
 const boolean display_fps_dots = false;
@@ -162,12 +162,12 @@ unsigned int joywait = 0;
 void PrintVBuffer(void)
 {
     // pixel_t *vb = I_VideoBuffer;
-    // printf("%.2X %.2X %.2X %2X %.2X %.2X %.2X %2X\n", 
+    // printf("%.2X %.2X %.2X %2X %.2X %.2X %.2X %2X\n",
     //     vb[0], vb[1], vb[2], vb[3],
-    //     vb[4], vb[5], vb[6], vb[7]); 
-    // printf("%.2X %.2X %.2X %2X %.2X %.2X %.2X %2X\n", 
+    //     vb[4], vb[5], vb[6], vb[7]);
+    // printf("%.2X %.2X %.2X %2X %.2X %.2X %.2X %2X\n",
     //     vb[1*SCREENWIDTH+0], vb[1*SCREENWIDTH+1], vb[1*SCREENWIDTH+2], vb[1*SCREENWIDTH+3],
-    //     vb[1*SCREENWIDTH+4], vb[1*SCREENWIDTH+5], vb[1*SCREENWIDTH+6], vb[1*SCREENWIDTH+7]); 
+    //     vb[1*SCREENWIDTH+4], vb[1*SCREENWIDTH+5], vb[1*SCREENWIDTH+6], vb[1*SCREENWIDTH+7]);
 }
 
 
@@ -412,7 +412,7 @@ int I_GetPaletteIndex(int r, int g, int b)
 
     */
 
-// 
+//
 // Set the window title
 //
 
@@ -437,7 +437,7 @@ void I_GraphicsCheckCommandLine(void)
     // noblit = M_CheckParm ("-noblit");
 
     // //!
-    // // @category video 
+    // // @category video
     // //
     // // Don't grab the mouse when running in windowed mode.
     // //
@@ -445,7 +445,7 @@ void I_GraphicsCheckCommandLine(void)
     // nograbmouse_override = M_ParmExists("-nograbmouse");
 
     //!
-    // @category video 
+    // @category video
     //
     // Disable the mouse.
     //

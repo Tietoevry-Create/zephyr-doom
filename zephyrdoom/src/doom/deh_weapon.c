@@ -51,7 +51,7 @@ static void *DEH_WeaponStart(deh_context_t *context, char *line)
         DEH_Warning(context, "Invalid weapon number: %i", weapon_number);
         return NULL;
     }
-    
+
     return &weaponinfo[weapon_number];
 }
 
@@ -60,7 +60,7 @@ static void DEH_WeaponParseLine(deh_context_t *context, char *line, void *tag)
     char *variable_name, *value;
     weaponinfo_t *weapon;
     int ivalue;
-    
+
     if (tag == NULL)
         return;
 
@@ -98,4 +98,3 @@ deh_section_t deh_section_weapon =
     NULL,
     DEH_WeaponSHA1Sum,
 };
-

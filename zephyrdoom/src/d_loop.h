@@ -13,7 +13,7 @@
 // GNU General Public License for more details.
 //
 // DESCRIPTION:
-//	Main loop stuff.
+//  Main loop stuff.
 //
 
 #ifndef __D_LOOP__
@@ -85,4 +85,3 @@ boolean D_NonVanillaPlayback(boolean conditional, int lumpnum,
                              char *feature);
 
 #endif
-

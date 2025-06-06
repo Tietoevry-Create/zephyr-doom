@@ -92,14 +92,14 @@ static void NET_Conn_ParseDisconnect(net_connection_t *conn, net_packet_t *packe
 
     // Other end wants to disconnect
     // Send a DISCONNECT_ACK reply.
-    
+
     reply = NET_NewPacket(10);
     NET_WriteInt16(reply, NET_PACKET_TYPE_DISCONNECT_ACK);
     NET_Conn_SendPacket(conn, reply);
     NET_FreePacket(reply);
 
     conn->last_send_time = I_GetTimeMS();
-    
+
     conn->state = NET_CONN_STATE_DISCONNECTED_SLEEP;
     conn->disconnect_reason = NET_DISCONNECT_REMOTE;
 }
@@ -114,7 +114,7 @@ static void NET_Conn_ParseDisconnectACK(net_connection_t *conn,
     {
         // We have received an acknowledgement to our disconnect
         // request. We have been disconnected successfully.
-        
+
         conn->state = NET_CONN_STATE_DISCONNECTED;
         conn->disconnect_reason = NET_DISCONNECT_LOCAL;
         conn->last_send_time = -1;
@@ -131,7 +131,7 @@ static void NET_Conn_ParseReject(net_connection_t *conn, net_packet_t *packet)
     {
         return;
     }
-    
+
     if (conn->state == NET_CONN_STATE_CONNECTING)
     {
         // rejected by server
@@ -156,7 +156,7 @@ static void NET_Conn_ParseReliableACK(net_connection_t *conn, net_packet_t *pack
     {
         return;
     }
-            
+
     // Is this an acknowledgement for the first packet in the list?
 
     if (seq == (unsigned int)((conn->reliable_packets->seq + 1) & 0xff))
@@ -168,7 +168,7 @@ static void NET_Conn_ParseReliableACK(net_connection_t *conn, net_packet_t *pack
 
         rp = conn->reliable_packets;
         conn->reliable_packets = rp->next;
-        
+
         NET_FreePacket(rp->packet);
         free(rp);
     }
@@ -178,7 +178,7 @@ static void NET_Conn_ParseReliableACK(net_connection_t *conn, net_packet_t *pack
 //
 // Returns true if the packet should be discarded (incorrect sequence)
 
-static boolean NET_Conn_ReliablePacket(net_connection_t *conn, 
+static boolean NET_Conn_ReliablePacket(net_connection_t *conn,
                                        net_packet_t *packet)
 {
     unsigned int seq;
@@ -206,13 +206,13 @@ static boolean NET_Conn_ReliablePacket(net_connection_t *conn,
         // Now we can receive the next packet in the sequence.
 
         conn->reliable_recv_seq = (conn->reliable_recv_seq + 1) & 0xff;
-    
+
         result = false;
     }
 
     // Send an acknowledgement
 
-    // Note: this is braindead.  It would be much more sensible to 
+    // Note: this is braindead.  It would be much more sensible to
     // include this in the next packet, rather than the overhead of
     // sending a complete packet just for one byte of information.
 
@@ -232,7 +232,7 @@ static boolean NET_Conn_ReliablePacket(net_connection_t *conn,
 //
 // Returns true if eaten by common code
 
-boolean NET_Conn_Packet(net_connection_t *conn, net_packet_t *packet, 
+boolean NET_Conn_Packet(net_connection_t *conn, net_packet_t *packet,
                         unsigned int *packet_type)
 {
     conn->keepalive_recv_time = I_GetTimeMS();
@@ -241,7 +241,7 @@ boolean NET_Conn_Packet(net_connection_t *conn, net_packet_t *packet,
 
     if (*packet_type & NET_RELIABLE_PACKET)
     {
-        if (NET_Conn_ReliablePacket(conn, packet)) 
+        if (NET_Conn_ReliablePacket(conn, packet))
         {
             // Invalid packet: eat it.
 
@@ -252,7 +252,7 @@ boolean NET_Conn_Packet(net_connection_t *conn, net_packet_t *packet,
 
         *packet_type &= ~NET_RELIABLE_PACKET;
     }
-    
+
     switch (*packet_type)
     {
         case NET_PACKET_TYPE_DISCONNECT:
@@ -313,7 +313,7 @@ void NET_Conn_Run(net_connection_t *conn)
             conn->state = NET_CONN_STATE_DISCONNECTED;
             conn->disconnect_reason = NET_DISCONNECT_TIMEOUT;
         }
-        
+
         if (nowtime - conn->keepalive_send_time > KEEPALIVE_PERIOD * 1000)
         {
             // We have not sent anything in a long time.
@@ -347,7 +347,7 @@ void NET_Conn_Run(net_connection_t *conn)
         if (conn->last_send_time < 0
          || nowtime - conn->last_send_time > 1000)
         {
-            // it has been a second since the last disconnect packet 
+            // it has been a second since the last disconnect packet
             // was sent, and still no reply.
 
             if (conn->num_retries < MAX_RETRIES)
@@ -362,7 +362,7 @@ void NET_Conn_Run(net_connection_t *conn)
 
                 ++conn->num_retries;
             }
-            else 
+            else
             {
                 // No more retries allowed.
                 // Force disconnect.
@@ -400,7 +400,7 @@ net_packet_t *NET_Conn_NewReliable(net_connection_t *conn, int packet_type)
     NET_WriteInt16(packet, packet_type | NET_RELIABLE_PACKET);
 
     // write the low byte of the send sequence number
-    
+
     NET_WriteInt8(packet, conn->reliable_send_seq & 0xff);
 
     // Add to the list of reliable packets
@@ -411,8 +411,8 @@ net_packet_t *NET_Conn_NewReliable(net_connection_t *conn, int packet_type)
     rp->seq = conn->reliable_send_seq;
     rp->last_send_time = -1;
 
-    for (listend = &conn->reliable_packets; 
-         *listend != NULL; 
+    for (listend = &conn->reliable_packets;
+         *listend != NULL;
          listend = &((*listend)->next));
 
     *listend = rp;
@@ -422,11 +422,11 @@ net_packet_t *NET_Conn_NewReliable(net_connection_t *conn, int packet_type)
     conn->reliable_send_seq = (conn->reliable_send_seq + 1) & 0xff;
 
     // Finished
-    
+
     return packet;
 }
 
-// Used to expand the least significant byte of a tic number into 
+// Used to expand the least significant byte of a tic number into
 // the full tic number, from the current tic number
 
 unsigned int NET_ExpandTicNum(unsigned int relative, unsigned int b)
@@ -443,7 +443,7 @@ unsigned int NET_ExpandTicNum(unsigned int relative, unsigned int b)
         result -= 0x100;
     if (l > 0xb0 && b < 0x40)
         result += 0x100;
-    
+
     return result;
 }
 
@@ -472,4 +472,3 @@ boolean NET_ValidGameSettings(GameMode_t mode, GameMission_t mission,
 
     return true;
 }
-

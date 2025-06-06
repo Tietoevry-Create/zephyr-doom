@@ -88,7 +88,7 @@ extern  int             startloadgame;
 
 extern  boolean     autostart;
 
-// Selected by user. 
+// Selected by user.
 extern  skill_t         gameskill;
 extern  int     gameepisode;
 extern  int     gamemap;
@@ -160,7 +160,7 @@ extern  int             testcontrols_mousespeed;
 extern  int viewangleoffset;
 
 // Player taking events, and displaying.
-extern  int consoleplayer;  
+extern  int consoleplayer;
 extern  int displayplayer;
 
 
@@ -194,7 +194,7 @@ extern const boolean   demorecording;
 extern boolean lowres_turn;
 
 // Quit after playing a demo from cmdline.
-extern const boolean        singledemo; 
+extern const boolean        singledemo;
 
 //?
 extern  gamestate_t     gamestate;
@@ -222,7 +222,7 @@ extern  mapthing_t      playerstarts[MAXPLAYERS];
 
 // Intermission stats.
 // Parameters for world map / intermission.
-extern  wbstartstruct_t     wminfo; 
+extern  wbstartstruct_t     wminfo;
 
 
 
