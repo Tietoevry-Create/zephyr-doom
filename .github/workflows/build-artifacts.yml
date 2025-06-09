@@ -1,0 +1,124 @@
+---
+name: Build and package artifacts
+run-name: >
+  ${{ github.workflow }} — Triggered by
+  ${{ github.actor }} on ${{ github.ref_name }}
+
+on:
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      toolchain_version:
+        description: Version of the nRF toolchain to install
+        required: false
+        default: v2.6.2
+        type: string
+      sdk_version:
+        description: Version of the nRF SDK to install
+        required: false
+        default: v2.6.0
+        type: string
+      board_target:
+        description: Target board for the build
+        required: false
+        default: nrf5340dk_nrf5340_cpuapp
+        type: string
+
+env:
+  NRFUTIL_URL: https://files.nordicsemi.com/artifactory/swtools/external/nrfutil/executables/x86_64-unknown-linux-gnu/nrfutil
+  TOOLCHAIN_VERSION: v2.6.2
+  SDK_VERSION: v2.6.0
+  BOARD_TARGET: nrf5340dk_nrf5340_cpuapp
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  build-artifacts:
+    name: Build and package artifacts
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set build env variables
+        run: |
+          echo "TOOLCHAIN_VERSION=${INPUT_TOOLCHAIN_VERSION:-$TOOLCHAIN_VERSION}" >> $GITHUB_ENV
+          echo "SDK_VERSION=${INPUT_SDK_VERSION:-$SDK_VERSION}" >> $GITHUB_ENV
+          echo "BOARD_TARGET=${INPUT_BOARD_TARGET:-$BOARD_TARGET}" >> $GITHUB_ENV
+        env:
+          INPUT_TOOLCHAIN_VERSION: ${{ github.event.inputs.toolchain_version }}
+          INPUT_SDK_VERSION: ${{ github.event.inputs.sdk_version }}
+          INPUT_BOARD_TARGET: ${{ github.event.inputs.board_target }}
+
+      - name: Prepare runner env for nrfutil tool
+        run: |
+          sudo apt-get update && sudo apt-get install -y \
+          libunistring5 \
+          libusb-1.0-0 \
+
+      # Required for nrfutil toolchain/sdk in version <3.0.0
+      - name: Link libunistring library to avoid nrfutil runtime errors
+        run: sudo ln -sf libunistring.so.5.0.0 libunistring.so.2
+        working-directory: /lib/x86_64-linux-gnu
+
+      - name: Configure nrfutil tool
+        run: |
+          sudo curl ${{ env.NRFUTIL_URL }} \
+          -o /usr/local/bin/nrfutil
+          sudo chmod +x /usr/local/bin/nrfutil
+
+      - name: Ensure the lastest version of nrfutil tool
+        run: nrfutil self-upgrade
+
+      - name: Install nRF toolchain
+        run: |
+          nrfutil install toolchain-manager
+          nrfutil toolchain-manager install --ncs-version ${{ env.TOOLCHAIN_VERSION }}
+
+      - name: Install nRF SDK
+        run: |
+          nrfutil install sdk-manager
+          nrfutil sdk-manager install ${{ env.SDK_VERSION }}
+
+      - name: Build zephyrdoom artifacts
+        run: |
+          nrfutil sdk-manager toolchain launch \
+          --ncs-version ${{ env.TOOLCHAIN_VERSION }} -- \
+          bash -c '
+            set -euo pipefail
+            export ZEPHYR_BASE="$HOME/ncs/${{ env.SDK_VERSION }}/zephyr"
+            west build \
+            --build-dir "${{ github.workspace }}/zephyrdoom/build" \
+            "${{ github.workspace }}/zephyrdoom" \
+            --pristine \
+            --board ${{ env.BOARD_TARGET }} \
+            -- -DNCS_TOOLCHAIN_VERSION=NONE \
+            2>&1 | tee zephyrdoom-build-${{ env.SDK_VERSION }}-${{ github.run_number }}.log'
+
+      - name: Rename zephyrdoom artifacts
+        run: |
+          cp "${{ github.workspace }}/zephyrdoom/build/zephyr/merged.hex" \
+          "${{ github.workspace }}/zephyrdoom-merged-${{ env.SDK_VERSION }}-${{ github.run_number }}.hex"
+          cp "${{ github.workspace }}/zephyrdoom/build/zephyr/merged_domains.hex" \
+          "${{ github.workspace }}/zephyrdoom-merged-domains-${{ env.SDK_VERSION }}-${{ github.run_number }}.hex"
+          cp "${{ github.workspace }}/zephyrdoom/build/zephyr/zephyr.hex" \
+          "${{ github.workspace }}/zephyrdoom-zephyr-${{ env.SDK_VERSION }}-${{ github.run_number }}.hex"
+          cp "${{ github.workspace }}/zephyrdoom/build/zephyr/zephyr.elf" \
+          "${{ github.workspace }}/zephyrdoom-zephyr-${{ env.SDK_VERSION }}-${{ github.run_number }}.elf"
+          cp "${{ github.workspace }}/zephyrdoom/build/zephyr/zephyr.map" \
+          "${{ github.workspace }}/zephyrdoom-zephyr-${{ env.SDK_VERSION }}-${{ github.run_number }}.map"
+
+      - name: Upload zephyrdoom artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: zephyrdoom-build-${{ env.SDK_VERSION }}-${{ env.BOARD_TARGET }}-${{ github.run_number }}
+          path: |
+            zephyrdoom-merged-${{ env.SDK_VERSION }}-${{ github.run_number }}.hex
+            zephyrdoom-merged-domains-${{ env.SDK_VERSION }}-${{ github.run_number }}.hex
+            zephyrdoom-zephyr-${{ env.SDK_VERSION }}-${{ github.run_number }}.hex
+            zephyrdoom-zephyr-${{ env.SDK_VERSION }}-${{ github.run_number }}.elf
+            zephyrdoom-zephyr-${{ env.SDK_VERSION }}-${{ github.run_number }}.map
+            zephyrdoom-build-${{ env.SDK_VERSION }}-${{ github.run_number }}.log
