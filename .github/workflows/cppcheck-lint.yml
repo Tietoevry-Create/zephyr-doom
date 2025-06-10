@@ -13,15 +13,17 @@ defaults:
 
 jobs:
   cppcheck-lint:
-    name: Run Cppcheck linter
+    name: Run cppcheck linter
     runs-on: ubuntu-24.04
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Prepare runner env for Cppcheck
-        run: sudo apt-get update && sudo apt-get install -y cppcheck
+      - name: Prepare runner env for cppcheck tool
+        run: |
+          sudo apt-get update && sudo apt-get install -y \
+          cppcheck
 
       - name: Run cppcheck command for zephyrdoom source files
         run: |
@@ -33,11 +35,12 @@ jobs:
           --check-level=exhaustive \
           --enable=warning \
           --enable=style \
-          -I ./zephyrdoom/src/ \
-          -I ./zephyrdoom/src/config/ \
-          -I ./zephyrdoom/src/doom/ \
+          -I "${{ github.workspace }}/zephyrdoom/src" \
+          -I "${{ github.workspace }}/zephyrdoom/src/config" \
+          -I "${{ github.workspace }}/zephyrdoom/src/doom" \
           --showtime=summary \
-          ./zephyrdoom/src 2>&1 | tee zephyrdoom-cppcheck.log
+          "${{ github.workspace }}/zephyrdoom/src" \
+          2>&1 | tee zephyrdoom-cppcheck--${{ github.run_number }}.log
 
       - name: Run cppcheck command for gamepad source files
         run: |
@@ -50,16 +53,13 @@ jobs:
           --enable=warning \
           --enable=style \
           --showtime=summary \
-          ./gamepad/microbit/src 2>&1 | tee gamepad-cppcheck.log
+          "${{ github.workspace }}/gamepad/microbit/src" \
+          2>&1 | tee gamepad-cppcheck-${{ github.run_number }}.log
 
-      - name: Upload zephyrdoom log
+      - name: Upload zephyr-doom logs
         uses: actions/upload-artifact@v4
         with:
-          name: zephyrdoom-cppcheck-log
-          path: zephyrdoom-cppcheck.log
-
-      - name: Upload gamepad log
-        uses: actions/upload-artifact@v4
-        with:
-          name: gamepad-cppcheck-log
-          path: gamepad-cppcheck.log
+          name: zephyr-doom-cppcheck-${{ github.run_number }}
+          path: |
+            zephyrdoom-cppchec-${{ github.run_number }}.log
+            gamepad-cppcheck-${{ github.run_number }}.log

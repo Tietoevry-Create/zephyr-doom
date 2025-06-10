@@ -21,18 +21,21 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Prepare runner env for pre-commit
-        run: sudo apt-get update && sudo apt-get install -y pre-commit
+      - name: Prepare runner env for pre-commit tool
+        run: |
+          sudo apt-get update && sudo apt-get install -y \
+          pre-commit
 
       - name: Run pre-commit checks
         run: |
           pre-commit run \
           --verbose \
           --show-diff-on-failure \
-          --all-files 2>&1 | tee pre-commit.log
+          --all-files \
+          2>&1 | tee pre-commit-${{ github.run_number }}.log
 
-      - name: Upload gamepad log
+      - name: Upload pre-commit logs
         uses: actions/upload-artifact@v4
         with:
-          name: pre-commit-log
-          path: pre-commit.log
+          name: zephyr-doom-pre-commit-${{ github.run_number }}
+          path: pre-commit-${{ github.run_number }}.log
