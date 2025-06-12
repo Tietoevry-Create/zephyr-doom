@@ -1,0 +1,54 @@
+{
+    "name": "zephyr-doom",
+    "containerUser": "root",
+    "remoteUser": "developer",
+    "build": {
+        "dockerfile": "Dockerfile"
+    },
+    "init": true,
+    "initializeCommand": {
+        "initalize.sh": "bash ${localWorkspaceFolder}/.devcontainer/initialize.sh"
+    },
+    "postCreateCommand": {
+        "setup-git.sh": "bash ${containerWorkspaceFolder}/.devcontainer/setup-git.sh",
+        "setup-nRF-env.sh": "bash ${containerWorkspaceFolder}/.devcontainer/setup-nRF-env.sh"
+    },
+    "containerEnv": {
+        "ZEPHYR_BASE": "$HOME/ncs/v2.6.0/zephyr"
+    },
+    "runArgs": [
+        "--hostname",
+        "zephyr-doom",
+        "--env-file",
+        "${localWorkspaceFolder}/.devcontainer/git.env"
+    ],
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "asciidoctor.asciidoctor-vscode@3.4.2",
+                "editorconfig.editorconfig@0.17.4",
+                "github.copilot@1.335.0",
+                "github.vscode-github-actions@0.27.2",
+                "ms-vscode.cmake-tools@1.20.53",
+                "ms-vscode.cpptools@1.25.3",
+                "ms-vscode.makefile-tools@0.12.17",
+                "nordic-semiconductor.nrf-connect-extension-pack@2025.4.4",
+                "timonwong.shellcheck@0.37.7",
+                "tyriar.sort-lines@1.12.0"
+            ],
+            "settings": {
+                "editor.formatOnSave": true,
+                "editor.rulers": [
+                    80,
+                    120
+                ],
+                "files.insertFinalNewline": true,
+                "files.trimFinalNewlines": true,
+                "cmake.ignoreCMakeListsMissing": true,
+                "nrf-connect.applications": [
+                    "${containerWorkspaceFolder}/zephyrdoom"
+                ]
+            }
+        }
+    }
+}

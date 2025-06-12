@@ -4,6 +4,10 @@
 .cache/
 .vscode/
 
+# Environment files
+*.env
+*.gitconfig
+
 # Temporary/session files
 *.TMP
 *.emSession
