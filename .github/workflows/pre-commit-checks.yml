@@ -16,6 +16,7 @@ jobs:
   pre-commit-check:
     name: Run pre-commit checks
     runs-on: ubuntu-24.04
+    if: github.ref_name != 'master' && github.ref_name != 'main'
 
     steps:
       - name: Checkout repository

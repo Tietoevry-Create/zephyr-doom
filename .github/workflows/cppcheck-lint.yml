@@ -5,6 +5,10 @@ run-name: >
   ${{ github.actor }} on ${{ github.ref_name }}
 
 on:
+  pull_request:
+    paths:
+      - '**/*.c'
+      - '**/*.h'
   workflow_dispatch:
 
 defaults:
@@ -35,12 +39,11 @@ jobs:
           --check-level=exhaustive \
           --enable=warning \
           --enable=style \
-          -I "${{ github.workspace }}/zephyrdoom/src" \
-          -I "${{ github.workspace }}/zephyrdoom/src/config" \
-          -I "${{ github.workspace }}/zephyrdoom/src/doom" \
-          --showtime=summary \
+          -I "${{ github.workspace }}/zephyrdoom/src/" \
+          -I "${{ github.workspace }}/zephyrdoom/src/config/" \
+          -I "${{ github.workspace }}/zephyrdoom/src/doom/" \
           "${{ github.workspace }}/zephyrdoom/src" \
-          2>&1 | tee zephyrdoom-cppcheck--${{ github.run_number }}.log
+          2>&1 | tee zephyrdoom-cppcheck-${{ github.run_number }}.log
 
       - name: Run cppcheck command for gamepad source files
         run: |
@@ -52,7 +55,6 @@ jobs:
           --check-level=exhaustive \
           --enable=warning \
           --enable=style \
-          --showtime=summary \
           "${{ github.workspace }}/gamepad/microbit/src" \
           2>&1 | tee gamepad-cppcheck-${{ github.run_number }}.log
 
@@ -61,5 +63,5 @@ jobs:
         with:
           name: zephyr-doom-cppcheck-${{ github.run_number }}
           path: |
-            zephyrdoom-cppchec-${{ github.run_number }}.log
+            zephyrdoom-cppcheck-${{ github.run_number }}.log
             gamepad-cppcheck-${{ github.run_number }}.log
