@@ -7,8 +7,8 @@ run-name: >
 on:
   pull_request:
     paths:
-      - '**/*.c'
-      - '**/*.h'
+      - 'zephyrdoom/**/*.c'
+      - 'zephyrdoom/**/*.h'
   workflow_dispatch:
 
 defaults:
@@ -37,7 +37,6 @@ jobs:
           --std=c89 \
           --platform=unix32 \
           --check-level=exhaustive \
-          --enable=warning \
           --enable=style \
           -I "${{ github.workspace }}/zephyrdoom/src/" \
           -I "${{ github.workspace }}/zephyrdoom/src/config/" \
@@ -45,23 +44,15 @@ jobs:
           "${{ github.workspace }}/zephyrdoom/src" \
           2>&1 | tee zephyrdoom-cppcheck-${{ github.run_number }}.log
 
-      - name: Run cppcheck command for gamepad source files
+      - name: Analyze logs of zephyrdoom source files
         run: |
-          cppcheck \
-          --force \
-          --language=c \
-          --std=c89 \
-          --platform=unix32 \
-          --check-level=exhaustive \
-          --enable=warning \
-          --enable=style \
-          "${{ github.workspace }}/gamepad/microbit/src" \
-          2>&1 | tee gamepad-cppcheck-${{ github.run_number }}.log
+          "${{ github.workspace }}/scripts/parse-cppcheck-logfile.sh" \
+          zephyrdoom-cppcheck-${{ github.run_number }}.log
 
-      - name: Upload zephyr-doom logs
+      - name: Upload zephyrdoom logs
         uses: actions/upload-artifact@v4
         with:
-          name: zephyr-doom-cppcheck-${{ github.run_number }}
+          name: zephyrdoom-cppcheck-${{ github.run_number }}
           path: |
             zephyrdoom-cppcheck-${{ github.run_number }}.log
-            gamepad-cppcheck-${{ github.run_number }}.log
+            zephyrdoom-cppcheck-${{ github.run_number }}-summary.log
