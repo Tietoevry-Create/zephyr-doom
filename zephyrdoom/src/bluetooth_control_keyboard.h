@@ -26,6 +26,20 @@
 #include "d_event.h"
 #include "doomkeys.h"
 
+#include <zephyr/drivers/gpio.h>
+#include <zephyr/kernel.h>
+
+#define LED1_NODE DT_ALIAS(led1)
+const struct gpio_dt_spec led1 = GPIO_DT_SPEC_GET(LED1_NODE, gpios);
+
+static void pairing_blink_cb(struct k_timer *timer)
+{
+    gpio_pin_toggle_dt(&led1);
+}
+
+K_TIMER_DEFINE(pairing_blink_timer, pairing_blink_cb, NULL);
+
+
 /**
  * Switch between boot protocol and report protocol mode.
  */
@@ -194,6 +208,9 @@ static void connected_keyboard(struct bt_conn *conn, uint8_t conn_err) {
 
         gatt_discover_keyboard(conn);
     }
+
+    k_timer_stop(&pairing_blink_timer);
+    gpio_pin_set_dt(&led1, 1);
 }
 
 static void disconnected_keyboard(struct bt_conn *conn, uint8_t reason) {
@@ -744,6 +761,20 @@ int bluetooth_main_keyboard(void) {
     if (IS_ENABLED(CONFIG_SETTINGS)) {
         settings_load();
     }
+
+    if (!gpio_is_ready_dt(&led1)) {
+    printk("LED1 not ready\n");
+    return 0;
+    }
+
+    err = gpio_pin_configure_dt(&led1, GPIO_OUTPUT_INACTIVE);
+    if (err) {
+        printk("Failed to configure LED1 (err %d)\n", err);
+        return 0;
+    }
+
+k_timer_start(&pairing_blink_timer, K_NO_WAIT, K_MSEC(500));
+
 
     scan_init_keyboard();
 
