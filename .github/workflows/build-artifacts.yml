@@ -37,7 +37,7 @@ defaults:
     shell: bash
 
 jobs:
-  build-zephyrdoom-artifacts:
+  build-artifacts:
     name: Build and package artifacts
     runs-on: ubuntu-24.04
 
