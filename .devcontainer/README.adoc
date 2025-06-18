@@ -1,0 +1,150 @@
+:email: <maciej.gebicz@tietoevry.com>
+:description: Introduction to the Zephyr-Doom DevContainer
+:sectlinks:
+:sectnums:
+:toc:
+:toc-title: Content
+:toclevels: 2
+:source-highlighter: highlightjs
+
+= Zephyr-Doom DevContainer
+
+== Introduction
+
+This repository includes a `.devcontainer` directory that defines a
+*DevContainer*, which enables reproducible development environments using
+*Docker* and *Visual Studio Code*.
+
+DevContainers are especially useful in teams, open-source projects, and CI/CD
+workflows where consistent development setup across contributors and machines is
+desired.
+
+== Why use DevContainers
+
+* Consistent environment across various operating systems;
+* Run your project inside a Docker container with all dependencies
+pre-installed;
+* Isolate toolchains and libraries without polluting the host system;
+* Onboarding new developers becomes much faster;
+* Easier integration with CI/CD, testing and debugging in containerized
+environments;
+
+For more details, please refer to the official documentation:
+
+* https://containers.dev/[DevContainer documentation]
+* https://code.visualstudio.com/docs/devcontainers/containers[Visual Studio Code documentation]
+* https://docs.docker.com/[Docker documentation]
+
+== Prerequisites
+
+Before using this DevContainer, ensure you have the following tools installed:
+
+* https://code.visualstudio.com/Download[Visual Studio Code]
+* https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers[Remote - Containers Extension]
+* https://docs.docker.com/get-started/get-docker/[Docker]
+
+Additionally, you may want to configure:
+
+* *SSH agent forwarding* - this allows your local `ssh-agent` to be propagated
+into the `DevContainer`, enabling seamless SSH authentication without repeatedly
+entering passphrases or manually adding keys.
+
+* *Git identity environment variables* - to ensure consistent author and
+committer information across Git operations within the container, set the
+following environment variables on your host system:
+** `GIT_AUTHOR_NAME`
+** `GIT_AUTHOR_EMAIL`
+** `GIT_COMMITTER_NAME`
+** `GIT_COMMITTER_EMAIL`
+*** These values are automatically picked up by the initialization scripts and
+applied inside the container, avoiding issues with missing or mismatched Git
+identity.
+
+== How to use in Visual Studio Code
+
+NOTE: Example below is based on a Linux host.
+
+. Clone this repository and open it in Visual Studio Code:
++
+[source,bash]
+----
+git clone git@github.com:Tietoevry-Create/zephyr-doom.git
+cd zephyr-doom && code .
+----
+
+. Reopen the folder in container:
++
+* Press `F1` and select `Dev Containers: Reopen in Container`;
+* Alternatively, Visual Studio Code might prompt you to reopen in container
+automatically;
+
+. Wait for the container to build and start
+.. This may take a few minutes the first time.
+.. Once the message `Done. Press any key to close the terminal.` appears in the
+terminal, the environment is fully set up;
+
+. You are now in a fully configured development environment!
+
+== Directory structure
+
+[source,text]
+----
+.
+├── Dockerfile               # Defines the container image and install dependencies
+├── README.adoc              # Documentation explaining the DevContainer usage and setup
+├── devcontainer.json        # Main DevContainer configuration file
+├── initialize.sh            # Script that runs setup routines before container build
+├── setup-git.sh             # Sets up Git configuration inside the container
+├── setup-nRF-env.sh         # Prepares the Nordic nRF development environment
+└── templates
+    └── .gitconfig.template  # Template used to generate a Git config inside the container
+----
+
+== Known issues
+
+* The `nRF Connect extension` for Visual Studio Code may not initialize
+correctly *on the first DevContainer startup*. This is due to parallel execution
+of initialization scripts and extension installations.
+** To resolve this, simply reopen the DevContainer once the initial build has
+completed successfully.
+
+== Limitations
+
+* Docker performance may be slower due to virtualization overhead;
+
+* Container rebuild is required after changing base image or installed packages;
+
+== Troubleshooting
+
+* If you experience issues with the DevContainer environment and need to start
+from scratch, try the following:
+
+** Press `F1` in Visual Studio Code and select
+`Dev Containers: Rebuild Without Cache and Reopen in Container` option;
++
+This will discard cached layers and reinitialize the container environment;
+
+** If problems persist, you can manually remove all previously built and cached
+container data using:
++
+[source,bash]
+----
+docker rmi -f $(docker images -q)
+docker rm -fv $(docker ps -a -q)
+----
++ After cleanup, press `F1` and select
+`Dev Containers: Rebuild and Reopen in Container` to rebuild everything from a
+clean state;
+
+* If you encounter persistent issues with the Docker environment itself, you can
+try cleaning up all unused Docker resources by running:
++
+[source,bash]
+----
+docker system prune --all --force --volumes
+----
++
+IMPORTANT: This command will remove all unused containers, images, networks, and
+volumes. It may take some time depending on the amount of data being cleaned.
+Refer to the official Docker documentation for details ->
+https://docs.docker.com/engine/reference/commandline/system_prune/[docker system prune command].
