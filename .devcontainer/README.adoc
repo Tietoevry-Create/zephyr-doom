@@ -93,9 +93,10 @@ terminal, the environment is fully set up;
 ├── Dockerfile               # Defines the container image and install dependencies
 ├── README.adoc              # Documentation explaining the DevContainer usage and setup
 ├── devcontainer.json        # Main DevContainer configuration file
-├── initialize.sh            # Script that runs setup routines before container build
-├── setup-git.sh             # Sets up Git configuration inside the container
-├── setup-nRF-env.sh         # Prepares the Nordic nRF development environment
+├── scripts
+│   ├── initialize.sh        # Script that runs setup routines before container build
+│   ├── setup-git.sh         # Sets up Git configuration inside the container
+│   └── setup-nRF-env.sh     # Prepares the Nordic nRF development environment
 └── templates
     └── .gitconfig.template  # Template used to generate a Git config inside the container
 ----

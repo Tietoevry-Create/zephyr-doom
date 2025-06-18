@@ -46,7 +46,7 @@ jobs:
 
       - name: Analyze logs of zephyrdoom source files
         run: |
-          "${{ github.workspace }}/scripts/parse-cppcheck-logfile.sh" \
+          "${{ github.workspace }}/.github/scripts/parse-cppcheck-logfile.sh" \
           zephyrdoom-cppcheck-${{ github.run_number }}.log
 
       - name: Upload zephyrdoom logs

@@ -7,11 +7,11 @@
     },
     "init": true,
     "initializeCommand": {
-        "initalize.sh": "bash ${localWorkspaceFolder}/.devcontainer/initialize.sh"
+        "initalize.sh": "bash ${localWorkspaceFolder}/.devcontainer/scripts/initialize.sh"
     },
     "postCreateCommand": {
-        "setup-git.sh": "bash ${containerWorkspaceFolder}/.devcontainer/setup-git.sh",
-        "setup-nRF-env.sh": "bash ${containerWorkspaceFolder}/.devcontainer/setup-nRF-env.sh"
+        "setup-git.sh": "bash ${containerWorkspaceFolder}/.devcontainer/scripts/setup-git.sh",
+        "setup-nRF-env.sh": "bash ${containerWorkspaceFolder}/.devcontainer/scripts/setup-nRF-env.sh"
     },
     "containerEnv": {
         "ZEPHYR_BASE": "$HOME/ncs/v2.6.0/zephyr"

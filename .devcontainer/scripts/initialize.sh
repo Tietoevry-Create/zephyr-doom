@@ -3,7 +3,7 @@
 set -euo pipefail
 
 SCRIPT_DIR_PATH=$(realpath "$(dirname "$0")")
-GIT_ENV_PATH="$SCRIPT_DIR_PATH/git.env"
+GIT_ENV_PATH="$SCRIPT_DIR_PATH/../git.env"
 
 if [[ ! -f "$GIT_ENV_PATH" ]]; then
     if [[ -z "$GIT_AUTHOR_NAME" || -z "$GIT_AUTHOR_EMAIL" ]]; then
