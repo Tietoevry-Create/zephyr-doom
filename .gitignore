@@ -15,6 +15,9 @@
 *.html
 *.pdf
 
+# Archive files
+*.zip
+
 # Temporary/session files
 *.TMP
 *.emSession
