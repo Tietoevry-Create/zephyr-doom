@@ -59,6 +59,9 @@ following environment variables on your host system:
 *** These values are automatically picked up by the initialization scripts and
 applied inside the container, avoiding issues with missing or mismatched Git
 identity.
+*** Alternatively, you can set these values directly in the `git.env` file inside
+the `.devcontainer` directory, which will be used to generate the Git config
+inside the container.
 
 == How to use in Visual Studio Code
 

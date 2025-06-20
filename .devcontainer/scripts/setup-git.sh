@@ -15,6 +15,8 @@ if [[ ! -f "$GIT_CONFIG_HOME_PATH" ]]; then
     sed -i "s/TPL_GIT_USERNAME/$GIT_AUTHOR_NAME/g" "$GIT_CONFIG_TARGET_PATH"
 
     ln -sf "$GIT_CONFIG_TARGET_PATH" "$GIT_CONFIG_HOME_PATH"
+
+    echo "Created Git configuration at $GIT_CONFIG_TARGET_PATH"
 fi
 
 # Install pre-commit hooks
