@@ -27,7 +27,7 @@
             "extensions": [
                 "asciidoctor.asciidoctor-vscode@3.4.2",
                 "editorconfig.editorconfig@0.17.4",
-                "github.copilot@1.335.0",
+                "github.copilot@1.336.0",
                 "github.vscode-github-actions@0.27.2",
                 "ms-vscode.cmake-tools@1.20.53",
                 "ms-vscode.cpptools@1.25.3",
