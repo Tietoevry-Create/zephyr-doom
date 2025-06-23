@@ -1,1 +1,0 @@
-./docs/zephyr-doom.rst
