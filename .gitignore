@@ -4,20 +4,29 @@
 .cache/
 .vscode/
 
+# Log files
+*.log
+
+# Environment files
+*.env
+*.gitconfig
+
+# Documentation files
+*.html
+*.pdf
+
 # Temporary/session files
 *.TMP
 *.emSession
 *.jlink
 *.tmp
 
-# Log files
-*.log
-
 # Build artifacts
 Output
 _build/
 build*/
 build/
+output
 
 # SDK/vendor artifacts
 nRF5_SDK/

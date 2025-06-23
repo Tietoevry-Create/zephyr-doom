@@ -25,6 +25,6 @@ repos:
     rev: v1.5.5
     hooks:
       - id: forbid-tabs
-        exclude: (^|/)Kconfig(\..*)?$
+        exclude: (^|/)Kconfig(\..*)?$|(^|/).*\.gitconfig.*
       - id: remove-tabs
-        exclude: (^|/)Kconfig(\..*)?$
+        exclude: (^|/)Kconfig(\..*)?$|(^|/).*\.gitconfig.*

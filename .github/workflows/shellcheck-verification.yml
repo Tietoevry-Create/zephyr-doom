@@ -1,0 +1,40 @@
+---
+name: ShellCheck verification
+run-name: >
+  ${{ github.workflow }} — Triggered by
+  ${{ github.actor }} on ${{ github.ref_name }}
+
+on:
+  pull_request:
+    paths:
+      - '**/*.sh'
+  workflow_dispatch:
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  shellcheck-verification:
+    name: Run shellcheck verification
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Prepare runner env for shellcheck tool
+        run: |
+          sudo apt-get update && sudo apt-get install -y \
+          shellcheck
+
+      - name: Run shellcheck verification
+        run: |
+          find . -type f -name "*.sh" | xargs shellcheck --shell=bash \
+          2>&1 | tee shellcheck-${{ github.run_number }}.log
+
+      - name: Upload shellcheck logs
+        uses: actions/upload-artifact@v4
+        with:
+          name: zephyr-doom-shellcheck-${{ github.run_number }}
+          path: shellcheck-${{ github.run_number }}.log
