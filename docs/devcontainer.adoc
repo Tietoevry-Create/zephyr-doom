@@ -12,8 +12,9 @@
 == Introduction
 
 This repository includes a `.devcontainer` directory that defines a
-*DevContainer*, which enables reproducible development environments using
-*Docker* and *Visual Studio Code*.
+*DevContainer*, enabling reproducible development environment using *Docker* and
+*Visual Studio Code*. On Windows, it additionally requires
+*Windows Subsystem for Linux (WSL)*.
 
 DevContainers are especially useful in teams, open-source projects, and CI/CD
 workflows where consistent development setup across contributors and machines is
@@ -37,11 +38,57 @@ For more details, please refer to the official documentation:
 
 == Prerequisites
 
-Before using this DevContainer, ensure you have the following tools installed:
+Before using this DevContainer, follow the chapters below to set up the basic
+environment for your chosen setup.
+
+=== Linux host
+
+Ensure you have the following tools installed:
 
 * https://code.visualstudio.com/Download[Visual Studio Code]
 * https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers[Remote - Containers Extension]
-* https://docs.docker.com/get-started/get-docker/[Docker]
+* https://docs.docker.com/engine/install/[Docker Engine]
+
+For *helper extensions* installations and *additional configuration* plese refer
+to the <<additional-config, Additional configuration>> chapter.
+
+=== Windows host
+
+==== Host instance
+
+Ensure you have the following tools installed:
+
+* https://learn.microsoft.com/en-us/windows/wsl/install[Windows Subsystem for Linux (WSL)]
+** Extended step by step installation of Windows Subsystem for Linux (WSL) is
+available
+https://learn.microsoft.com/en-us/windows/wsl/install-manual[here].
+
+* https://learn.microsoft.com/en-us/windows/wsl/install-manual#step-6---install-your-linux-distribution-of-choice[Linux distribution] of your choice for Windows Subsystem for Linux (WSL)
+** By default it is *the lastest Ubuntu* operating system.
+
+* https://code.visualstudio.com/Download[Visual Studio Code]
+
+* https://marketplace.visualstudio.com/items?itemName=ms-vscode.remote-explorer[Remote Explorer Extension]
+
+* https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-wsl[WSL Extension]
+
+==== Windows Subsystem for Linux (WSL) instance
+
+Ensure you have the following tools installed:
+
+* https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers[Remote - Containers Extension]
+* https://docs.docker.com/engine/install/[Docker Engine]
+
+For *helper extensions* installations and *additional configuration* plese refer
+to the <<additional-config, Additional configuration>> chapter.
+
+=== Additional configuration [[additional-config]]
+
+Helper extensions that could be installed:
+
+* https://marketplace.visualstudio.com/items?itemName=ms-azuretools.vscode-containers[Container Tools Extension]
+* https://marketplace.visualstudio.com/items?itemName=ms-azuretools.vscode-docker[Docker Extension]
+* https://marketplace.visualstudio.com/items?itemName=docker.docker[Docker DX Extension]
 
 Additionally, you may want to configure:
 
@@ -65,28 +112,61 @@ inside the container.
 
 == How to use in Visual Studio Code
 
-NOTE: Example below is based on a Linux host.
+=== Linux host [[how-to-linux-host]]
 
-. Clone this repository and open it in Visual Studio Code:
+. Clone this repository (if not done yet):
 +
 [source,bash]
 ----
 git clone git@github.com:Tietoevry-Create/zephyr-doom.git
+----
++
+NOTE: To use this method for cloning the repository, you must have an SSH key
+pair configured. For details, see the official
+https://docs.github.com/en/authentication/connecting-to-github-with-ssh/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent[GitHub documentation].
+
+. Open the repository in Visual Studio Code:
++
+[source,bash]
+----
 cd zephyr-doom && code .
 ----
 
-. Reopen the folder in container:
+. Reopen the repository in the container:
 +
-* Press `F1` and select `Dev Containers: Reopen in Container`;
+* Press `F1` and select `Dev Containers: Reopen in Container`.
 * Alternatively, Visual Studio Code might prompt you to reopen in container
-automatically;
+automatically.
 
-. Wait for the container to build and start
+. Wait for the container to build and start.
 .. This may take a few minutes the first time.
 .. Once the message `Done. Press any key to close the terminal.` appears in the
-terminal, the environment is fully set up;
+terminal, the environment is fully set up.
 
 . You are now in a fully configured development environment!
+
+=== Windows host
+
+==== Host instance
+
+. Open Visual Studio Code.
+
+. Navigate to the `Remote Explorer` tab.
+.. If multiple connection methods are configured, ensure the extension is set to
+`WSL Targets`.
+
+. Start the desired distribution (by default, *the latest Ubuntu* version) by
+selecting `Connect in Current Window`.
+.. In case the *Terminal* is not started to navigate, use the
+`CTRL + `` keyboard shortcut.
+
+NOTE: On subsequent launches, if a directory was previously opened in the
+Windows Subsystem for Linux (WSL) instance, one will have the option to load
+directly into that directory.
+
+==== Windows Subsystem for Linux (WSL) instance
+
+Continue with the steps mentioned in the <<how-to-linux-host, next chapter>>.
 
 == Directory structure
 
