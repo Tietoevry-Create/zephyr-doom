@@ -1,0 +1,226 @@
+:email: <maciej.gebicz@tietoevry.com>
+:description: Setup of self-hosted GitHub Actions runner
+:sectlinks:
+:sectnums:
+:toc:
+:toc-title: Content
+:toclevels: 3
+:source-highlighter: highlightjs
+
+= Self-hosted GitHub Actions runner
+
+== Introduction
+
+GitHub Actions enables powerful automation for building, testing and releasing
+code directly from your repositories. While GitHub hosted runners offer a quick
+start, they come with limitations in terms of customization, runtime environment
+control and usage quotas.
+
+Self-hosted runners offer an alternative for one who wants more flexibility,
+access to local resources or better integration with custom hardware and
+software environments. By hosting own runner, one gain full control over system
+configuration, installed tools and network accessibility.
+
+This documentation guides through preparing a self-hosted GitHub Actions runner
+including installation, configuration and integration with GitHub repositories.
+
+While the setup process is largely platform agnostic, this guide uses a compact
+ARM based setup as a practical example of a cost effective, energy efficient
+and computationally capable runner.
+
+== Hardware overview
+
+For the purposes of this guide, the self-hosted runner will be deployed on a
+*Raspberry Pi 5*. This device is compact, affordable and powerful enough for
+many development automation tasks.
+
+The following hardware specification is used:
+
+[cols="1,1" options="header, autowidth"]
+|===
+^| Component
+^| Specification
+
+| Model
+| Raspberry Pi 5
+
+| RAM
+| 8 GB (LPDDR4X)
+
+| CPU
+| Quad-core ARM Cortex-A76 (2.4 GHz)
+
+| Storage
+| Samsung PRO Ultimate microSDXC (256 GB)
+
+| SD card performance
+| Read - Up to 200 MB/s +
+  Write - Up to 130 MB/s
+
+| Cooling
+| Passive heatsinks +
+  1 active cooling fan (30 x 30 mm)
+
+| Network
+| Gigabit Ethernet +
+  Wi-Fi 5 (802.11ac)
+
+| OS
+| Raspberry Pi OS Desktop (64 bit)
+
+| Power supply
+| USB-C 27 W (PD and QC supported)
+|===
+
+This hardware offers a balance of performance and efficiency, suitable for
+lightweight and moderate GitHub Actions workflows such as testing, building,
+scripting or integrating tasks.
+
+== RPi OS installation
+
+As mentioned in the previous chapter, the operating system chosen for this setup
+is *Raspberry Pi OS* with desktop features, based on the *aarch64* (64-bit ARM)
+architecture. This OS is the most suitable and officially supported option for
+the *Raspberry Pi 5* hardware.
+
+The system is installed onto the microSDXC card using the *Raspberry Pi Imager*
+tool. For more information, refer to the
+https://www.raspberrypi.com/software/[official download page].
+
+For step by step instructions and explanations of the installation process,
+refer to the
+https://www.raspberrypi.com/documentation/computers/getting-started.html#installing-the-operating-system[official getting started guide].
+
+== Runner installation
+
+=== Prerequisites
+
+. Create a `runner` user to isolate files and the processes it will start:
++
+[source,bash]
+----
+sudo useradd runner -m -s /bin/bash -c "User to manage Github Actions runner(s)"
+----
+.. If the `runner` user should be allowed to install packages required by a
+workflow, you can grant it passwordless `sudo` access. If `sudo` access is
+not granted, one will need to manually install the required packages or
+configure the environment to meet the requirements of the workflow:
++
+IMPORTANT: Granting `sudo` access without a password allows the `runner` user to
+execute any command as `root` without restrictions. Such action is persistent,
+system wide change and should only be applied if you fully trust the workflow
+and the repository it executes from. +
+*Consider the security risks!* A compromised workflow could gain full control
+over the system.
++
+[source,bash]
+----
+sudo bash -c "echo 'runner ALL=(root) NOPASSWD:ALL' > '/etc/sudoers.d/runner'"
+sudo chmod 440 "/etc/sudoers.d/runner"
+----
+
+. Log in as `runner` user:
++
+[source,bash]
+----
+sudo su - runner
+----
+.. Optionally add *SSH* authentication to ease the process and log in directly:
++
+[source,bash]
+----
+install -d -m 700 "$HOME/.ssh"
+touch "$HOME/.ssh/authorized_keys"
+chmod 600 "$HOME/.ssh/authorized_keys"
+
+# Write public key to the authorized_keys file
+vim "$HOME/.ssh/authorized_keys"
+----
+
+. Clone the repository and navigate to the `runner` directory:
++
+[source,bash]
+----
+git clone git@github.com:Tietoevry-Create/zephyr-doom.git
+cd zephyr-doom/runner
+----
+
+. Collect the necessary runner information for deployment:
+
+* Image type;
+* Architecture;
+* Tooling version;
+* (_Optionally_) Checksum hash of the archive to download;
+* Repository URL;
+* Time-limited authentication token;
+
+NOTE: You can obtain this information in the repository by navigating to
+*Settings* -> *Actions* -> *Runners* -> *New self-hosted runner*
+and selecting the appropriate configuration.
+
+=== Environment download
+
+. Run the `download-runner-tooling.sh` script with the appropriate arguments:
++
+[source,bash]
+----
+./download-runner-tooling.sh -a arm64 -v 2.325.0 -s 0e916ad0d354089d320011c132d46bdbe3353c8b925a2e1056c7c8e85d2f2490
+----
+
+=== Instance configuration
+
+. Execute the `configure-runner-env.sh` script with the repository URL and
+authentication token:
++
+[source,bash]
+----
+./configure-runner-env.sh -r https://github.com/Tietoevry-Create/zephyr-doom -t time_limited_auth_token_here
+----
+
+=== Enabling the instance
+
+. Start the runner manually using the `start-runner.sh` script:
++
+[source,bash]
+----
+./start-runner.sh
+----
+
+. Alternatively, configure the runner as a `systemd` service to start it
+automatically on boot:
+.. Enable *lingering* for the configured `runner` user:
++
+[source,bash]
+----
+sudo loginctl enable-linger runner
+----
+.. Configure the `systemd` service and start the runner with:
++
+[source,bash]
+----
+./start-runner-service.sh
+----
+
+=== Usage
+
+. To use a *self-hosted* runner in workflows, add the following to the YAML
+workflow file for each job:
++
+[source,yaml]
+----
+runs-on: self-hosted
+----
++
+NOTE: The `self-hosted` label is automatically assigned to the runner. You can
+add custom labels to categorize runners and target specific ones for particular
+jobs.
+
+== Links
+
+For in depth information, about *GitHub Actions runners*, please refer to
+official documentation pages:
+
+* https://docs.github.com/en/actions/concepts/runners/about-self-hosted-runners[About self-hosted documentation];
+* https://docs.github.com/en/actions/how-tos/hosting-your-own-runners/managing-self-hosted-runners/adding-self-hosted-runners#adding-a-self-hosted-runner-to-a-repository[Adding a self-hosted runner to a repository];
+* https://docs.github.com/en/organizations/managing-organization-settings/disabling-or-limiting-github-actions-for-your-organization#limiting-the-use-of-self-hosted-runners[Limiting the use of self-hosted runners];
+* https://docs.github.com/en/actions/how-tos/security-for-github-actions/security-guides/security-hardening-for-github-actions#hardening-for-self-hosted-runners[Hardening for self-hosted runners];
