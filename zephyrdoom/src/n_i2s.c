@@ -35,6 +35,7 @@
 
 #include <stdio.h>
 #include "board_config.h"
+#include "nrf5340_application.h"
 #include <nrf.h>
 
 #define NRF_I2S NRF_I2S0_S
@@ -76,6 +77,8 @@ static void clear_buffers()
     }
 }
 
+void I2S0_IRQHandler();
+
 void N_I2S_init()
 {
     printf("N_I2S_init\n");
@@ -112,6 +115,7 @@ void N_I2S_init()
 
     NRF_I2S->EVENTS_TXPTRUPD = 0;
     // IRQ setup
+    IRQ_CONNECT(I2S0_IRQn, 3, I2S0_IRQHandler, NULL, 0);
     NVIC_SetPriority(I2S0_IRQn, 3);
     NVIC_EnableIRQ(I2S0_IRQn);
     NRF_I2S->INTEN = I2S_INTEN_TXPTRUPD_Msk;

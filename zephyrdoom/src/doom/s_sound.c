@@ -600,8 +600,6 @@ void S_UpdateSounds(mobj_t *listener)
 
     // TODO: Fix this function
     // printf("NRFD-TODO: S_UpdateSounds\n");
-    return;
-
     I_UpdateSound();
 
     for (cnum=0; cnum<snd_channels; cnum++)

@@ -20,6 +20,7 @@
 
 LOG_MODULE_REGISTER(doom_main, CONFIG_DOOM_MAIN_LOG_LEVEL);
 
+
 #include "bluetooth_control_xbox.h"
 
 /* 1000 msec = 1 sec */
@@ -216,6 +217,8 @@ int main(void) {
     // }
 
     N_ButtonsInit();
+
+    N_I2S_init();
 
     M_ArgvInit();
 
