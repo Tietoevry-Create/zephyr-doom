@@ -91,9 +91,28 @@ For step by step instructions and explanations of the installation process,
 refer to the
 https://www.raspberrypi.com/documentation/computers/getting-started.html#installing-the-operating-system[official getting started guide].
 
-== Runner installation
+== Installation of direct runner
 
 === Prerequisites
+
+. Install required packages (to avoid blocking the installation process by
+built in `installDependencies.sh` script):
++
+[source,bash]
+----
+sudo apt install -y \
+    libkrb5-3 \
+    liblttng-ust1 \
+    zlib1g \
+    $(apt-cache search '^libicu[0-9][0-9]$' | \
+      awk '{print $1}' | \
+      sort -r | \
+      head -n 1) \
+    $(apt-cache search '^libssl[0-9]$' | \
+      awk '{print $1}' | \
+      sort -r | \
+      head -n 1)
+----
 
 . Create a `runner` user to isolate files and the processes it will start:
 +
@@ -106,18 +125,19 @@ workflow, you can grant it passwordless `sudo` access. If `sudo` access is
 not granted, one will need to manually install the required packages or
 configure the environment to meet the requirements of the workflow:
 +
-IMPORTANT: Granting `sudo` access without a password allows the `runner` user to
-execute any command as `root` without restrictions. Such action is persistent,
-system wide change and should only be applied if you fully trust the workflow
-and the repository it executes from. +
-*Consider the security risks!* A compromised workflow could gain full control
-over the system.
-+
 [source,bash]
 ----
 sudo bash -c "echo 'runner ALL=(root) NOPASSWD:ALL' > '/etc/sudoers.d/runner'"
 sudo chmod 440 "/etc/sudoers.d/runner"
 ----
++
+IMPORTANT: *Consider the security risks!* A compromised workflow could gain full
+control over the system. +
+Granting `sudo` access without a password allows the `runner` user to
+execute any command as `root` without restrictions. Such action is persistent,
+system wide change and should only be applied if you fully trust the workflow
+and the repository it executes from. +
+
 
 . Log in as `runner` user:
 +
@@ -137,12 +157,12 @@ chmod 600 "$HOME/.ssh/authorized_keys"
 vim "$HOME/.ssh/authorized_keys"
 ----
 
-. Clone the repository and navigate to the `runner` directory:
+. Clone the repository and navigate to the `scripts` directory:
 +
 [source,bash]
 ----
 git clone git@github.com:Tietoevry-Create/zephyr-doom.git
-cd zephyr-doom/runner
+cd zephyr-doom/runner/scripts
 ----
 
 . Collect the necessary runner information for deployment:
@@ -158,13 +178,14 @@ NOTE: You can obtain this information in the repository by navigating to
 *Settings* -> *Actions* -> *Runners* -> *New self-hosted runner*
 and selecting the appropriate configuration.
 
-=== Environment download
+=== Tooling download
 
 . Run the `download-runner-tooling.sh` script with the appropriate arguments:
 +
 [source,bash]
 ----
-./download-runner-tooling.sh -a arm64 -v 2.325.0 -s 0e916ad0d354089d320011c132d46bdbe3353c8b925a2e1056c7c8e85d2f2490
+./download-runner-tooling.sh -a arm64 -v 2.325.0 \
+-s 0e916ad0d354089d320011c132d46bdbe3353c8b925a2e1056c7c8e85d2f2490
 ----
 
 === Instance configuration
@@ -174,7 +195,8 @@ authentication token:
 +
 [source,bash]
 ----
-./configure-runner-env.sh -r https://github.com/Tietoevry-Create/zephyr-doom -t time_limited_auth_token_here
+ ./configure-runner-env.sh -r https://github.com/Tietoevry-Create/zephyr-doom \
+-t time_limited_auth_token_here
 ----
 
 === Enabling the instance
@@ -200,8 +222,168 @@ sudo loginctl enable-linger runner
 ----
 ./start-runner-service.sh
 ----
+... To verify the service status as `runner` user, use:
++
+[source,bash]
+----
+systemctl --user status gha-runner.service
+----
 
-=== Usage
+== Installation of container runner
+
+=== Prerequisites
+
+. Create a `runner` user to isolate files and the processes it will start:
++
+[source,bash]
+----
+sudo useradd runner -m -s /bin/bash -c "User to manage Github Actions runner(s)"
+----
+
+. Install *Podman* environment:
++
+[source,bash]
+----
+sudo apt install -y podman
+----
+
+. Configure *Podman* environment to be able to run in rootless mode. For more
+information, please check the
+<<rootless_podman_env,Configure rootless Podman environment>> chapter.
+
+. Log in as `runner` user:
++
+[source,bash]
+----
+sudo su - runner
+----
+.. Optionally add *SSH* authentication to ease the process and log in directly:
++
+[source,bash]
+----
+install -d -m 700 "$HOME/.ssh"
+touch "$HOME/.ssh/authorized_keys"
+chmod 600 "$HOME/.ssh/authorized_keys"
+
+# Write public key to the authorized_keys file
+vim "$HOME/.ssh/authorized_keys"
+----
+
+. Clone the repository and navigate to the `scripts` directory:
++
+[source,bash]
+----
+git clone git@github.com:Tietoevry-Create/zephyr-doom.git
+cd zephyr-doom/runner/scripts
+----
+
+. Collect the necessary runner information for deployment:
+
+* Image type;
+* Architecture;
+* Tooling version;
+* Checksum hash of the archive to download;
+* Repository URL;
+* Time-limited authentication token;
+
+NOTE: You can obtain this information in the repository by navigating to
+*Settings* -> *Actions* -> *Runners* -> *New self-hosted runner*
+and selecting the appropriate configuration.
+
+==== Configure rootless Podman environment [[rootless_podman_env]]
+
+Rootless Podman requires the user running containers to have a range of UIDs
+configured. To achieve such configuration for the given user, execute the
+following steps:
+
+. Add according entry to `/etc/subuid` file.
+. Add according entry to `/etc/subgid` file.
+.. The format of the line to be added for above files is
+`username:start_uid:total_uids`.
+... `username` is the actual user that can be listed in `/etc/passwd` file.
+... `start_uid` is the initial UID allocated for the user and should have higher
+value than other users.
+... `total_uids` is the range of UIDs allocated for the user.
++
+[source,bash]
+----
+cat /etc/subuid
+gebicmac:100000:65536
+runner:165536:65536
+
+cat /etc/subgid
+gebicmac:100000:65536
+runner:165536:65536
+----
++
+IMPORTANT: Ensure both `/etc/subuid` and `/etc/subgid` contain identical entries
+for the same user and they are not overlapping with other entries!
+
+. Run the following command as *the user* whose namespace was just configured.
+This is not a global command, it only applies to the currently logged in user
+environment:
++
+[source,bash]
+----
+podman system migrate
+----
++
+The command should be executed every time the user namespace configuration
+is changed (`/etc/subuid` and `/etc/subgid` have been modified for the given
+user). In such case we should notify Podman to recreate user namespace
+ranges.
++
+IMPORTANT: In case files have been modified significantly, command should be
+executed for each mentioned user in the files individually.
++
+For more information about complete process behind this command, please check
+the following link ->
+https://docs.podman.io/en/latest/markdown/podman-system-migrate.1.html[podman system migrate command]
+
+=== Build runner container image
+
+. Build the container runner image using the `build-runner-image.sh` script:
++
+[source,bash]
+----
+ ./build-runner-image.sh -a arm64 -v 2.325.0 \
+-s 0e916ad0d354089d320011c132d46bdbe3353c8b925a2e1056c7c8e85d2f2490 \
+-r https://github.com/Tietoevry-Create/zephyr-doom \
+-t time_limited_auth_token_here
+----
+
+=== Start runner container instance
+
+. Start the runner container manually using the `start-container-runner.sh`
+script:
++
+[source,bash]
+----
+./start-container-runner.sh
+----
+
+. Alternatively, configure the container runner as a `systemd` service to start
+it automatically on boot:
+.. Enable *lingering* for the configured `runner` user:
++
+[source,bash]
+----
+sudo loginctl enable-linger runner
+----
+.. Configure the `systemd` service and start the runner with:
++
+[source,bash]
+----
+./start-container-runner-service.sh
+----
+... To verify the service status as `runner` user, use:
++
+[source,bash]
+----
+systemctl --user status container-gha-runner.service
+----
+
+== Runner usage
 
 . To use a *self-hosted* runner in workflows, add the following to the YAML
 workflow file for each job:
@@ -212,8 +394,8 @@ runs-on: self-hosted
 ----
 +
 NOTE: The `self-hosted` label is automatically assigned to the runner. You can
-add custom labels to categorize runners and target specific ones for particular
-jobs.
+define custom labels during runner setup to group and target specific runners in
+workflows.
 
 == Links
 

@@ -4,7 +4,7 @@ set -eo pipefail
 
 usage() {
 cat << EOF
-Usage: ./$(basename "$0") [-h] [-r repo_url] [-t TOKEN]
+Usage: ./$(basename "$0") [-h] [-r repo_url] [-t token]
 EOF
 }
 

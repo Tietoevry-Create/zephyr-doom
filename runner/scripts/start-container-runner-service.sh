@@ -20,7 +20,7 @@ done
 
 RUNNER_REPOSITORY_DIR_PATH="$HOME/zephyr-doom/runner/systemd"
 SERVICE_DIR_PATH="$HOME/.config/systemd/user"
-SERVICE_FILE_NAME=gha-runner.service
+SERVICE_FILE_NAME=container-gha-runner.service
 
 mkdir -p "$SERVICE_DIR_PATH"
 cd "$SERVICE_DIR_PATH" && \
