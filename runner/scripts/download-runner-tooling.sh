@@ -53,4 +53,4 @@ if [[ -n "$HASH" ]]; then
     sha256sum -c
 fi
 
-tar -xzvf "actions-runner-linux-${ARCH}-${VERSION}.tar.gz"
+tar -xzf "actions-runner-linux-${ARCH}-${VERSION}.tar.gz"
