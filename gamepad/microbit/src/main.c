@@ -66,7 +66,6 @@ static const struct device *uart = DEVICE_DT_GET(DT_CHOSEN(nordic_nus_uart));
 static struct k_work_delayable uart_work;
 
 struct uart_data_t {
-    void *fifo_reserved;
     uint8_t data[UART_BUF_SIZE];
     uint16_t len;
 };
@@ -236,7 +235,6 @@ static bool uart_test_async_api(const struct device *dev)
 static int uart_init(void)
 {
     int err;
-    int pos;
     struct uart_data_t *rx;
     struct uart_data_t *tx;
 
@@ -300,6 +298,7 @@ static int uart_init(void)
     tx = k_malloc(sizeof(*tx));
 
     if (tx) {
+        int pos;
         pos = snprintf(tx->data, sizeof(tx->data),
                    "Starting Nordic UART service example\r\n");
 
@@ -468,7 +467,6 @@ static struct bt_conn_auth_info_cb conn_auth_info_callbacks;
 static void bt_receive_cb(struct bt_conn *conn, const uint8_t *const data,
               uint16_t len)
 {
-    int err;
     char addr[BT_ADDR_LE_STR_LEN] = {0};
 
     bt_addr_le_to_str(bt_conn_get_dst(conn), addr, ARRAY_SIZE(addr));
@@ -476,6 +474,7 @@ static void bt_receive_cb(struct bt_conn *conn, const uint8_t *const data,
     LOG_INF("Received data from: %s", addr);
 
     for (uint16_t pos = 0; pos != len;) {
+        int err;
         struct uart_data_t *tx = k_malloc(sizeof(*tx));
 
         if (!tx) {
