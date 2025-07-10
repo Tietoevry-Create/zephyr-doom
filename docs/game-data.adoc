@@ -1,0 +1,144 @@
+:email: <maciej.gebicz@tietoevry.com>
+:description: Description of the Zephyr-Doom MVP1 implementation
+:sectlinks:
+:sectnums:
+:toc:
+:toc-title: Content
+:toclevels: 2
+:source-highlighter: highlightjs
+
+= Zephyr Doom - Game Data
+
+== Version Notice
+This documentation is valid for the code from *MVP1* release (commit
+https://github.com/Tietoevry-Create/zephyr-doom/commit/2d67542479c1c68f5c80fa8096c246c1313c7bf0[4e4f9a4])
+and requires the 3,5" ILI9486 Arduino
+https://www.laskakit.cz/en/320x480-barevny-lcd-tft-displej-3-5-shield-arduino-uno/[display]
+shield.
+
+== Shield Pin Mapping
+
+[cols="1,1,1" options="header, autowidth"]
+|===
+^| Peripheral
+^| Function
+^| nRF5340 Pin
+
+| SPI/SD card
+| SS
+| P1.12
+
+| SPI/SD card
+| DI
+| P1.13
+
+| SPI/SD card
+| DO
+| P1.14
+
+| SPI/SD card
+| SCK
+| P1.15
+
+| LCD
+| Bit 1-2
+| P1.10 - P1.11
+
+| LCD
+| Bit 3-8
+| P1.04 - P1.09
+
+| LCD
+| RST
+| P0.25
+
+| LCD
+| CS
+| P0.07
+
+| LCD
+| RS
+| P0.06
+
+| LCD
+| WR
+| P0.05
+
+| LCD
+| RD
+| P0.04
+
+|===
+
+== QSPI Flash Upload
+
+. Ensure that the Nordic command line tools are installed (`nrfjprog`).
+
+. Connect the board via USB.
+
+. Erase the external *QSPI flash* and then program it with the data in the
+`qspi.hex` file with the following commands:
++
+[source,bash]
+----
+nrfjprog --family nrf53 --qspicustominit --qspieraseall
+nrfjprog --family nrf53 --qspicustominit --program qspi.hex --verify
+----
+
+== Custom WAD Files [[custom-wad-files]]
+
+If one want to play with the *modified DOOM WAD* file(s):
+
+. Format an SD card to `FAT32` format.
+. Copy the *custom WAD file* to the root directory of the SD card.
+. Insert the SD card into the card slot connected to the board.
+. Hold down *button 2* while restarting the board, which will cause the game to
+load the *WAD file* and write it to the *external QSPI flash*.
+. The game will now use *custom WAD file*.
+
+The `qspi.hex` file in this folder was created in the following way:
+
+. Download the
+https://archive.org/details/DoomsharewareEpisode[DOOM shareware v1.9 WAD file].
+
+. Follow the steps above to upload the *WAD file* to the external *QSPI flash*.
+
+. Use the below command to read the contents of the *QSPI flash* and save it as
+`qspi.hex`:
++
+[source,bash]
+----
+nrfjprog --family nrf53 --readqspi qspi.hex
+----
+
+== Edit WAD Files
+
+Follow these steps to modify and integrate the *custom WAD file(s)*:
+
+. *Choose a WAD Editor*
+** Popular options include:
+*** https://slade.mancubus.net[SLADE3] - A versatile editor that handles
+graphics, audio, textures, and map editing.
+*** https://github.com/jewalky/UltimateDoomBuilder[Ultimate Doom Builder] -
+Primarily focused on creating and editing maps.
+
+. *Edit the WAD file*
+* Open the *WAD file* using your chosen editor:
+** Replace textures or sprites.
+** Edit or create new maps.
+** Change sound effects or music.
+
+. *Save your custom WAD*
+* Save your changes as a *new WAD file* (e.g. `MYDOOM.WAD`).
+
+. *Load your custom WAD onto the board*
+* Follow the steps outlined in the <<custom-wad-files, Custom WAD Files>>
+chapter to transfer the *edited WAD* onto the board's *external QSPI flash*.
+
+=== Tips
+
+* Always back up the *original WAD file* before editing.
+* Ensure that the *custom WAD file* stays within the size limit supported by the
+external flash (*8 MiB*).
+* Test the *custom WAD file* thoroughly on a desktop DOOM port (like Chocolate
+Doom) before deploying it to the board, making the debugging easier.
