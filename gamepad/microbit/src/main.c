@@ -4,10 +4,10 @@
  * SPDX-License-Identifier: LicenseRef-Nordic-5-Clause
  */
 
-/** @file
- *  @brief Nordic UART Bridge Service (NUS) sample
+/**
+ * @file
+ * @brief Nordic UART Bridge Service (NUS) sample
  */
-// #include "uart_async_adapter.h"
 
 #include <zephyr/types.h>
 #include <zephyr/kernel.h>
@@ -261,7 +261,6 @@ static int uart_init(void)
 
     k_work_init_delayable(&uart_work, uart_work_handler);
 
-
     if (IS_ENABLED(CONFIG_BT_NUS_UART_ASYNC_ADAPTER) && !uart_test_async_api(uart)) {
         /* Implement API adapter */
         uart_async_adapter_init(async_adapter, uart);
@@ -284,7 +283,7 @@ static int uart_init(void)
             if (dtr) {
                 break;
             }
-            /* Give CPU resources to low priority threads. */
+            /* Give CPU resources to low priority threads */
             k_sleep(K_MSEC(100));
         }
         LOG_INF("DTR set");
@@ -328,7 +327,10 @@ static int uart_init(void)
     err = uart_rx_enable(uart, rx->data, sizeof(rx->data), UART_WAIT_FOR_RX);
     if (err) {
         LOG_ERR("Cannot enable uart reception (err: %d)", err);
-        /* Free the rx buffer only because the tx buffer will be handled in the callback */
+        /*
+         * Free the rx buffer only because the tx buffer will be handled in the
+         * callback
+         */
         k_free(rx);
     }
 
@@ -419,7 +421,6 @@ static void auth_passkey_confirm(struct bt_conn *conn, unsigned int passkey)
     LOG_INF("Press Button 1 to confirm, Button 2 to reject.");
 }
 
-
 static void auth_cancel(struct bt_conn *conn)
 {
     char addr[BT_ADDR_LE_STR_LEN];
@@ -448,7 +449,6 @@ static void pairing_failed(struct bt_conn *conn, enum bt_security_err reason)
 
     LOG_INF("Pairing failed conn: %s, reason %d", addr, reason);
 }
-
 
 static struct bt_conn_auth_cb conn_auth_callbacks = {
     .passkey_display = auth_passkey_display,
@@ -483,7 +483,7 @@ static void bt_receive_cb(struct bt_conn *conn, const uint8_t *const data,
             return;
         }
 
-        /* Keep the last byte of TX buffer for potential LF char. */
+        /* Keep the last byte of TX buffer for potential LF char */
         size_t tx_data_size = sizeof(tx->data) - 1;
 
         if ((len - pos) > tx_data_size) {
@@ -496,8 +496,9 @@ static void bt_receive_cb(struct bt_conn *conn, const uint8_t *const data,
 
         pos += tx->len;
 
-        /* Append the LF character when the CR character triggered
-         * transmission from the peer.
+        /*
+         * Append the LF character when the CR character triggered transmission
+         * from the peer
          */
         if ((pos == len) && (data[len - 1] == '\r')) {
             tx->data[tx->len] = '\n';
@@ -565,14 +566,13 @@ static void configure_gpio(void)
     if (err) {
         LOG_ERR("Cannot init buttons (err: %d)", err);
     }
-#endif /* CONFIG_BT_NUS_SECURITY_ENABLED */
+#endif
 
     err = dk_leds_init();
     if (err) {
         LOG_ERR("Cannot init LEDs (err: %d)", err);
     }
 }
-
 
 static const struct adc_dt_spec adc_chan0 =
     ADC_DT_SPEC_GET_BY_IDX(DT_PATH(zephyr_user), 0);
@@ -610,7 +610,6 @@ int initialize_adc_sequence(const struct adc_dt_spec *adc_spec,
 
     return 0;
 }
-
 
 #define BUTTON_A_PIN 14
 #define BUTTON_B_PIN 23
@@ -703,17 +702,15 @@ int main(void)
         return 0;
     }
 
-    uint32_t count = 0;
-
-    /* STEP 4.1 - Define a variable of type adc_sequence and a buffer of type
-     * uint16_t */
+    /*
+     * STEP 4.1 - Define a variable of type adc_sequence and a buffer of type
+     * uint16_t
+     */
     int16_t adc_buf0;
     struct adc_sequence sequence0 = {
         .buffer = &adc_buf0,
-        /* buffer size in bytes, not number of samples */
+        /* Buffer size in bytes, not number of samples */
         .buffer_size = sizeof(adc_buf0),
-        // Optional
-        //.calibrate = true,
     };
 
     int16_t adc_buf1;
@@ -753,10 +750,6 @@ int main(void)
         k_sem_take(&ble_init_ok, K_FOREVER);
 
         for (;;) {
-            /* Wait indefinitely for data to be sent over bluetooth */
-            // struct uart_data_t *buf = k_fifo_get(&fifo_uart_rx_data,
-            //                   K_FOREVER);
-
             char buf[sizeof(adc_buf0) + sizeof(adc_buf1) + 6 * sizeof(bool)];
 
             err = adc_read(adc_chan0.dev, &sequence0);
@@ -771,7 +764,7 @@ int main(void)
                 continue;
             }
 
-            // Fill buff (Little Endian)
+            /* Fill buff (Little Endian) */
             size_t offset = 0;
             memcpy(buf, &adc_buf0, sizeof(adc_buf0));
             offset += sizeof(adc_buf0);
@@ -799,24 +792,3 @@ int main(void)
         }
     }
 }
-
-// void ble_write_thread(void)
-// {
-//  /* Don't go any further until BLE is initialized */
-//  k_sem_take(&ble_init_ok, K_FOREVER);
-
-//  for (;;) {
-//      /* Wait indefinitely for data to be sent over bluetooth */
-//      struct uart_data_t *buf = k_fifo_get(&fifo_uart_rx_data,
-//                           K_FOREVER);
-
-//      if (bt_nus_send(NULL, buf->data, buf->len)) {
-//          LOG_WRN("Failed to send data over BLE connection");
-//      }
-
-//      k_free(buf);
-//  }
-// }
-
-// K_THREAD_DEFINE(ble_write_thread_id, STACKSIZE, ble_write_thread, NULL, NULL,
-//      NULL, PRIORITY, 0, 0);
