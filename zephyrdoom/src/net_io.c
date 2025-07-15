@@ -1,20 +1,20 @@
-//
-// Copyright(C) 2005-2014 Simon Howard
-//
-// This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU General Public License
-// as published by the Free Software Foundation; either version 2
-// of the License, or (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//
-// DESCRIPTION:
-//     Network packet I/O.  Base layer for sending/receiving packets,
-//     through the network module system
-//
+/*
+ * Copyright(C) 2005-2014 Simon Howard
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * DESCRIPTION:
+ * Network packet I/O. Base layer for sending/receiving packets,
+ * through the network module system
+ */
 
 #include <stdio.h>
 
@@ -61,7 +61,7 @@ net_addr_t *NET_ResolveAddress(net_context_t *context, char *addr)
 
     result = NULL;
 
-    for (i=0; i<context->num_modules; ++i)
+    for (i = 0; i < context->num_modules; ++i)
     {
         result = context->modules[i]->ResolveAddress(addr);
 
@@ -83,7 +83,7 @@ void NET_SendBroadcast(net_context_t *context, net_packet_t *packet)
 {
     int i;
 
-    for (i=0; i<context->num_modules; ++i)
+    for (i = 0; i < context->num_modules; ++i)
     {
         context->modules[i]->SendPacket(&net_broadcast_addr, packet);
     }
@@ -95,9 +95,8 @@ boolean NET_RecvPacket(net_context_t *context,
 {
     int i;
 
-    // check all modules for new packets
-
-    for (i=0; i<context->num_modules; ++i)
+    /* Check all modules for new packets */
+    for (i = 0; i < context->num_modules; ++i)
     {
         if (context->modules[i]->RecvPacket(addr, packet))
         {
@@ -108,9 +107,10 @@ boolean NET_RecvPacket(net_context_t *context,
     return false;
 }
 
-// Note: this prints into a static buffer, calling again overwrites
-// the first result
-
+/*
+ * This prints into a static buffer, calling again overwrites
+ * the first result.
+ */
 char *NET_AddrToString(net_addr_t *addr)
 {
     static char buf[128];
