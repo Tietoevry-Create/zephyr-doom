@@ -1,20 +1,20 @@
-//
-// Copyright(C) 1993-1996 Id Software, Inc.
-// Copyright(C) 2005-2014 Simon Howard
-//
-// This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU General Public License
-// as published by the Free Software Foundation; either version 2
-// of the License, or (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//
-// Emulates the IO functions in C stdio.h reading and writing to
-// memory.
-//
+/*
+ * Copyright(C) 1993-1996 Id Software, Inc.
+ * Copyright(C) 2005-2014 Simon Howard
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * Emulates the IO functions in C stdio.h reading and writing to
+ * memory.
+ */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -24,12 +24,14 @@
 
 #include "z_zone.h"
 
-typedef enum {
+typedef enum
+{
     MODE_READ,
     MODE_WRITE,
 } memfile_mode_t;
 
-struct _MEMFILE {
+struct _MEMFILE
+{
     unsigned char *buf;
     size_t buflen;
     size_t alloced;
@@ -37,15 +39,14 @@ struct _MEMFILE {
     memfile_mode_t mode;
 };
 
-// Open a memory area for reading
-
+/* Open a memory area for reading. */
 MEMFILE *mem_fopen_read(void *buf, size_t buflen)
 {
     MEMFILE *file;
 
     file = Z_Malloc(sizeof(MEMFILE), PU_STATIC, 0);
 
-    file->buf = (unsigned char *) buf;
+    file->buf = (unsigned char *)buf;
     file->buflen = buflen;
     file->position = 0;
     file->mode = MODE_READ;
@@ -53,8 +54,7 @@ MEMFILE *mem_fopen_read(void *buf, size_t buflen)
     return file;
 }
 
-// Read bytes
-
+/* Read bytes. */
 size_t mem_fread(void *buf, size_t size, size_t nmemb, MEMFILE *stream)
 {
     size_t items;
@@ -65,8 +65,7 @@ size_t mem_fread(void *buf, size_t size, size_t nmemb, MEMFILE *stream)
         return -1;
     }
 
-    // Trying to read more bytes than we have left?
-
+    /* Trying to read more bytes than we have left */
     items = nmemb;
 
     if (items * size > stream->buflen - stream->position)
@@ -74,19 +73,16 @@ size_t mem_fread(void *buf, size_t size, size_t nmemb, MEMFILE *stream)
         items = (stream->buflen - stream->position) / size;
     }
 
-    // Copy bytes to buffer
-
+    /* Copy bytes to buffer */
     memcpy(buf, stream->buf + stream->position, items * size);
 
-    // Update position
-
+    /* Update position */
     stream->position += items * size;
 
     return items;
 }
 
-// Open a memory area for writing
-
+/* Open a memory area for writing. */
 MEMFILE *mem_fopen_write(void)
 {
     MEMFILE *file;
@@ -102,8 +98,7 @@ MEMFILE *mem_fopen_write(void)
     return file;
 }
 
-// Write bytes to stream
-
+/* Write bytes to stream. */
 size_t mem_fwrite(const void *ptr, size_t size, size_t nmemb, MEMFILE *stream)
 {
     size_t bytes;
@@ -113,9 +108,10 @@ size_t mem_fwrite(const void *ptr, size_t size, size_t nmemb, MEMFILE *stream)
         return -1;
     }
 
-    // More bytes than can fit in the buffer?
-    // If so, reallocate bigger.
-
+    /*
+     * More bytes than can fit in the buffer.
+     * If so, reallocate bigger.
+     */
     bytes = size * nmemb;
 
     while (bytes > stream->alloced - stream->position)
@@ -129,8 +125,7 @@ size_t mem_fwrite(const void *ptr, size_t size, size_t nmemb, MEMFILE *stream)
         stream->alloced *= 2;
     }
 
-    // Copy into buffer
-
+    /* Copy into buffer */
     memcpy(stream->buf + stream->position, ptr, bytes);
     stream->position += bytes;
 
@@ -167,19 +162,19 @@ int mem_fseek(MEMFILE *stream, signed long position, mem_rel_t whence)
 
     switch (whence)
     {
-        case MEM_SEEK_SET:
-            newpos = (int) position;
-            break;
+    case MEM_SEEK_SET:
+        newpos = (int)position;
+        break;
 
-        case MEM_SEEK_CUR:
-            newpos = (int) (stream->position + position);
-            break;
+    case MEM_SEEK_CUR:
+        newpos = (int)(stream->position + position);
+        break;
 
-        case MEM_SEEK_END:
-            newpos = (int) (stream->buflen + position);
-            break;
-        default:
-            return -1;
+    case MEM_SEEK_END:
+        newpos = (int)(stream->buflen + position);
+        break;
+    default:
+        return -1;
     }
 
     if (newpos < stream->buflen)

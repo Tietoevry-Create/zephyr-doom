@@ -27,8 +27,10 @@
  * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
+ *
+ * DESCRIPTION:
+ * Implement custom radio based gamepad.
  */
-// Implement custom radio based gamepad
 
 int N_rjoy_init();
 void N_rjoy_read();

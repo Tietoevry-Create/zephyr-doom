@@ -1,3 +1,4 @@
+// // TODO
 // // /*
 // //  * Copyright (c) 2019 - 2020, Nordic Semiconductor ASA
 // //  * All rights reserved.
@@ -45,18 +46,17 @@
 
 // #include "n_mem.h"
 
-// void I_Error (char *error, ...);
+// void I_Error(char *error, ...);
 
 // /**
 //  * @brief  SDC block device definition
-//  * */
+//  */
 // NRF_BLOCK_DEV_SDC_DEFINE(
-//         m_block_dev_sdc,
-//         NRF_BLOCK_DEV_SDC_CONFIG(SDC_SECTOR_SIZE,
-//         APP_SDCARD_CONFIG(SDC_MOSI_PIN, SDC_MISO_PIN, SDC_SCK_PIN,
-//         SDC_CS_PIN)),
-//          NFR_BLOCK_DEV_INFO_CONFIG("Nordic", "SDC", "1.00")
-// );
+//     m_block_dev_sdc,
+//     NRF_BLOCK_DEV_SDC_CONFIG(SDC_SECTOR_SIZE,
+//                              APP_SDCARD_CONFIG(SDC_MOSI_PIN, SDC_MISO_PIN, SDC_SCK_PIN,
+//                                                SDC_CS_PIN)),
+//     NFR_BLOCK_DEV_INFO_CONFIG("Nordic", "SDC", "1.00"));
 
 // FATFS *fs = NULL;
 
@@ -72,12 +72,12 @@
 //     FRESULT ff_result;
 //     DSTATUS disk_state = STA_NOINIT;
 
-//     // Initialize FATFS disk I/O interface by providing the block device.
+//     // Initialize FATFS disk I/O interface by providing the block device
 //     static diskio_blkdev_t drives[] =
-//     {
+//         {
 //             DISKIO_BLOCKDEV_CONFIG(NRF_BLOCKDEV_BASE_ADDR(m_block_dev_sdc,
-//             block_dev), NULL)
-//     };
+//                                                           block_dev),
+//                                    NULL)};
 
 //     diskio_blockdev_register(drives, ARRAY_SIZE(drives));
 
@@ -93,10 +93,10 @@
 //     }
 
 //     uint32_t blocks_per_mb = (1024uL * 1024uL) /
-//     m_block_dev_sdc.block_dev.p_ops->geometry(&m_block_dev_sdc.block_dev)->blk_size;
+//                              m_block_dev_sdc.block_dev.p_ops->geometry(&m_block_dev_sdc.block_dev)->blk_size;
 //     uint32_t capacity =
-//     m_block_dev_sdc.block_dev.p_ops->geometry(&m_block_dev_sdc.block_dev)->blk_count
-//     / blocks_per_mb; printf("Capacity: %ld MB\n", capacity);
+//         m_block_dev_sdc.block_dev.p_ops->geometry(&m_block_dev_sdc.block_dev)->blk_count / blocks_per_mb;
+//     printf("Capacity: %ld MB\n", capacity);
 
 //     printf("Mounting volume...\n");
 //     ff_result = f_mount(fs, "", 1);
@@ -134,8 +134,7 @@
 //                 printf("%9lu  %s\n", fno.fsize, fno.fname);
 //             }
 //         }
-//     }
-//     while (fno.fname[0]);
+//     } while (fno.fname[0]);
 //     printf("----\n \n");
 //     return;
 // }
@@ -150,7 +149,8 @@
 
 // FIL *N_fs_open(char *path)
 // {
-//     if (!fs) I_Error("N_fs_open: fs not iniitialized\n");
+//     if (!fs)
+//         I_Error("N_fs_open: fs not iniitialized\n");
 //     printf("FatFS: Opening: %s\n", path);
 //     FIL *fstream = N_malloc(sizeof(FIL));
 //     FRESULT ff_result;
@@ -168,38 +168,37 @@
 
 // FSIZE_t N_fs_size(FIL *fstream)
 // {
-//     if (!fs) I_Error("N_fs_open: fs not iniitialized\n");
+//     if (!fs)
+//         I_Error("N_fs_open: fs not iniitialized\n");
 //     return f_size(fstream);
 // }
 
 // static void N_fs_close(FIL *fstream)
 // {
-//     if (!fs) I_Error("N_fs_open: fs not iniitialized\n");
-//     (void) f_close(fstream);
+//     if (!fs)
+//         I_Error("N_fs_open: fs not iniitialized\n");
+//     (void)f_close(fstream);
 
 //     N_free(fstream);
 // }
 
 // // Read data from the specified position in the file into the
-// // provided buffer.  Returns the number of bytes read.
-
-// size_t N_fs_read(FIL *fstream, unsigned int offset, void *buffer, size_t
-// buffer_len)
+// // provided buffer. Returns the number of bytes read.
+// size_t N_fs_read(FIL *fstream, unsigned int offset, void *buffer, size_t buffer_len)
 // {
-//     if (!fs) I_Error("N_fs_open: fs not iniitialized\n");
+//     if (!fs)
+//         I_Error("N_fs_open: fs not iniitialized\n");
 //     size_t result;
 //     FRESULT ff_result;
 
-//     // Jump to the specified position in the file.
-
+//     // Jump to the specified position in the file
 //     ff_result = f_lseek(fstream, offset);
 //     if (ff_result != FR_OK)
 //     {
 //         printf("W_FatFS_Read: seek failed\n");
 //         return 0;
 //     }
-//     // Read into the buffer.
-
+//     // Read into the buffer
 //     ff_result = f_read(fstream, buffer, buffer_len, &result);
 //     if (ff_result != FR_OK)
 //     {
@@ -210,46 +209,52 @@
 //     return result;
 // }
 
-// int N_fs_file_exists(char *path) {
-//     if (!fs) I_Error("N_fs_open: fs not iniitialized\n");
+// int N_fs_file_exists(char *path)
+// {
+//     if (!fs)
+//         I_Error("N_fs_open: fs not iniitialized\n");
 
 //     FRESULT fr;
 //     FILINFO fno;
 
 //     fr = f_stat(path, &fno);
-//     switch (fr) {
-//         case FR_OK:
-//             return 1;
-//             break;
+//     switch (fr)
+//     {
+//     case FR_OK:
+//         return 1;
+//         break;
 
-//         case FR_NO_FILE:
-//             return 0;
-//             break;
+//     case FR_NO_FILE:
+//         return 0;
+//         break;
 
-//         default:
-//             I_Error("N_fs_file_exists");
+//     default:
+//         I_Error("N_fs_file_exists");
 //     }
 //     return 0;
 // }
 
-// long N_fs_file_length(char *path) {
-//     if (!fs) I_Error("N_fs_open: fs not iniitialized\n");
+// long N_fs_file_length(char *path)
+// {
+//     if (!fs)
+//         I_Error("N_fs_open: fs not iniitialized\n");
 
 //     FRESULT fr;
 //     FILINFO fno;
 
 //     fr = f_stat(path, &fno);
-//     switch (fr) {
-//         case FR_OK:
-//             return fno.fsize;
-//             break;
+//     switch (fr)
+//     {
+//     case FR_OK:
+//         return fno.fsize;
+//         break;
 
-//         case FR_NO_FILE:
-//             return 01;
-//             break;
+//     case FR_NO_FILE:
+//         return 01;
+//         break;
 
-//         default:
-//             I_Error("N_fs_file_length");
+//     default:
+//         I_Error("N_fs_file_length");
 //     }
 //     return -1;
 // }

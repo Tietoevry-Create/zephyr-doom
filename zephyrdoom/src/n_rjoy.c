@@ -27,15 +27,15 @@
  * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
+ *
+ * DESCRIPTION:
+ * Nordic Propriatery gamepad/joycon.
  */
-
-// Nordic Propriatery gamepad/joycon
 
 #include <stdio.h>
 
 #include "nrf.h"
 #include <hal/nrf_clock.h>
-// #include "nrf_delay.h"
 #include "board_config.h"
 
 #undef PACKED_STRUCT
@@ -44,7 +44,7 @@
 #include "d_event.h"
 #include "i_system.h"
 
-// State.
+/* State. */
 #include "doom/doomstat.h"
 
 const int x_cen = 128;
@@ -53,16 +53,18 @@ const int guard = 4;
 
 extern short st_faceindex;
 
-static player_t* plyr;
+static player_t *plyr;
 
-typedef struct {
+typedef struct
+{
     uint8_t counter;
     uint8_t buttons;
     uint8_t joyX;
     uint8_t joyY;
 } rjoy_radio_packet_t;
 
-typedef struct {
+typedef struct
+{
     uint8_t face;
     uint8_t health;
     uint8_t ammo;
@@ -71,31 +73,31 @@ typedef struct {
 
 rjoy_radio_packet_t prev_joy_state;
 
-int N_rjoy_init() {
+int N_rjoy_init()
+{
     plyr = &players[consoleplayer];
 
     return 1;
 }
 
-
-void N_rjoy_read() {
+void N_rjoy_read()
+{
     volatile uint32_t *ipc_ptr = &NRF_IPC_S->GPMEM[0];
     uint32_t radio_packet = *ipc_ptr;
     rjoy_radio_packet_t new_joy_state;
-    uint32_t *tmp = (uint32_t*)(&new_joy_state);
+    uint32_t *tmp = (uint32_t *)(&new_joy_state);
     *tmp = radio_packet;
-    //printf("%d %d %d %d %lx\n", new_joy_state.counter, new_joy_state.buttons, new_joy_state.joyX, new_joy_state.joyY, *tmp);
-    if (new_joy_state.counter != prev_joy_state.counter) {
-        // printf("N_rjoy_read: %d\n", new_joy_state.counter);
+    if (new_joy_state.counter != prev_joy_state.counter)
+    {
         event_t ev;
 
-        int joyX = new_joy_state.joyX-x_cen;
-        int joyY = new_joy_state.joyY-y_cen;
+        int joyX = new_joy_state.joyX - x_cen;
+        int joyY = new_joy_state.joyY - y_cen;
 
-        if (-guard < joyX && joyX < guard) joyX = 0;
-        if (-guard < joyY && joyY < guard) joyY = 0;
-
-        // printf("N_rjoy_read: %d %d\n", joyX, joyY);
+        if (-guard < joyX && joyX < guard)
+            joyX = 0;
+        if (-guard < joyY && joyY < guard)
+            joyY = 0;
 
         ev.type = ev_joystick;
         ev.data1 = new_joy_state.buttons;
@@ -108,7 +110,7 @@ void N_rjoy_read() {
     }
     prev_joy_state = new_joy_state;
 
-    // Provide current face to radio for transfer to gamepad
+    /* Provide current face to radio for transfer to gamepad */
     radio_packet_out response = {0};
     response.face = st_faceindex;
     response.health = plyr->health;
@@ -116,5 +118,5 @@ void N_rjoy_read() {
     response.armor = plyr->armorpoints;
 
     volatile uint32_t *ipc_ptr_1 = &NRF_IPC_S->GPMEM[1];
-    *ipc_ptr_1 = *(uint32_t*)&response;
+    *ipc_ptr_1 = *(uint32_t *)&response;
 }
