@@ -216,7 +216,7 @@ int main(void) {
     //     N_ReadButtons();
 
     //     if (N_ButtonState(0)) {
-    //         bluetooth_main_xbox();
+            // bluetooth_main_xbox();
     //         printf("Selecting Xbox controller\n");
     //         break;
     //     } else if (N_ButtonState(1)) {
