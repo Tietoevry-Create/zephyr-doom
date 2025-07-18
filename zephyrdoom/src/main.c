@@ -20,8 +20,9 @@
 
 LOG_MODULE_REGISTER(doom_main, CONFIG_DOOM_MAIN_LOG_LEVEL);
 
-#include "bluetooth_control_keyboard.h"
-#include "bluetooth_control_xbox.h"
+// #include "bluetooth_control_keyboard.h"
+// #include "bluetooth_control_xbox.h"
+#include "bluetooth_control.h"
 
 /* 1000 msec = 1 sec */
 #define SLEEP_TIME_MS 1000
@@ -209,22 +210,11 @@ int main(void) {
 
     M_ArgvInit();
 
-    // while (true) {
-    //     printf("Waiting for controller selection\n");
-    //     N_ReadButtons();
-    //     k_msleep(100);
-    //     N_ReadButtons();
-
-    //     if (N_ButtonState(0)) {
-            // bluetooth_main_xbox();
-    //         printf("Selecting Xbox controller\n");
-    //         break;
-    //     } else if (N_ButtonState(1)) {
-            bluetooth_main_keyboard();
-    //         printf("Selecting keyboard\n");
-    //         break;
-    //     }
-    // }
+    int err = bluetooth_control_init();
+    if (err) {
+        LOG_ERR("Bluetooth control initialization failed.");
+        return 0;
+    }
 
     D_DoomMain();
 

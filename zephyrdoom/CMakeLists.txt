@@ -47,6 +47,7 @@ target_sources(app PRIVATE
                 src/w_main.c
                 src/w_wad.c
                 src/z_native.c
+                src/bluetooth_control.c
                 src/doom/am_map.c
                 src/doom/doomstat.c
                 src/doom/d_main.c
