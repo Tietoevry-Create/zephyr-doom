@@ -1,19 +1,19 @@
-//
-// Copyright(C) 2005-2014 Simon Howard
-//
-// This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU General Public License
-// as published by the Free Software Foundation; either version 2
-// of the License, or (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//
-//
-// Main dehacked code
-//
+/*
+ * Copyright(C) 2005-2014 Simon Howard
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * DESCRIPTION:
+ * Main dehacked code.
+ */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -37,20 +37,16 @@ extern char *deh_signatures[];
 
 static boolean deh_initialized = false;
 
-// If true, we can parse [STRINGS] sections in BEX format.
-
+/* If true, we can parse [STRINGS] sections in BEX format. */
 boolean deh_allow_extended_strings = false;
 
-// If true, we can do long string replacements.
-
+/* If true, we can do long string replacements. */
 boolean deh_allow_long_strings = false;
 
-// If true, we can do cheat replacements longer than the originals.
-
+/* If true, we can do cheat replacements longer than the originals. */
 boolean deh_allow_long_cheats = false;
 
-// If false, dehacked cheat replacements are ignored.
-
+/* If false, dehacked cheat replacements are ignored. */
 boolean deh_apply_cheats = true;
 
 void DEH_Checksum(sha1_digest_t digest)
@@ -60,7 +56,7 @@ void DEH_Checksum(sha1_digest_t digest)
 
     SHA1_Init(&sha1_context);
 
-    for (i=0; deh_section_types[i] != NULL; ++i)
+    for (i = 0; deh_section_types[i] != NULL; ++i)
     {
         if (deh_section_types[i]->sha1_hash != NULL)
         {
@@ -71,13 +67,12 @@ void DEH_Checksum(sha1_digest_t digest)
     SHA1_Final(digest, &sha1_context);
 }
 
-// Called on startup to call the Init functions
-
+/* Called on startup to call the Init functions. */
 static void InitializeSections(void)
 {
     unsigned int i;
 
-    for (i=0; deh_section_types[i] != NULL; ++i)
+    for (i = 0; deh_section_types[i] != NULL; ++i)
     {
         if (deh_section_types[i]->init != NULL)
         {
@@ -93,33 +88,32 @@ static void DEH_Init(void)
     //
     // Ignore cheats in dehacked files.
     //
-
     if (M_CheckParm("-nocheats") > 0)
     {
         deh_apply_cheats = false;
     }
 
-    // Call init functions for all the section definitions.
+    /* Call init functions for all the section definitions */
     InitializeSections();
 
     deh_initialized = true;
 }
 
-// Given a section name, get the section structure which corresponds
-
+/* Given a section name, get the section structure which corresponds. */
 static deh_section_t *GetSectionByName(char *name)
 {
     unsigned int i;
 
-    // we explicitely do not recognize [STRINGS] sections at all
-    // if extended strings are not allowed
-
+    /*
+     * We explicitely do not recognize [STRINGS] sections at all
+     * if extended strings are not allowed.
+     */
     if (!deh_allow_extended_strings && !strncasecmp("[STRINGS]", name, 9))
     {
         return NULL;
     }
 
-    for (i=0; deh_section_types[i] != NULL; ++i)
+    for (i = 0; deh_section_types[i] != NULL; ++i)
     {
         if (!strcasecmp(deh_section_types[i]->name, name))
         {
@@ -130,8 +124,7 @@ static deh_section_t *GetSectionByName(char *name)
     return NULL;
 }
 
-// Is the string passed just whitespace?
-
+/* Is the string passed just whitespace. */
 static boolean IsWhitespace(char *s)
 {
     for (; *s; ++s)
@@ -143,19 +136,16 @@ static boolean IsWhitespace(char *s)
     return true;
 }
 
-// Strip whitespace from the start and end of a string
-
+/* Strip whitespace from the start and end of a string. */
 static char *CleanString(char *s)
 {
     char *strending;
 
-    // Leading whitespace
-
+    /* Leading whitespace */
     while (*s && isspace(*s))
         ++s;
 
-    // Trailing whitespace
-
+    /* Trailing whitespace */
     strending = s + strlen(s) - 1;
 
     while (strlen(s) > 0 && isspace(*strending))
@@ -167,22 +157,22 @@ static char *CleanString(char *s)
     return s;
 }
 
-// This pattern is used a lot of times in different sections,
-// an assignment is essentially just a statement of the form:
-//
-// Variable Name = Value
-//
-// The variable name can include spaces or any other characters.
-// The string is split on the '=', essentially.
-//
-// Returns true if read correctly
-
+/*
+ * This pattern is used a lot of times in different sections,
+ * an assignment is essentially just a statement of the form:
+ *
+ * Variable Name = Value
+ *
+ * The variable name can include spaces or any other characters.
+ * The string is split on the '=', essentially.
+ *
+ * Returns true if read correctly.
+ */
 boolean DEH_ParseAssignment(char *line, char **variable_name, char **value)
 {
     char *p;
 
-    // find the equals
-
+    /* Find the equals */
     p = strchr(line, '=');
 
     if (p == NULL)
@@ -190,15 +180,15 @@ boolean DEH_ParseAssignment(char *line, char **variable_name, char **value)
         return false;
     }
 
-    // variable name at the start
-    // turn the '=' into a \0 to terminate the string here
-
+    /*
+     * Variable name at the start turn
+     * the '=' into a \0 to terminate the string here.
+     */
     *p = '\0';
     *variable_name = CleanString(line);
 
-    // value immediately follows the '='
-
-    *value = CleanString(p+1);
+    /* Value immediately follows the '=' */
+    *value = CleanString(p + 1);
 
     return true;
 }
@@ -208,8 +198,7 @@ static boolean CheckSignatures(deh_context_t *context)
     size_t i;
     char *line;
 
-    // Read the first line
-
+    /* Read the first line */
     line = DEH_ReadLine(context, false);
 
     if (line == NULL)
@@ -217,9 +206,8 @@ static boolean CheckSignatures(deh_context_t *context)
         return false;
     }
 
-    // Check all signatures to see if one matches
-
-    for (i=0; deh_signatures[i] != NULL; ++i)
+    /* Check all signatures to see if one matches */
+    for (i = 0; deh_signatures[i] != NULL; ++i)
     {
         if (!strcmp(deh_signatures[i], line))
         {
@@ -230,57 +218,56 @@ static boolean CheckSignatures(deh_context_t *context)
     return false;
 }
 
-// Parses a comment string in a dehacked file.
-
+/* Parses a comment string in a dehacked file. */
 static void DEH_ParseComment(char *comment)
 {
-    //
-    // Welcome, to the super-secret Chocolate Doom-specific Dehacked
-    // overrides function.
-    //
-    // Putting these magic comments into your Dehacked lumps will
-    // allow you to go beyond the normal limits of Vanilla Dehacked.
-    // Because of this, these comments are deliberately undocumented,
-    // and if you're using them you should be aware that your mod
-    // is not compatible with Vanilla Doom and you're probably a
-    // very naughty person.
-    //
-
-    // Allow comments containing this special value to allow string
-    // replacements longer than those permitted by DOS dehacked.
-    // This allows us to use a dehacked patch for doing string
-    // replacements for emulating Chex Quest.
-    //
-    // If you use this, your dehacked patch may not work in Vanilla
-    // Doom.
+    /*
+     * Welcome, to the super-secret Chocolate Doom-specific Dehacked
+     * overrides function.
+     *
+     * Putting these magic comments into your Dehacked lumps will
+     * allow you to go beyond the normal limits of Vanilla Dehacked.
+     * Because of this, these comments are deliberately undocumented,
+     * and if you're using them you should be aware that your mod
+     * is not compatible with Vanilla Doom and you're probably a
+     * very naughty person.
+     *
+     * Allow comments containing this special value to allow string
+     * replacements longer than those permitted by DOS dehacked.
+     * This allows us to use a dehacked patch for doing string
+     * replacements for emulating Chex Quest.
+     *
+     * If you use this, your dehacked patch may not work in Vanilla
+     * Doom.
+     */
 
     if (strstr(comment, "*allow-long-strings*") != NULL)
     {
         deh_allow_long_strings = true;
     }
 
-    // Allow magic comments to allow longer cheat replacements than
-    // those permitted by DOS dehacked.  This is also for Chex
-    // Quest.
-
+    /*
+     * Allow magic comments to allow longer cheat replacements than
+     * those permitted by DOS dehacked. This is also for Chex Quest.
+     */
     if (strstr(comment, "*allow-long-cheats*") != NULL)
     {
         deh_allow_long_cheats = true;
     }
 
-    // Allow magic comments to allow parsing [STRINGS] section
-    // that are usually only found in BEX format files. This allows
-    // for substitution of map and episode names when loading
-    // Freedoom/FreeDM IWADs.
-
+    /*
+     * Allow magic comments to allow parsing [STRINGS] section
+     * that are usually only found in BEX format files. This allows
+     * for substitution of map and episode names when loading
+     * Freedoom/FreeDM IWADs.
+     */
     if (strstr(comment, "*allow-extended-strings*") != NULL)
     {
         deh_allow_extended_strings = true;
     }
 }
 
-// Parses a dehacked file by reading from the context
-
+/* Parses a dehacked file by reading from the context. */
 static void DEH_ParseContext(deh_context_t *context)
 {
     deh_section_t *current_section = NULL;
@@ -289,25 +276,23 @@ static void DEH_ParseContext(deh_context_t *context)
     boolean extended;
     char *line;
 
-    // Read the header and check it matches the signature
-
+    /* Read the header and check it matches the signature */
     if (!CheckSignatures(context))
     {
         DEH_Error(context, "This is not a valid dehacked patch file!");
     }
 
-    // Read the file
-
+    /* Read the file */
     while (!DEH_HadError(context))
     {
-        // Read the next line. We only allow the special extended parsing
-        // for the BEX [STRINGS] section.
-        extended = current_section != NULL
-                && !strcasecmp(current_section->name, "[STRINGS]");
+        /*
+         * Read the next line. We only allow the special extended parsing
+         * for the BEX [STRINGS] section.
+         */
+        extended = current_section != NULL && !strcasecmp(current_section->name, "[STRINGS]");
         line = DEH_ReadLine(context, extended);
 
-        // end of file?
-
+        /* End of file */
         if (line == NULL)
         {
             return;
@@ -318,8 +303,7 @@ static void DEH_ParseContext(deh_context_t *context)
 
         if (line[0] == '#')
         {
-            // comment
-
+            /* Parse comment */
             DEH_ParseComment(line);
             continue;
         }
@@ -328,14 +312,12 @@ static void DEH_ParseContext(deh_context_t *context)
         {
             if (current_section != NULL)
             {
-                // end of section
-
+                /* End of section */
                 if (current_section->end != NULL)
                 {
                     current_section->end(context, tag);
                 }
 
-                //printf("end %s tag\n", current_section->name);
                 current_section = NULL;
             }
         }
@@ -343,14 +325,12 @@ static void DEH_ParseContext(deh_context_t *context)
         {
             if (current_section != NULL)
             {
-                // parse this line
-
+                /* Parse this line */
                 current_section->line_parser(context, line, tag);
             }
             else
             {
-                // possibly the start of a new section
-
+                /* Possibly the start of a new section */
                 sscanf(line, "%19s", section_name);
 
                 current_section = GetSectionByName(section_name);
@@ -358,19 +338,13 @@ static void DEH_ParseContext(deh_context_t *context)
                 if (current_section != NULL)
                 {
                     tag = current_section->start(context, line);
-                    //printf("started %s tag\n", section_name);
-                }
-                else
-                {
-                    //printf("unknown section name %s\n", section_name);
                 }
             }
         }
     }
 }
 
-// Parses a dehacked file
-
+/* Parses a dehacked file */
 int DEH_LoadFile(char *filename)
 {
     deh_context_t *context;
@@ -380,9 +354,11 @@ int DEH_LoadFile(char *filename)
         DEH_Init();
     }
 
-    // Before parsing a new file, reset special override flags to false.
-    // Magic comments should only apply to the file in which they were
-    // defined, and shouldn't carry over to subsequent files as well.
+    /*
+     * Before parsing a new file, reset special override flags to false.
+     * Magic comments should only apply to the file in which they were
+     * defined, and shouldn't carry over to subsequent files as well.
+     */
     deh_allow_long_strings = false;
     deh_allow_long_cheats = false;
     deh_allow_extended_strings = false;
@@ -409,9 +385,10 @@ int DEH_LoadFile(char *filename)
     return 1;
 }
 
-// Load dehacked file from WAD lump.
-// If allow_long is set, allow long strings and cheats just for this lump.
-
+/*
+ * Load dehacked file from WAD lump.
+ * If allow_long is set, allow long strings and cheats just for this lump.
+ */
 int DEH_LoadLump(int lumpnum, boolean allow_long, boolean allow_error)
 {
     deh_context_t *context;
@@ -421,7 +398,7 @@ int DEH_LoadLump(int lumpnum, boolean allow_long, boolean allow_error)
         DEH_Init();
     }
 
-    // Reset all special flags to defaults.
+    /* Reset all special flags to defaults */
     deh_allow_long_strings = allow_long;
     deh_allow_long_cheats = allow_long;
     deh_allow_extended_strings = false;
@@ -438,8 +415,10 @@ int DEH_LoadLump(int lumpnum, boolean allow_long, boolean allow_error)
 
     DEH_CloseFile(context);
 
-    // If there was an error while parsing, abort with an error, but allow
-    // errors to just be ignored if allow_error=true.
+    /*
+     * If there was an error while parsing, abort with an error, but allow
+     * errors to just be ignored if allow_error=true.
+     */
     if (!allow_error && DEH_HadError(context))
     {
         I_Error("Error parsing dehacked lump");
@@ -463,7 +442,7 @@ int DEH_LoadLumpByName(char *name, boolean allow_long, boolean allow_error)
     return DEH_LoadLump(lumpnum, allow_long, allow_error);
 }
 
-// Check the command line for -deh argument, and others.
+/* Check the command line for -deh argument, and others. */
 void DEH_ParseCommandLine(void)
 {
     char *filename;
@@ -473,9 +452,8 @@ void DEH_ParseCommandLine(void)
     // @arg <files>
     // @category mod
     //
-    // Load the given dehacked patch(es)
+    // Load the given dehacked patch(es).
     //
-
     p = M_CheckParm("-deh");
 
     if (p > 0)

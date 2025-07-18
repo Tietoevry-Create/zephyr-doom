@@ -1,21 +1,21 @@
-//
-// Copyright(C) 2005-2014 Simon Howard
-//
-// This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU General Public License
-// as published by the Free Software Foundation; either version 2
-// of the License, or (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//
-// Graphical stuff related to the networking code:
-//
-//  * The client waiting screen when we are waiting for the server to
-//    start the game.
-//
+/*
+ * Copyright(C) 2005-2014 Simon Howard
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * DESCRIPTION:
+ * Graphical stuff related to the networking code.
+ * The client waiting screen when we are waiting for the server to
+ * start the game.
+ */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -45,9 +45,11 @@ static txt_label_t *drone_label;
 static txt_label_t *master_msg_label;
 static boolean had_warning;
 
-// Number of players we expect to be in the game. When the number is
-// reached, we auto-start the game (if we're the controller). If
-// zero, do not autostart.
+/*
+ * Number of players we expect to be in the game. When the number is
+ * reached, we auto-start the game (if we're the controller). If
+ * zero, do not autostart.
+ */
 static int expected_nodes;
 
 static void EscapePressed(TXT_UNCAST_ARG(widget), void *unused)
@@ -76,7 +78,7 @@ static void OpenWaitDialog(void)
 
     TXT_SetWindowAction(window, TXT_HORIZ_LEFT, cancel);
     TXT_SetWindowPosition(window, TXT_HORIZ_CENTER, TXT_VERT_BOTTOM,
-                                  TXT_SCREEN_W / 2, TXT_SCREEN_H - 9);
+                          TXT_SCREEN_W / 2, TXT_SCREEN_H - 9);
 
     old_max_players = 0;
 }
@@ -91,14 +93,12 @@ static void BuildWindow(void)
     table = TXT_NewTable(3);
     TXT_AddWidget(window, table);
 
-    // Add spacers
-
+    /* Add spacers */
     TXT_AddWidget(table, NULL);
     TXT_AddWidget(table, TXT_NewStrut(25, 1));
     TXT_AddWidget(table, TXT_NewStrut(17, 1));
 
-    // Player labels
-
+    /* Player labels */
     for (i = 0; i < net_client_wait_data.max_players; ++i)
     {
         M_snprintf(buf, sizeof(buf), " %i. ", i + 1);
@@ -120,10 +120,11 @@ static void UpdateGUI(void)
     char buf[50];
     unsigned int i;
 
-    // If the value of max_players changes, we must rebuild the
-    // contents of the window. This includes when the first
-    // waiting data packet is received.
-
+    /*
+     * If the value of max_players changes, we must rebuild the
+     * contents of the window. This includes when the first
+     * waiting data packet is received.
+     */
     if (net_client_received_wait_data)
     {
         if (net_client_wait_data.max_players != old_max_players)
@@ -140,7 +141,7 @@ static void UpdateGUI(void)
     {
         txt_color_t color = TXT_COLOR_BRIGHT_WHITE;
 
-        if ((signed) i == net_client_wait_data.consoleplayer)
+        if ((signed)i == net_client_wait_data.consoleplayer)
         {
             color = TXT_COLOR_YELLOW;
         }
@@ -194,12 +195,13 @@ static void BuildMasterStatusWindow(void)
     master_msg_label = TXT_NewLabel("");
     TXT_AddWidget(master_window, master_msg_label);
 
-    // This window is here purely for information, so it should be
-    // in the background.
-
+    /*
+     * This window is here purely for information, so it should be
+     * in the background.
+     */
     TXT_LowerWindow(master_window);
     TXT_SetWindowPosition(master_window, TXT_HORIZ_CENTER, TXT_VERT_CENTER,
-                                         TXT_SCREEN_W / 2, TXT_SCREEN_H - 4);
+                          TXT_SCREEN_W / 2, TXT_SCREEN_H - 4);
     TXT_SetWindowAction(master_window, TXT_HORIZ_LEFT, NULL);
     TXT_SetWindowAction(master_window, TXT_HORIZ_CENTER, NULL);
     TXT_SetWindowAction(master_window, TXT_HORIZ_RIGHT, NULL);
@@ -222,16 +224,16 @@ static void CheckMasterStatus(void)
     if (added)
     {
         TXT_SetLabel(master_msg_label,
-            "Your server is now registered with the global master server.\n"
-            "Other players can find your server online.");
+                     "Your server is now registered with the global master server.\n"
+                     "Other players can find your server online.");
     }
     else
     {
         TXT_SetLabel(master_msg_label,
-            "Failed to register with the master server. Your server is not\n"
-            "publicly accessible. You may need to reconfigure your Internet\n"
-            "router to add a port forward for UDP port 2342. Look up\n"
-            "information on port forwarding online.");
+                     "Failed to register with the master server. Your server is not\n"
+                     "publicly accessible. You may need to reconfigure your Internet\n"
+                     "router to add a port forward for UDP port 2342. Look up\n"
+                     "information on port forwarding online.");
     }
 }
 
@@ -241,7 +243,7 @@ static void PrintSHA1Digest(char *s, byte *digest)
 
     printf("%s: ", s);
 
-    for (i=0; i<sizeof(sha1_digest_t); ++i)
+    for (i = 0; i < sizeof(sha1_digest_t); ++i)
     {
         printf("%02x", digest[i]);
     }
@@ -314,43 +316,39 @@ static void CheckSHA1Sums(void)
 
     if (!same_freedoom)
     {
-        // If Freedoom and Doom IWADs are mixed, the WAD directory
-        // will be wrong, but this is not neccessarily a problem.
-        // Display a different message to the WAD directory message.
-
+        /*
+         * If Freedoom and Doom IWADs are mixed, the WAD directory
+         * will be wrong, but this is not neccessarily a problem.
+         * Display a different message to the WAD directory message.
+         */
         if (net_local_is_freedoom)
         {
-            TXT_AddWidget(window, TXT_NewLabel
-            ("You are using the Freedoom IWAD to play with players\n"
-             "using an official Doom IWAD.  Make sure that you are\n"
-             "playing the same levels as other players.\n"));
+            TXT_AddWidget(window, TXT_NewLabel("You are using the Freedoom IWAD to play with players\n"
+                                               "using an official Doom IWAD.  Make sure that you are\n"
+                                               "playing the same levels as other players.\n"));
         }
         else
         {
-            TXT_AddWidget(window, TXT_NewLabel
-            ("You are using an official IWAD to play with players\n"
-             "using the Freedoom IWAD.  Make sure that you are\n"
-             "playing the same levels as other players.\n"));
+            TXT_AddWidget(window, TXT_NewLabel("You are using an official IWAD to play with players\n"
+                                               "using the Freedoom IWAD.  Make sure that you are\n"
+                                               "playing the same levels as other players.\n"));
         }
     }
     else if (!correct_wad)
     {
-        TXT_AddWidget(window, TXT_NewLabel
-            ("Your WAD directory does not match other players in the game.\n"
-             "Check that you have loaded the exact same WAD files as other\n"
-             "players.\n"));
+        TXT_AddWidget(window, TXT_NewLabel("Your WAD directory does not match other players in the game.\n"
+                                           "Check that you have loaded the exact same WAD files as other\n"
+                                           "players.\n"));
     }
 
     if (!correct_deh)
     {
-        TXT_AddWidget(window, TXT_NewLabel
-            ("Your dehacked signature does not match other players in the\n"
-             "game.  Check that you have loaded the same dehacked patches\n"
-             "as other players.\n"));
+        TXT_AddWidget(window, TXT_NewLabel("Your dehacked signature does not match other players in the\n"
+                                           "game.  Check that you have loaded the same dehacked patches\n"
+                                           "as other players.\n"));
     }
 
-    TXT_AddWidget(window, TXT_NewLabel
-            ("If you continue, this may cause your game to desync."));
+    TXT_AddWidget(window, TXT_NewLabel("If you continue, this may cause your game to desync."));
 
     had_warning = true;
 }
@@ -365,7 +363,6 @@ static void ParseCommandLineArgs(void)
     //
     // Autostart the netgame when n nodes (clients) have joined the server.
     //
-
     i = M_CheckParmWithArgs("-nodes", 1);
     if (i > 0)
     {
@@ -377,12 +374,9 @@ static void CheckAutoLaunch(void)
 {
     int nodes;
 
-    if (net_client_received_wait_data
-     && net_client_wait_data.is_controller
-     && expected_nodes > 0)
+    if (net_client_received_wait_data && net_client_wait_data.is_controller && expected_nodes > 0)
     {
-        nodes = net_client_wait_data.num_players
-              + net_client_wait_data.num_drones;
+        nodes = net_client_wait_data.num_players + net_client_wait_data.num_drones;
 
         if (nodes >= expected_nodes)
         {
