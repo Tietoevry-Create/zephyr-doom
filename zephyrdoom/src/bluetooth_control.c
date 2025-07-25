@@ -9,6 +9,7 @@
 #include <zephyr/bluetooth/gatt.h>
 #include <zephyr/bluetooth/hci.h>
 #include <zephyr/bluetooth/uuid.h>
+#include <zephyr/devicetree.h>
 #include <zephyr/drivers/gpio.h>
 #include <zephyr/kernel.h>
 #include <zephyr/settings/settings.h>
@@ -20,25 +21,23 @@
 #include "doomkeys.h"
 #include "m_controls.h"
 
-#include <zephyr/drivers/gpio.h>
-#include <zephyr/devicetree.h>
-
-// Add these definitions
 #define BLINK_INTERVAL_MS 500
-#define LED1_NODE DT_ALIAS(led1)
+#define LED1_NODE DT_ALIAS(led0)
+#define LED2_NODE DT_ALIAS(led1)
 
-static const struct gpio_dt_spec led = GPIO_DT_SPEC_GET(LED1_NODE, gpios);
+static const struct gpio_dt_spec led1 = GPIO_DT_SPEC_GET(LED1_NODE, gpios);
+static const struct gpio_dt_spec led2 = GPIO_DT_SPEC_GET(LED2_NODE, gpios);
 
-// Timer handler to toggle the LED
-static void blink_timer_handler(struct k_timer *timer_id)
-{
-    if (gpio_is_ready_dt(&led)) {
-        gpio_pin_toggle_dt(&led);
+static void blink_timer_handler(struct k_timer *timer_id) {
+    if (gpio_is_ready_dt(&led1)) {
+        gpio_pin_toggle_dt(&led1);
+    }
+    if (gpio_is_ready_dt(&led2)) {
+        gpio_pin_toggle_dt(&led2);
     }
 }
 
-K_TIMER_DEFINE(blink_timer, blink_timer_handler, NULL); // This handles the definition.
-
+K_TIMER_DEFINE(blink_timer, blink_timer_handler, NULL);
 
 typedef enum {
     DEVICE_TYPE_NONE,
@@ -340,13 +339,20 @@ static uint8_t hogp_notify_cb(struct bt_hogp *hogp_ctx,
 static void discovery_completed_cb(struct bt_gatt_dm *dm, void *context) {
     printk("Discovery completed.\n");
 
+    k_timer_stop(&blink_timer);
     if (is_device_xbox(dm)) {
         printk("Device identified as: XBOX Controller\n");
         current_device_type = DEVICE_TYPE_XBOX;
         convert_xbox_uuids(dm);
+
+        gpio_pin_set_dt(&led1, 1);
+        gpio_pin_set_dt(&led2, 0);
     } else {
         printk("Device identified as: Standard Keyboard\n");
         current_device_type = DEVICE_TYPE_KEYBOARD;
+
+        gpio_pin_set_dt(&led1, 0);
+        gpio_pin_set_dt(&led2, 1);
     }
 
     int err = bt_hogp_handles_assign(dm, &hogp);
@@ -360,10 +366,12 @@ static void discovery_completed_cb(struct bt_gatt_dm *dm, void *context) {
 static void discovery_service_not_found_cb(struct bt_conn *conn,
                                            void *context) {
     printk("HIDS service not found.\n");
+    k_timer_start(&blink_timer, K_MSEC(BLINK_INTERVAL_MS), K_MSEC(BLINK_INTERVAL_MS));
 }
 
 static void discovery_error_cb(struct bt_conn *conn, int err, void *context) {
     printk("Discovery failed, error: %d\n", err);
+    k_timer_start(&blink_timer, K_MSEC(BLINK_INTERVAL_MS), K_MSEC(BLINK_INTERVAL_MS));
 }
 
 static const struct bt_gatt_dm_cb discovery_callbacks = {
@@ -401,9 +409,6 @@ static void connected(struct bt_conn *conn, uint8_t conn_err) {
     }
     printk("Connected.\n");
 
-    k_timer_stop(&blink_timer);
-    gpio_pin_set_dt(&led, 1);
-
     default_conn = bt_conn_ref(conn);
     int err = bt_conn_set_security(conn, BT_SECURITY_L2);
     if (err) {
@@ -422,7 +427,10 @@ static void disconnected(struct bt_conn *conn, uint8_t reason) {
         default_conn = NULL;
         current_device_type = DEVICE_TYPE_NONE;
 
-        k_timer_start(&blink_timer, K_MSEC(BLINK_INTERVAL_MS), K_MSEC(BLINK_INTERVAL_MS));
+        gpio_pin_set_dt(&led1, 0);
+        gpio_pin_set_dt(&led2, 0);
+        k_timer_start(&blink_timer, K_MSEC(BLINK_INTERVAL_MS),
+                      K_MSEC(BLINK_INTERVAL_MS));
 
         bt_scan_start(BT_SCAN_TYPE_SCAN_ACTIVE);
     }
@@ -461,8 +469,7 @@ static void hogp_prep_fail_cb(struct bt_hogp *hogp_ctx, int err) {
 static void scan_init(void) {
     struct bt_scan_init_param scan_init_param = {.connect_if_match = 1};
     bt_scan_init(&scan_init_param);
-    BT_SCAN_CB_INIT(scan_callbacks, NULL, NULL, NULL,
-                    NULL);
+    BT_SCAN_CB_INIT(scan_callbacks, NULL, NULL, NULL, NULL);
     bt_scan_cb_register(&scan_callbacks);
     bt_scan_filter_add(BT_SCAN_FILTER_TYPE_UUID, BT_UUID_HIDS);
     bt_scan_filter_enable(BT_SCAN_UUID_FILTER, false);
@@ -506,16 +513,22 @@ int bluetooth_control_init(void) {
     int err;
     printk("Initializing Unified Bluetooth Controller\n");
 
-    if (!gpio_is_ready_dt(&led)) {
-        printk("Error: LED device %s is not ready\n", led.port->name);
+    if (!gpio_is_ready_dt(&led1) || !gpio_is_ready_dt(&led2)) {
+        printk("Error: LED device(s) are not ready\n");
         return -ENODEV;
     }
-    err = gpio_pin_configure_dt(&led, GPIO_OUTPUT_INACTIVE);
+    err = gpio_pin_configure_dt(&led1, GPIO_OUTPUT_INACTIVE);
     if (err) {
-        printk("Error %d: failed to configure LED pin\n", err);
+        printk("Error %d: failed to configure LED1 pin\n", err);
         return err;
     }
-    k_timer_start(&blink_timer, K_MSEC(BLINK_INTERVAL_MS), K_MSEC(BLINK_INTERVAL_MS));
+    err = gpio_pin_configure_dt(&led2, GPIO_OUTPUT_INACTIVE);
+    if (err) {
+        printk("Error %d: failed to configure LED2 pin\n", err);
+        return err;
+    }
+    k_timer_start(&blink_timer, K_MSEC(BLINK_INTERVAL_MS),
+                  K_MSEC(BLINK_INTERVAL_MS));
 
     const struct bt_hogp_init_params hogp_init_params = {
         .ready_cb = hogp_ready_cb,
