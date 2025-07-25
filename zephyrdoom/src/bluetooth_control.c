@@ -20,6 +20,26 @@
 #include "doomkeys.h"
 #include "m_controls.h"
 
+#include <zephyr/drivers/gpio.h>
+#include <zephyr/devicetree.h>
+
+// Add these definitions
+#define BLINK_INTERVAL_MS 500
+#define LED1_NODE DT_ALIAS(led1)
+
+static const struct gpio_dt_spec led = GPIO_DT_SPEC_GET(LED1_NODE, gpios);
+
+// Timer handler to toggle the LED
+static void blink_timer_handler(struct k_timer *timer_id)
+{
+    if (gpio_is_ready_dt(&led)) {
+        gpio_pin_toggle_dt(&led);
+    }
+}
+
+K_TIMER_DEFINE(blink_timer, blink_timer_handler, NULL); // This handles the definition.
+
+
 typedef enum {
     DEVICE_TYPE_NONE,
     DEVICE_TYPE_XBOX,
@@ -380,6 +400,10 @@ static void connected(struct bt_conn *conn, uint8_t conn_err) {
         return;
     }
     printk("Connected.\n");
+
+    k_timer_stop(&blink_timer);
+    gpio_pin_set_dt(&led, 1);
+
     default_conn = bt_conn_ref(conn);
     int err = bt_conn_set_security(conn, BT_SECURITY_L2);
     if (err) {
@@ -397,6 +421,9 @@ static void disconnected(struct bt_conn *conn, uint8_t reason) {
         bt_conn_unref(default_conn);
         default_conn = NULL;
         current_device_type = DEVICE_TYPE_NONE;
+
+        k_timer_start(&blink_timer, K_MSEC(BLINK_INTERVAL_MS), K_MSEC(BLINK_INTERVAL_MS));
+
         bt_scan_start(BT_SCAN_TYPE_SCAN_ACTIVE);
     }
 }
@@ -478,6 +505,17 @@ static struct bt_conn_auth_cb auth_callbacks = {
 int bluetooth_control_init(void) {
     int err;
     printk("Initializing Unified Bluetooth Controller\n");
+
+    if (!gpio_is_ready_dt(&led)) {
+        printk("Error: LED device %s is not ready\n", led.port->name);
+        return -ENODEV;
+    }
+    err = gpio_pin_configure_dt(&led, GPIO_OUTPUT_INACTIVE);
+    if (err) {
+        printk("Error %d: failed to configure LED pin\n", err);
+        return err;
+    }
+    k_timer_start(&blink_timer, K_MSEC(BLINK_INTERVAL_MS), K_MSEC(BLINK_INTERVAL_MS));
 
     const struct bt_hogp_init_params hogp_init_params = {
         .ready_cb = hogp_ready_cb,
