@@ -17,18 +17,23 @@ The simplest way is to:
 
 1. Set up the Raspberry Pi with an internet connection and ssh access. For that you can follow the [instructions on the official Raspberry Pi website](https://www.raspberrypi.com/documentation/computers/getting-started.html).
 
-2. Connect to the board using SSH and follow Python Instructions in the btferret repository.
+2. Connect to the board using SSH and follow the Python Instructions in the btferret repository.
 
-3. Run
-```bash
-pip install evdev
-```
+    2.1. ```sudo apt-get install git```
 
-4. Replace the keyboard.py file with the one in this folder.
+    2.2. ```sudo git clone https://github.com/petzval/btferret.git```
+
+    2.3. ```sudo apt-get install python3-setuptools python3-dev```
+
+    2.4. ```cd btferret && python3 btfpymake.py build```
+
+    2.5. ```pip install evdev```
+
+3. Replace the keyboard.py file with the one in this folder.
 
 
 ## Usage
-1. Connect the keyboard to the RPI and run this command in the downloaded repository:
+1. Connect the keyboard to the RPI and run this command in the btferret repository:
 
 ```bash
 sudo python3 keyboard.py
