@@ -85,7 +85,7 @@ jobs:
           nrfutil install sdk-manager
           nrfutil sdk-manager install ${{ env.SDK_VERSION }}
 
-      - name: Build zephyrdoom artifacts
+      - name: Build artifacts
         run: |
           nrfutil sdk-manager toolchain launch \
           --ncs-version ${{ env.TOOLCHAIN_VERSION }} -- \
@@ -98,29 +98,29 @@ jobs:
             --pristine \
             --board ${{ env.BOARD_TARGET }} \
             -- -DNCS_TOOLCHAIN_VERSION=NONE \
-            2>&1 | tee zephyrdoom-build-${{ env.SDK_VERSION }}-${{ github.run_number }}.log'
+            2>&1 | tee build-${{ env.SDK_VERSION }}-${{ github.run_number }}.log'
 
       - name: Rename zephyrdoom artifacts
         run: |
           cp "${{ github.workspace }}/zephyrdoom/build/zephyr/merged.hex" \
-          "${{ github.workspace }}/zephyrdoom-merged-${{ env.SDK_VERSION }}-${{ github.run_number }}.hex"
+          "${{ github.workspace }}/merged-${{ env.SDK_VERSION }}-${{ github.run_number }}.hex"
           cp "${{ github.workspace }}/zephyrdoom/build/zephyr/merged_domains.hex" \
-          "${{ github.workspace }}/zephyrdoom-merged-domains-${{ env.SDK_VERSION }}-${{ github.run_number }}.hex"
+          "${{ github.workspace }}/merged-domains-${{ env.SDK_VERSION }}-${{ github.run_number }}.hex"
           cp "${{ github.workspace }}/zephyrdoom/build/zephyr/zephyr.hex" \
-          "${{ github.workspace }}/zephyrdoom-zephyr-${{ env.SDK_VERSION }}-${{ github.run_number }}.hex"
+          "${{ github.workspace }}/zephyr-${{ env.SDK_VERSION }}-${{ github.run_number }}.hex"
           cp "${{ github.workspace }}/zephyrdoom/build/zephyr/zephyr.elf" \
-          "${{ github.workspace }}/zephyrdoom-zephyr-${{ env.SDK_VERSION }}-${{ github.run_number }}.elf"
+          "${{ github.workspace }}/zephyr-${{ env.SDK_VERSION }}-${{ github.run_number }}.elf"
           cp "${{ github.workspace }}/zephyrdoom/build/zephyr/zephyr.map" \
-          "${{ github.workspace }}/zephyrdoom-zephyr-${{ env.SDK_VERSION }}-${{ github.run_number }}.map"
+          "${{ github.workspace }}/zephyr-${{ env.SDK_VERSION }}-${{ github.run_number }}.map"
 
-      - name: Upload zephyrdoom artifacts
+      - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: zephyrdoom-build-${{ env.SDK_VERSION }}-${{ env.BOARD_TARGET }}-${{ github.run_number }}
+          name: build-${{ env.SDK_VERSION }}-${{ env.BOARD_TARGET }}-${{ github.run_number }}
           path: |
-            zephyrdoom-merged-${{ env.SDK_VERSION }}-${{ github.run_number }}.hex
-            zephyrdoom-merged-domains-${{ env.SDK_VERSION }}-${{ github.run_number }}.hex
-            zephyrdoom-zephyr-${{ env.SDK_VERSION }}-${{ github.run_number }}.hex
-            zephyrdoom-zephyr-${{ env.SDK_VERSION }}-${{ github.run_number }}.elf
-            zephyrdoom-zephyr-${{ env.SDK_VERSION }}-${{ github.run_number }}.map
-            zephyrdoom-build-${{ env.SDK_VERSION }}-${{ github.run_number }}.log
+            merged-${{ env.SDK_VERSION }}-${{ github.run_number }}.hex
+            merged-domains-${{ env.SDK_VERSION }}-${{ github.run_number }}.hex
+            zephyr-${{ env.SDK_VERSION }}-${{ github.run_number }}.hex
+            zephyr-${{ env.SDK_VERSION }}-${{ github.run_number }}.elf
+            zephyr-${{ env.SDK_VERSION }}-${{ github.run_number }}.map
+            build-${{ env.SDK_VERSION }}-${{ github.run_number }}.log

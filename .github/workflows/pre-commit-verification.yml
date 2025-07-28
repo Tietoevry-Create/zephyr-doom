@@ -1,5 +1,5 @@
 ---
-name: Pre-commit checks
+name: Pre-commit verification
 run-name: >
   ${{ github.workflow }} — Triggered by
   ${{ github.actor }} on ${{ github.ref_name }}
@@ -14,7 +14,7 @@ defaults:
 
 jobs:
   pre-commit-check:
-    name: Run pre-commit checks
+    name: Run Pre-commit verification
     runs-on: ubuntu-24.04
     if: github.ref_name != 'master' && github.ref_name != 'main'
 
@@ -27,7 +27,7 @@ jobs:
           sudo apt-get update && sudo apt-get install -y \
           pre-commit
 
-      - name: Run pre-commit checks
+      - name: Run pre-commit command
         run: |
           pre-commit run \
           --verbose \

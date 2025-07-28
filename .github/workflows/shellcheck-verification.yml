@@ -16,7 +16,7 @@ defaults:
 
 jobs:
   shellcheck-verification:
-    name: Run shellcheck verification
+    name: Run ShellCheck verification
     runs-on: ubuntu-24.04
 
     steps:
@@ -28,7 +28,7 @@ jobs:
           sudo apt-get update && sudo apt-get install -y \
           shellcheck
 
-      - name: Run shellcheck verification
+      - name: Run shellcheck command
         run: |
           find . -type f -name "*.sh" | xargs shellcheck --shell=bash \
           2>&1 | tee shellcheck-${{ github.run_number }}.log
