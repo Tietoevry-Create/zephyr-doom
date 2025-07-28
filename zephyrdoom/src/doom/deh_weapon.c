@@ -1,19 +1,19 @@
-//
-// Copyright(C) 2005-2014 Simon Howard
-//
-// This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU General Public License
-// as published by the Free Software Foundation; either version 2
-// of the License, or (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//
-//
-// Parses "Weapon" sections in dehacked files
-//
+/*
+ * Copyright(C) 2005-2014 Simon Howard
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * DESCRIPTION:
+ * Parses "Weapon" sections in dehacked files
+ */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -28,12 +28,12 @@
 #include "deh_mapping.h"
 
 DEH_BEGIN_MAPPING(weapon_mapping, weaponinfo_t)
-  DEH_MAPPING("Ammo type",        ammo)
-  DEH_MAPPING("Deselect frame",   upstate)
-  DEH_MAPPING("Select frame",     downstate)
-  DEH_MAPPING("Bobbing frame",    readystate)
-  DEH_MAPPING("Shooting frame",   atkstate)
-  DEH_MAPPING("Firing frame",     flashstate)
+DEH_MAPPING("Ammo type", ammo)
+DEH_MAPPING("Deselect frame", upstate)
+DEH_MAPPING("Select frame", downstate)
+DEH_MAPPING("Bobbing frame", readystate)
+DEH_MAPPING("Shooting frame", atkstate)
+DEH_MAPPING("Firing frame", flashstate)
 DEH_END_MAPPING
 
 static void *DEH_WeaponStart(deh_context_t *context, char *line)
@@ -64,12 +64,11 @@ static void DEH_WeaponParseLine(deh_context_t *context, char *line, void *tag)
     if (tag == NULL)
         return;
 
-    weapon = (weaponinfo_t *) tag;
+    weapon = (weaponinfo_t *)tag;
 
     if (!DEH_ParseAssignment(line, &variable_name, &value))
     {
-        // Failed to parse
-
+        /* Failed to parse */
         DEH_Warning(context, "Failed to parse assignment");
         return;
     }
@@ -83,18 +82,18 @@ static void DEH_WeaponSHA1Sum(sha1_context_t *context)
 {
     int i;
 
-    for (i=0; i<NUMWEAPONS ;++i)
+    for (i = 0; i < NUMWEAPONS; ++i)
     {
         DEH_StructSHA1Sum(context, &weapon_mapping, &weaponinfo[i]);
     }
 }
 
 deh_section_t deh_section_weapon =
-{
-    "Weapon",
-    NULL,
-    DEH_WeaponStart,
-    DEH_WeaponParseLine,
-    NULL,
-    DEH_WeaponSHA1Sum,
+    {
+        "Weapon",
+        NULL,
+        DEH_WeaponStart,
+        DEH_WeaponParseLine,
+        NULL,
+        DEH_WeaponSHA1Sum,
 };

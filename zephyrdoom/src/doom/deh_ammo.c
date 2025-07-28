@@ -1,19 +1,19 @@
-//
-// Copyright(C) 2005-2014 Simon Howard
-//
-// This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU General Public License
-// as published by the Free Software Foundation; either version 2
-// of the License, or (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//
-//
-// Parses "Ammo" sections in dehacked files
-//
+/*
+ * Copyright(C) 2005-2014 Simon Howard
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * DESCRIPTION:
+ * Parses "Ammo" sections in dehacked files.
+ */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -54,22 +54,19 @@ static void DEH_AmmoParseLine(deh_context_t *context, char *line, void *tag)
     if (tag == NULL)
         return;
 
-    ammo_number = ((int *) tag) - maxammo;
+    ammo_number = ((int *)tag) - maxammo;
 
-    // Parse the assignment
-
+    /* Parse the assignment */
     if (!DEH_ParseAssignment(line, &variable_name, &value))
     {
-        // Failed to parse
-
+        /* Failed to parse */
         DEH_Warning(context, "Failed to parse assignment");
         return;
     }
 
     ivalue = atoi(value);
 
-    // maxammo
-
+    /* Max ammo */
     if (!strcasecmp(variable_name, "Per ammo"))
         clipammo[ammo_number] = ivalue;
     else if (!strcasecmp(variable_name, "Max ammo"))
@@ -84,7 +81,7 @@ static void DEH_AmmoSHA1Hash(sha1_context_t *context)
 {
     int i;
 
-    for (i=0; i<NUMAMMO; ++i)
+    for (i = 0; i < NUMAMMO; ++i)
     {
         SHA1_UpdateInt32(context, clipammo[i]);
         SHA1_UpdateInt32(context, maxammo[i]);
@@ -92,11 +89,11 @@ static void DEH_AmmoSHA1Hash(sha1_context_t *context)
 }
 
 deh_section_t deh_section_ammo =
-{
-    "Ammo",
-    NULL,
-    DEH_AmmoStart,
-    DEH_AmmoParseLine,
-    NULL,
-    DEH_AmmoSHA1Hash,
+    {
+        "Ammo",
+        NULL,
+        DEH_AmmoStart,
+        DEH_AmmoParseLine,
+        NULL,
+        DEH_AmmoSHA1Hash,
 };
