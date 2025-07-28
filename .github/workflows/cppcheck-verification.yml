@@ -1,5 +1,5 @@
 ---
-name: Cppcheck linter
+name: Cppcheck verification
 run-name: >
   ${{ github.workflow }} — Triggered by
   ${{ github.actor }} on ${{ github.ref_name }}
@@ -17,7 +17,7 @@ defaults:
 
 jobs:
   cppcheck-lint:
-    name: Run cppcheck linter
+    name: Run Cppcheck verification
     runs-on: ubuntu-24.04
 
     steps:
@@ -29,7 +29,7 @@ jobs:
           sudo apt-get update && sudo apt-get install -y \
           cppcheck
 
-      - name: Run cppcheck command for zephyrdoom source files
+      - name: Run cppcheck command
         run: |
           cppcheck \
           --force \
@@ -42,17 +42,17 @@ jobs:
           -I "${{ github.workspace }}/zephyrdoom/src/config/" \
           -I "${{ github.workspace }}/zephyrdoom/src/doom/" \
           "${{ github.workspace }}/zephyrdoom/src" \
-          2>&1 | tee zephyrdoom-cppcheck-${{ github.run_number }}.log
+          2>&1 | tee cppcheck-${{ github.run_number }}.log
 
-      - name: Analyze logs of zephyrdoom source files
+      - name: Analyze cppcheck logs
         run: |
           "${{ github.workspace }}/.github/scripts/parse-cppcheck-logfile.sh" \
-          zephyrdoom-cppcheck-${{ github.run_number }}.log
+          cppcheck-${{ github.run_number }}.log
 
-      - name: Upload zephyrdoom logs
+      - name: Upload cppcheck logs
         uses: actions/upload-artifact@v4
         with:
-          name: zephyrdoom-cppcheck-${{ github.run_number }}
+          name: cppcheck-${{ github.run_number }}
           path: |
-            zephyrdoom-cppcheck-${{ github.run_number }}.log
-            zephyrdoom-cppcheck-${{ github.run_number }}-summary.log
+            cppcheck-${{ github.run_number }}.log
+            cppcheck-${{ github.run_number }}-summary.log
