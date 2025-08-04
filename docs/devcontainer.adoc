@@ -56,6 +56,9 @@ to the <<additional-config, Additional configuration>> chapter.
 
 ==== Host instance
 
+NOTE: To avoid potential issues caused by an existing environment configuration,
+you may want to start with a fresh WSL instance.
+
 Ensure you have the following tools installed:
 
 * https://learn.microsoft.com/en-us/windows/wsl/install[Windows Subsystem for Linux (WSL)]
@@ -72,11 +75,12 @@ https://learn.microsoft.com/en-us/windows/wsl/install-manual[here].
 
 * https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-wsl[WSL Extension]
 
+* https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers[Remote - Containers Extension]
+
 ==== Windows Subsystem for Linux (WSL) instance
 
 Ensure you have the following tools installed:
 
-* https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers[Remote - Containers Extension]
 * https://docs.docker.com/engine/install/[Docker Engine]
 
 For *helper extensions* installations and *additional configuration* plese refer
