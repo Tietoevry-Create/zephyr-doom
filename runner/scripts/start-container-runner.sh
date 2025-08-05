@@ -18,6 +18,6 @@ while getopts ":h" arg; do
     esac
 done
 
-podman kill gha-runner || true
-podman rm -fiv gha-runner
-podman run --rm --name=gha-runner gha-runner-image:latest
+podman kill gha-runner &>/dev/null || true
+podman rm -fiv gha-runner || true
+podman run -d --rm --name=gha-runner gha-runner-image:latest

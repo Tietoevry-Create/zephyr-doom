@@ -4,7 +4,7 @@ set -eo pipefail
 
 usage() {
 cat << EOF
-Usage: ./$(basename "$0") [-h] [-r repo_url] [-t token]
+Usage: ./$(basename "$0") [-h] [-r repo_url] [-t token] [-n name] [-l labels]
 EOF
 }
 
@@ -16,13 +16,22 @@ args_help() {
     echo
 
     echo "Optional arguments:
+    -n    Specify a name for the runner. By default set to hostname.
+    -l    Add custom labels to the runner configuration.
+          Defaults to the hostname.
     -h    Show help and exit."
 }
 
-while getopts "r:t:h" arg; do
+# Default values
+NAME=$(hostname)
+LABELS="$NAME"
+
+while getopts "r:t:n:l:h" arg; do
     case "$arg" in
         r) REPO_URL="${OPTARG}" ;;
         t) TOKEN="${OPTARG}" ;;
+        n) NAME="${OPTARG}" ;;
+        l) LABELS="${OPTARG}" ;;
         h) usage; echo; args_help; exit ;;
         *) usage; exit ;;
     esac
@@ -42,4 +51,5 @@ fi
 
 RUNNER_DIR_PATH="$HOME/actions-runner"
 
-"$RUNNER_DIR_PATH/config.sh" --unattended --url "$REPO_URL" --token "$TOKEN"
+"$RUNNER_DIR_PATH/config.sh" --unattended --url "$REPO_URL" --token "$TOKEN" \
+                             --name "$NAME" --labels "$LABELS"
