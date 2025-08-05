@@ -19,13 +19,13 @@ RUN apt-get update && apt-get install -y \
     liblttng-ust1 \
     zlib1g \
     $(apt-cache search '^libicu[0-9][0-9]$' | \
-      awk '{print $1}' | \
-      sort -r | \
-      head -n 1) \
+    awk '{print $1}' | \
+    sort -r | \
+    head -n 1) \
     $(apt-cache search '^libssl[0-9]$' | \
-      awk '{print $1}' | \
-      sort -r | \
-      head -n 1)
+    awk '{print $1}' | \
+    sort -r | \
+    head -n 1)
 
 # Check for any other system updates
 RUN apt-get update && apt-get -y upgrade
@@ -56,9 +56,12 @@ RUN ./download-runner-tooling.sh -a "$ARCH" -v "$VERSION" -s "$HASH"
 
 # Configure runner environment
 ARG REPO_URL
+ARG NAME
+ARG LABELS
 COPY ./configure-runner-env.sh configure-runner-env.sh
 RUN --mount=type=secret,id=token,mode=0444 \
-    ./configure-runner-env.sh -r "$REPO_URL" -t "$(cat /run/secrets/token)"
+    ./configure-runner-env.sh -r "$REPO_URL" -t "$(cat /run/secrets/token)" \
+    -n "$NAME" -l "$LABELS"
 
 # Start runner on container start
 COPY ./start-runner.sh start-runner.sh

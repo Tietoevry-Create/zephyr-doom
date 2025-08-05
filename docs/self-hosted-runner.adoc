@@ -138,7 +138,6 @@ execute any command as `root` without restrictions. Such action is persistent,
 system wide change and should only be applied if you fully trust the workflow
 and the repository it executes from. +
 
-
 . Log in as `runner` user:
 +
 [source,bash]
@@ -198,6 +197,15 @@ authentication token:
  ./configure-runner-env.sh -r https://github.com/Tietoevry-Create/zephyr-doom \
 -t time_limited_auth_token_here
 ----
+
+.. Additionally, the runner can be customized with a specific name and label to
+make it easier to identify or target in workflows:
+* Use the `--name` option to specify a custom runner name. Defaults to the
+system hostname.
+* Use the `--labels` option to define additional custom labels. By default, the
+hostname is also used as a label.
+** To specify multiple labels at once, separate them with commas e.g.
+`custom-label1,custom-label2,custom-label3`.
 
 === Enabling the instance
 
@@ -351,6 +359,15 @@ https://docs.podman.io/en/latest/markdown/podman-system-migrate.1.html[podman sy
 -r https://github.com/Tietoevry-Create/zephyr-doom \
 -t time_limited_auth_token_here
 ----
+
+.. Additionally, the runner can be customized with a specific name and label to
+make it easier to identify or target in workflows:
+* Use the `--name` option to specify a custom runner name. Defaults to the
+hostname of container host with prefix.
+* Use the `--labels` option to define additional custom labels. By default, the
+hostname of container host with prefix is also used as a label.
+** To specify multiple labels at once, separate them with commas e.g.
+`custom-label1,custom-label2,custom-label3`.
 
 === Start runner container instance
 

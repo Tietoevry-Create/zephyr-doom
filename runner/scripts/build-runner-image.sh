@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 
-set -euo pipefail
+set -eo pipefail
 
 usage() {
 cat << EOF
 Usage: ./$(basename "$0") [-h] [-a architecture] [-v version] [-s hash]
-                          [-r repo_url] [-t token]
+                          [-r repo_url] [-t token] [-n name] [-l labels]
 EOF
 }
 
@@ -20,16 +20,25 @@ args_help() {
     echo
 
     echo "Optional arguments:
+    -n    Specify a name for the runner. By default set to hostname of container
+          host with prefix.
+    -l    Add custom labels to the runner configuration.
+          Defaults to the hostname of container host with prefix.
     -h    Show help and exit."
 }
 
-while getopts "a:v:s:r:t:h" arg; do
+NAME="container-$(hostname)"
+LABELS="$NAME"
+
+while getopts "a:v:s:r:t:n:l:h" arg; do
     case "$arg" in
         a) ARCH="${OPTARG}" ;;
         v) VERSION="${OPTARG}" ;;
         s) HASH="${OPTARG}" ;;
         r) REPO_URL="${OPTARG}" ;;
         t) TOKEN="${OPTARG}" ;;
+        n) NAME="${OPTARG}" ;;
+        l) LABELS="${OPTARG}" ;;
         h) usage; echo; args_help; exit ;;
         *) usage; exit ;;
     esac
@@ -72,6 +81,8 @@ podman build \
 --build-arg VERSION="$VERSION" \
 --build-arg HASH="$HASH" \
 --build-arg REPO_URL="$REPO_URL" \
+--build-arg NAME="$NAME" \
+--build-arg LABELS="$LABELS" \
 --secret type=env,id=token,env=TOKEN \
 -t gha-runner-image .
 
