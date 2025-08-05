@@ -29,7 +29,6 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-
 #include <stdint.h>
 #include "doomtype.h"
 

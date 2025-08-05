@@ -1,37 +1,34 @@
-//
-// Copyright(C) 1993-1996 Id Software, Inc.
-// Copyright(C) 2005-2014 Simon Howard
-//
-// This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU General Public License
-// as published by the Free Software Foundation; either version 2
-// of the License, or (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//
-// DESCRIPTION:
-//  Created by the sound utility written by Dave Taylor.
-//  Kept as a sample, DOOM2  sounds. Frozen.
-//
+/*
+ * Copyright(C) 1993-1996 Id Software, Inc.
+ * Copyright(C) 2005-2014 Simon Howard
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * DESCRIPTION:
+ * Created by the sound utility written by Dave Taylor.
+ * Kept as a sample, DOOM2  sounds. Frozen.
+ */
 
 #ifndef __SOUNDS__
 #define __SOUNDS__
 
 #include "i_sound.h"
 
-// the complete set of sound effects
-extern sfxinfo_t    S_sfx[];
+/* The complete set of sound effects. */
+extern sfxinfo_t S_sfx[];
 
-// the complete set of music
-extern musicinfo_t  S_music[];
+/* The complete set of music. */
+extern musicinfo_t S_music[];
 
-//
-// Identifiers for all music in game.
-//
-
+/* Identifiers for all music in game. */
 typedef enum
 {
     mus_None,
@@ -105,11 +102,7 @@ typedef enum
     NUMMUSIC
 } musicenum_t;
 
-
-//
-// Identifiers for all sfx in game.
-//
-
+/* Identifiers for all sfx in game. */
 typedef enum
 {
     sfx_None,
@@ -224,4 +217,4 @@ typedef enum
     NUMSFX
 } sfxenum_t;
 
-#endif
+#endif /* __SOUNDS__ */

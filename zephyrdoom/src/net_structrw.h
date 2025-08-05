@@ -1,22 +1,25 @@
-//
-// Copyright(C) 2005-2014 Simon Howard
-//
-// This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU General Public License
-// as published by the Free Software Foundation; either version 2
-// of the License, or (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//
+/*
+ * Copyright(C) 2005-2014 Simon Howard
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ */
 
 #ifndef NET_STRUCTRW_H
 #define NET_STRUCTRW_H
 
-// NRFD-TODO?
-// #include "aes_prng.h"
+/*
+ * // NRFD-TODO
+ * #include "aes_prng.h"
+ */
+
 #include "sha1.h"
 #include "net_defs.h"
 #include "net_packet.h"
@@ -44,15 +47,16 @@ void NET_WriteSHA1Sum(net_packet_t *packet, sha1_digest_t digest);
 void NET_WriteWaitData(net_packet_t *packet, net_waitdata_t *data);
 boolean NET_ReadWaitData(net_packet_t *packet, net_waitdata_t *data);
 
-/* NRFD-TODO?
-boolean NET_ReadPRNGSeed(net_packet_t *packet, prng_seed_t seed);
-void NET_WritePRNGSeed(net_packet_t *packet, prng_seed_t seed);
-*/
+/*
+ * // NRFD-TODO
+ * boolean NET_ReadPRNGSeed(net_packet_t *packet, prng_seed_t seed);
+ * void NET_WritePRNGSeed(net_packet_t *packet, prng_seed_t seed);
+ */
 
-// Protocol list exchange.
+/* Protocol list exchange. */
 net_protocol_t NET_ReadProtocol(net_packet_t *packet);
 void NET_WriteProtocol(net_packet_t *packet, net_protocol_t protocol);
 net_protocol_t NET_ReadProtocolList(net_packet_t *packet);
 void NET_WriteProtocolList(net_packet_t *packet);
 
-#endif /* #ifndef NET_STRUCTRW_H */
+#endif /* NET_STRUCTRW_H */

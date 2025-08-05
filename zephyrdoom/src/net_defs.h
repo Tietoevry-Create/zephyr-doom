@@ -1,19 +1,19 @@
-//
-// Copyright(C) 2005-2014 Simon Howard
-//
-// This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU General Public License
-// as published by the Free Software Foundation; either version 2
-// of the License, or (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//
-// DESCRIPTION:
-//     Definitions for use in networking code.
-//
+/*
+ * Copyright(C) 2005-2014 Simon Howard
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * DESCRIPTION:
+ * Definitions for use in networking code.
+ */
 
 #ifndef NET_DEFS_H
 #define NET_DEFS_H
@@ -24,26 +24,30 @@
 #include "d_ticcmd.h"
 #include "sha1.h"
 
-// Absolute maximum number of "nodes" in the game.  This is different to
-// NET_MAXPLAYERS, as there may be observers that are not participating
-// (eg. left/right monitors)
-
+/*
+ * Absolute maximum number of "nodes" in the game. This is different to
+ * NET_MAXPLAYERS, as there may be observers that are not participating
+ * (e.g. left/right monitors)
+ */
 #define MAXNETNODES 16
 
-// The maximum number of players, multiplayer/networking.
-// This is the maximum supported by the networking code; individual games
-// have their own values for MAXPLAYERS that can be smaller.
-
+/*
+ * The maximum number of players, multiplayer/networking.
+ * This is the maximum supported by the networking code; individual games
+ * have their own values for MAXPLAYERS that can be smaller.
+ */
 #define NET_MAXPLAYERS 8
 
-// Maximum length of a player's name.
-
+/* Maximum length of a player's name. */
 #define MAXPLAYERNAME 30
 
-// Networking and tick handling related.
-
-/* NRFD-TODO !! BACKUPTICS 128 */
+/* Networking and tick handling related. */
 #define BACKUPTICS 4
+
+/*
+ * // NRFD-TODO
+ * # #define BACKUPTICS 128
+ */
 
 typedef struct _net_module_s net_module_t;
 typedef struct _net_packet_s net_packet_t;
@@ -60,38 +64,31 @@ struct _net_packet_s
 
 struct _net_module_s
 {
-    // Initialize this module for use as a client
-
+    /* Initialize this module for use as a client */
     boolean (*InitClient)(void);
 
-    // Initialize this module for use as a server
-
+    /* Initialize this module for use as a server */
     boolean (*InitServer)(void);
 
-    // Send a packet
-
+    /* Send a packet */
     void (*SendPacket)(net_addr_t *addr, net_packet_t *packet);
 
-    // Check for new packets to receive
-    //
-    // Returns true if packet received
-
+    /*
+     * Check for new packets to receive.
+     *
+     * Returns true if packet received.
+     */
     boolean (*RecvPacket)(net_addr_t **addr, net_packet_t **packet);
 
-    // Converts an address to a string
-
+    /* Converts an address to a string */
     void (*AddrToString)(net_addr_t *addr, char *buffer, int buffer_len);
 
-    // Free back an address when no longer in use
-
+    /* Free back an address when no longer in use */
     void (*FreeAddress)(net_addr_t *addr);
 
-    // Try to resolve a name to an address
-
+    /* Try to resolve a name to an address */
     net_addr_t *(*ResolveAddress)(char *addr);
 };
-
-// net_addr_t
 
 struct _net_addr_s
 {
@@ -99,43 +96,47 @@ struct _net_addr_s
     void *handle;
 };
 
-// Magic number sent when connecting to check this is a valid client
-#define NET_MAGIC_NUMBER     1454104972U
+/* Magic number sent when connecting to check this is a valid client. */
+#define NET_MAGIC_NUMBER 1454104972U
 
-// Old magic number used by Chocolate Doom versions before v3.0:
+/* Old magic number used by Chocolate Doom versions before v3.0 */
 #define NET_OLD_MAGIC_NUMBER 3436803284U
 
-// header field value indicating that the packet is a reliable packet
-
+/* Header field value indicating that the packet is a reliable packet. */
 #define NET_RELIABLE_PACKET (1 << 15)
 
-// Supported protocols. If you're developing a fork of Chocolate
-// Doom, you can add your own entry to this list while maintaining
-// compatibility with Chocolate Doom servers. Higher-numbered enum values
-// will be preferred when negotiating a protocol for the client and server
-// to use, so the order matters.
-// NOTE: The values in this enum do not have any special value outside of
-// the program they're compiled in. What matters is the string representation.
+/*
+ * Supported protocols. If you're developing a fork of Chocolate
+ * Doom, you can add your own entry to this list while maintaining
+ * compatibility with Chocolate Doom servers. Higher-numbered enum values
+ * will be preferred when negotiating a protocol for the client and server
+ * to use, so the order matters.
+ *
+ * The values in this enum do not have any special value outside of
+ * the program they're compiled in. What matters is the string representation.
+ */
 typedef enum
 {
-    // Protocol introduced with Chocolate Doom v3.0. Each compatibility-
-    // breaking change to the network protocol will produce a new protocol
-    // number in this enum.
+    /*
+     * Protocol introduced with Chocolate Doom v3.0. Each compatibility
+     * breaking change to the network protocol will produce a new protocol
+     * number in this enum.
+     */
     NET_PROTOCOL_CHOCOLATE_DOOM_0,
 
-    // Add your own protocol here; be sure to add a name for it to the list
-    // in net_common.c too.
-
+    /*
+     * Add your own protocol here. Be sure to add a name for it to the list
+     * in net_common.c too.
+     */
     NET_NUM_PROTOCOLS,
     NET_PROTOCOL_UNKNOWN,
 } net_protocol_t;
 
-// packet types
-
+/* Packet types. */
 typedef enum
 {
     NET_PACKET_TYPE_SYN,
-    NET_PACKET_TYPE_ACK, // deprecated
+    NET_PACKET_TYPE_ACK, /* Deprecated */
     NET_PACKET_TYPE_REJECTED,
     NET_PACKET_TYPE_KEEPALIVE,
     NET_PACKET_TYPE_WAITING_DATA,
@@ -166,8 +167,7 @@ typedef enum
     NET_MASTER_PACKET_TYPE_SIGN_END_RESPONSE,
 } net_master_packet_type_t;
 
-// Settings specified when the client connects to the server.
-
+/* Settings specified when the client connects to the server. */
 typedef struct
 {
     int gamemode;
@@ -181,9 +181,10 @@ typedef struct
     int player_class;
 } net_connect_data_t;
 
-// Game settings sent by client to server when initiating game start,
-// and received from the server by clients when the game starts.
-
+/*
+ * Game settings sent by client to server when initiating game start,
+ * and received from the server by clients when the game starts.
+ */
 typedef struct
 {
     int ticdup;
@@ -200,28 +201,27 @@ typedef struct
     int new_sync;
     int timelimit;
     int loadgame;
-    int random;  // [Strife only]
+    int random; /* [Strife only] */
 
-    // These fields are only used by the server when sending a game
-    // start message:
-
+    /*
+     * These fields are only used by the server when sending a game
+     * start message.
+     */
     int num_players;
     int consoleplayer;
 
-    // Hexen player classes:
-
+    /* Hexen player classes */
     int player_classes[NET_MAXPLAYERS];
-
 } net_gamesettings_t;
 
-#define NET_TICDIFF_FORWARD      (1 << 0)
-#define NET_TICDIFF_SIDE         (1 << 1)
-#define NET_TICDIFF_TURN         (1 << 2)
-#define NET_TICDIFF_BUTTONS      (1 << 3)
-#define NET_TICDIFF_CONSISTANCY  (1 << 4)
-#define NET_TICDIFF_CHATCHAR     (1 << 5)
-#define NET_TICDIFF_RAVEN        (1 << 6)
-#define NET_TICDIFF_STRIFE       (1 << 7)
+#define NET_TICDIFF_FORWARD (1 << 0)
+#define NET_TICDIFF_SIDE (1 << 1)
+#define NET_TICDIFF_TURN (1 << 2)
+#define NET_TICDIFF_BUTTONS (1 << 3)
+#define NET_TICDIFF_CONSISTANCY (1 << 4)
+#define NET_TICDIFF_CHATCHAR (1 << 5)
+#define NET_TICDIFF_RAVEN (1 << 6)
+#define NET_TICDIFF_STRIFE (1 << 7)
 
 typedef struct
 {
@@ -229,8 +229,7 @@ typedef struct
     ticcmd_t cmd;
 } net_ticdiff_t;
 
-// Complete set of ticcmds from all players
-
+/* Complete set of ticcmds from all players. */
 typedef struct
 {
     signed int latency;
@@ -239,8 +238,7 @@ typedef struct
     net_ticdiff_t cmds[NET_MAXPLAYERS];
 } net_full_ticcmd_t;
 
-// Data sent in response to server queries
-
+/* Data sent in response to server queries. */
 typedef struct
 {
     char *version;
@@ -253,8 +251,7 @@ typedef struct
     net_protocol_t protocol;
 } net_querydata_t;
 
-// Data sent by the server while waiting for the game to start.
-
+/* Data sent by the server while waiting for the game to start. */
 typedef struct
 {
     int num_players;
@@ -270,4 +267,4 @@ typedef struct
     int is_freedoom;
 } net_waitdata_t;
 
-#endif /* #ifndef NET_DEFS_H */
+#endif /* NET_DEFS_H */
