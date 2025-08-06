@@ -1,5 +1,3 @@
-/* main.c - Application main entry point */
-
 /*
  * Copyright (c) 2018 Nordic Semiconductor ASA
  *
@@ -35,21 +33,21 @@
 #define DEADZONE_Y 8
 
 static struct k_work_delayable reset_work;
-static void reset_inputs(struct k_work *work) {
+static void reset_inputs(struct k_work *work)
+{
     printk("Resetting joystick and button states\n");
 
     event_t joystick_event;
     joystick_event.type = ev_joystick;
-    joystick_event.data1 = 0;  // No buttons pressed
-    joystick_event.data2 = 0;  // Joystick X reset
-    joystick_event.data3 = 0;  // Joystick Y reset
+    joystick_event.data1 = 0; /* No buttons pressed */
+    joystick_event.data2 = 0; /* Joystick X reset */
+    joystick_event.data3 = 0; /* Joystick Y reset */
 
     D_PostEvent(&joystick_event);
 }
 
 #define SW0_NODE DT_ALIAS(sw0)
-static const struct gpio_dt_spec button =
-    GPIO_DT_SPEC_GET_OR(SW0_NODE, gpios, {0});
+static const struct gpio_dt_spec button = GPIO_DT_SPEC_GET_OR(SW0_NODE, gpios, {0});
 
 static struct gpio_callback button_cb_data;
 static struct bt_conn *default_conn;
@@ -59,23 +57,26 @@ static struct bt_conn *auth_conn;
 static void hids_on_ready(struct k_work *work);
 static K_WORK_DEFINE(hids_ready_work, hids_on_ready);
 
-extern struct bt_gatt_dm {
+extern struct bt_gatt_dm
+{
     /* Connection object */
     struct bt_conn *conn;
+
     /* The user context */
     void *context;
 
     /* The discovery parameters used */
     struct bt_gatt_discover_params discover_params;
+
     /* Currently parsed attributes */
     struct bt_gatt_dm_attr attrs[CONFIG_BT_GATT_DM_MAX_ATTRS];
+
     /* Currently accessed attribute */
     size_t cur_attr_id;
-    /* Flags with the status of the attributes */
-    // ATOMIC_DEFINE(state_flags, STATE_NUM);
 
-    /* The UUID of the service to discover. */
-    union {
+    /* The UUID of the service to discover */
+    union
+    {
         struct bt_uuid uuid;
         struct bt_uuid_16 u16;
         struct bt_uuid_32 u32;
@@ -84,22 +85,25 @@ extern struct bt_gatt_dm {
 
     /* Single-linked list of allocated chunks for user data */
     sys_slist_t chunk_list;
+
     /* The used length of the current chunk */
     size_t cur_chunk_len;
 
     /* The pointer to callback structure */
     const struct bt_gatt_dm_cb *callback;
 
-    /* Indicates that services should be searched by the UUID. */
+    /* Indicates that services should be searched by the UUID */
     bool search_svc_by_uuid;
 };
 
 static void scan_filter_match(struct bt_scan_device_info *device_info,
                               struct bt_scan_filter_match *filter_match,
-                              bool connectable) {
+                              bool connectable)
+{
     char addr[BT_ADDR_LE_STR_LEN];
 
-    if (!filter_match->uuid.match || (filter_match->uuid.count != 1)) {
+    if (!filter_match->uuid.match || (filter_match->uuid.count != 1))
+    {
         printk("Invalid device connected\n");
 
         return;
@@ -113,22 +117,27 @@ static void scan_filter_match(struct bt_scan_device_info *device_info,
            BT_UUID_16(uuid)->val, addr, connectable ? "yes" : "no");
 }
 
-static void scan_connecting_error(struct bt_scan_device_info *device_info) {
+static void scan_connecting_error(struct bt_scan_device_info *device_info)
+{
     printk("Connecting failed\n");
 }
 
 static void scan_connecting(struct bt_scan_device_info *device_info,
-                            struct bt_conn *conn) {
+                            struct bt_conn *conn)
+{
     default_conn = bt_conn_ref(conn);
 }
+
 /** .. include_startingpoint_scan_rst */
 static void scan_filter_no_match(struct bt_scan_device_info *device_info,
-                                 bool connectable) {
+                                 bool connectable)
+{
     int err;
     struct bt_conn *conn;
     char addr[BT_ADDR_LE_STR_LEN];
 
-    if (device_info->recv_info->adv_type == BT_GAP_ADV_TYPE_ADV_DIRECT_IND) {
+    if (device_info->recv_info->adv_type == BT_GAP_ADV_TYPE_ADV_DIRECT_IND)
+    {
         bt_addr_le_to_str(device_info->recv_info->addr, addr, sizeof(addr));
         printk("Direct advertising received from %s\n", addr);
         bt_scan_stop();
@@ -137,50 +146,58 @@ static void scan_filter_no_match(struct bt_scan_device_info *device_info,
                                 BT_CONN_LE_CREATE_CONN, device_info->conn_param,
                                 &conn);
 
-        if (!err) {
+        if (!err)
+        {
             default_conn = bt_conn_ref(conn);
             bt_conn_unref(conn);
         }
     }
 }
+
 /** .. include_endpoint_scan_rst */
 BT_SCAN_CB_INIT(scan_cb, scan_filter_match, scan_filter_no_match,
                 scan_connecting_error, scan_connecting);
 
-// for XBOX Gamepad
-void convert_uuid128_to_uuid16_services(struct bt_gatt_dm *dm) {
+/* UUID conversion for Xbox Gamepad. */
+void convert_uuid128_to_uuid16_services(struct bt_gatt_dm *dm)
+{
     char str[37];
     int i = 0;
 
-    while (dm->attrs[i + 1].handle != 0x0000) {
+    while (dm->attrs[i + 1].handle != 0x0000)
+    {
         if (!bt_uuid_cmp(dm->attrs[i].uuid,
                          BT_UUID_DECLARE_128(BT_UUID_128_ENCODE(
-                             BT_UUID_HIDS_INFO_VAL, 0, 0, 0, 0)))) {
+                             BT_UUID_HIDS_INFO_VAL, 0, 0, 0, 0))))
+        {
             dm->attrs[i].uuid->type = BT_UUID_TYPE_16;
             BT_UUID_16(dm->attrs[i].uuid)->val = BT_UUID_HIDS_INFO_VAL;
         }
 
         else if (!bt_uuid_cmp(dm->attrs[i].uuid,
                               BT_UUID_DECLARE_128(BT_UUID_128_ENCODE(
-                                  BT_UUID_HIDS_CTRL_POINT_VAL, 0, 0, 0, 0)))) {
+                                  BT_UUID_HIDS_CTRL_POINT_VAL, 0, 0, 0, 0))))
+        {
             dm->attrs[i].uuid->type = BT_UUID_TYPE_16;
             BT_UUID_16(dm->attrs[i].uuid)->val = BT_UUID_HIDS_CTRL_POINT_VAL;
         }
 
         else if (!bt_uuid_cmp(dm->attrs[i].uuid,
                               BT_UUID_DECLARE_128(BT_UUID_128_ENCODE(
-                                  BT_UUID_HIDS_REPORT_MAP_VAL, 0, 0, 0, 0)))) {
+                                  BT_UUID_HIDS_REPORT_MAP_VAL, 0, 0, 0, 0))))
+        {
             dm->attrs[i].uuid->type = BT_UUID_TYPE_16;
             BT_UUID_16(dm->attrs[i].uuid)->val = BT_UUID_HIDS_REPORT_MAP_VAL;
         }
 
         else if (!bt_uuid_cmp(dm->attrs[i].uuid,
                               BT_UUID_DECLARE_128(BT_UUID_128_ENCODE(
-                                  BT_UUID_HIDS_REPORT_VAL, 0, 0, 0, 0)))) {
+                                  BT_UUID_HIDS_REPORT_VAL, 0, 0, 0, 0))))
+        {
             dm->attrs[i].uuid->type = BT_UUID_TYPE_16;
             BT_UUID_16(dm->attrs[i].uuid)->val = BT_UUID_HIDS_REPORT_VAL;
-            BT_UUID_16(dm->attrs[11].uuid)->val =
-                BT_UUID_HIDS_REPORT_VAL;  // hardcoded for XBOX
+            /* Hardcoded value for Xbox */
+            BT_UUID_16(dm->attrs[11].uuid)->val = BT_UUID_HIDS_REPORT_VAL;
         }
 
         bt_uuid_to_str(dm->attrs[i].uuid, str, sizeof(str));
@@ -190,41 +207,42 @@ void convert_uuid128_to_uuid16_services(struct bt_gatt_dm *dm) {
     }
 }
 
-static void discovery_completed_cb(struct bt_gatt_dm *dm, void *context) {
+static void discovery_completed_cb(struct bt_gatt_dm *dm, void *context)
+{
     int err;
 
     printk("The discovery procedure succeeded\n");
-    printk(
-        "\nFor XBOX controllers, you need to manually exit pairing mode or "
-        "wait for the timeout\n\n");
+    printk("\nFor XBOX controllers, you need to manually exit pairing mode or "
+           "wait for the timeout\n\n");
 
-    convert_uuid128_to_uuid16_services(
-        dm);  // need convert some UUID128 into UUID16 (for XBOX Controller)
+    /* Convert UUID128 into UUID16 for Xbox Controller */
+    convert_uuid128_to_uuid16_services(dm);
 
     bt_gatt_dm_data_print(dm);
 
     err = bt_hogp_handles_assign(dm, &hogp);
 
-    if (err) {
+    if (err)
+    {
         printk("Could not init HIDS client object, error: %d\n", err);
     }
 
     err = bt_gatt_dm_data_release(dm);
-    if (err) {
-        printk(
-            "Could not release the discovery data, error "
-            "code: %d\n",
-            err);
+    if (err)
+    {
+        printk("Could not release the discovery data, error code: %d\n", err);
     }
 }
 
 static void discovery_service_not_found_cb(struct bt_conn *conn,
-                                           void *context) {
+                                           void *context)
+{
     printk("The service could not be found during the discovery\n");
 }
 
 static void discovery_error_found_cb(struct bt_conn *conn, int err,
-                                     void *context) {
+                                     void *context)
+{
     printk("The discovery procedure failed with %d\n", err);
 }
 
@@ -234,37 +252,40 @@ static const struct bt_gatt_dm_cb discovery_cb = {
     .error_found = discovery_error_found_cb,
 };
 
-static void gatt_discover(struct bt_conn *conn) {
+static void gatt_discover(struct bt_conn *conn)
+{
     int err;
 
-    if (conn != default_conn) {
+    if (conn != default_conn)
+    {
         return;
     }
 
     err = bt_gatt_dm_start(conn, BT_UUID_HIDS, &discovery_cb, NULL);
-    if (err) {
-        printk(
-            "could not start the discovery procedure, error "
-            "code: %d\n",
-            err);
+    if (err)
+    {
+        printk("Could not start the discovery procedure, error code: %d\n", err);
     }
 }
 
-static void connected(struct bt_conn *conn, uint8_t conn_err) {
+static void connected(struct bt_conn *conn, uint8_t conn_err)
+{
     int err;
     char addr[BT_ADDR_LE_STR_LEN];
 
     bt_addr_le_to_str(bt_conn_get_dst(conn), addr, sizeof(addr));
 
-    if (conn_err) {
+    if (conn_err)
+    {
         printk("Failed to connect to %s (%u)\n", addr, conn_err);
-        if (conn == default_conn) {
+        if (conn == default_conn)
+        {
             bt_conn_unref(default_conn);
             default_conn = NULL;
 
-            /* This demo doesn't require active scan */
             err = bt_scan_start(BT_SCAN_TYPE_SCAN_ACTIVE);
-            if (err) {
+            if (err)
+            {
                 printk("Scanning failed to start (err %d)\n", err);
             }
         }
@@ -275,54 +296,63 @@ static void connected(struct bt_conn *conn, uint8_t conn_err) {
     printk("Connected: %s\n", addr);
 
     err = bt_conn_set_security(conn, BT_SECURITY_L2);
-    if (err) {
+    if (err)
+    {
         printk("Failed to set security: %d\n", err);
 
         gatt_discover(conn);
     }
 }
 
-static void disconnected(struct bt_conn *conn, uint8_t reason) {
+static void disconnected(struct bt_conn *conn, uint8_t reason)
+{
     char addr[BT_ADDR_LE_STR_LEN];
     int err;
 
     bt_addr_le_to_str(bt_conn_get_dst(conn), addr, sizeof(addr));
 
-    if (auth_conn) {
+    if (auth_conn)
+    {
         bt_conn_unref(auth_conn);
         auth_conn = NULL;
     }
 
     printk("Disconnected: %s (reason %u)\n", addr, reason);
 
-    if (bt_hogp_assign_check(&hogp)) {
+    if (bt_hogp_assign_check(&hogp))
+    {
         printk("HIDS client active - releasing");
         bt_hogp_release(&hogp);
     }
 
-    if (default_conn != conn) {
+    if (default_conn != conn)
+    {
         return;
     }
 
     bt_conn_unref(default_conn);
     default_conn = NULL;
 
-    /* This demo doesn't require active scan */
     err = bt_scan_start(BT_SCAN_TYPE_SCAN_ACTIVE);
-    if (err) {
+    if (err)
+    {
         printk("Scanning failed to start (err %d)\n", err);
     }
 }
 
 static void security_changed(struct bt_conn *conn, bt_security_t level,
-                             enum bt_security_err err) {
+                             enum bt_security_err err)
+{
     char addr[BT_ADDR_LE_STR_LEN];
 
     bt_addr_le_to_str(bt_conn_get_dst(conn), addr, sizeof(addr));
 
-    if (!err) {
+    if (!err)
+    {
         printk("Security changed: %s level %u\n", addr, level);
-    } else {
+    }
+    else
+    {
         printk("Security failed: %s level %u err %d\n", addr, level, err);
     }
 
@@ -333,7 +363,8 @@ BT_CONN_CB_DEFINE(conn_callbacks) = {.connected = connected,
                                      .disconnected = disconnected,
                                      .security_changed = security_changed};
 
-static void scan_init(void) {
+static void scan_init(void)
+{
     int err;
 
     struct bt_scan_init_param scan_init = {
@@ -345,39 +376,34 @@ static void scan_init(void) {
     bt_scan_cb_register(&scan_cb);
 
     err = bt_scan_filter_add(BT_SCAN_FILTER_TYPE_UUID, BT_UUID_HIDS);
-    if (err) {
+    if (err)
+    {
         printk("Scanning filters cannot be set (err %d)\n", err);
 
         return;
     }
 
     err = bt_scan_filter_enable(BT_SCAN_UUID_FILTER, false);
-    if (err) {
+    if (err)
+    {
         printk("Filters cannot be turned on (err %d)\n", err);
     }
 }
 
 static uint8_t hogp_notify_cb(struct bt_hogp *hogp,
                               struct bt_hogp_rep_info *rep, uint8_t err,
-                              const uint8_t *data) {
+                              const uint8_t *data)
+{
     static bool prev_dpad_up = false;
     static bool prev_dpad_down = false;
     static bool prev_button_back = false;
     static bool prev_button_start = false;
     static event_t prev_joystick_event;
 
-    if (!data) {
+    if (!data)
+    {
         return BT_GATT_ITER_STOP;
     }
-
-    // uint8_t size = bt_hogp_rep_size(rep);
-    // uint8_t i;
-    // printk("Notification, id: %u, size: %u, data:", bt_hogp_rep_id(rep), size);
-
-    // for (i = 0; i < size; ++i) {
-    //     printk(" 0x%x", data[i]);
-    // }
-    // printk("\n");
 
     event_t joystick_event;
     event_t keyboard_event;
@@ -395,31 +421,38 @@ static uint8_t hogp_notify_cb(struct bt_hogp *hogp,
     joystick_event.data1 =
         (button_A << 4) | (button_B << 5) | (button_X << 2) | (button_Y << 3);
 
-    // Left joystick used for movement and turning
+    /* Left joystick is used for movement and turning */
     int32_t leftJoyX = (data[1] << 8 | data[0]);
     int32_t leftJoyY = (data[3] << 8 | data[2]);
 
     leftJoyX = ((leftJoyX - 32767) / (double)32767) * 65;
     leftJoyY = ((leftJoyY - 32767) / (double)32767) * 65;
-    if (leftJoyX > -DEADZONE_X && leftJoyX < DEADZONE_X) {
+    if (leftJoyX > -DEADZONE_X && leftJoyX < DEADZONE_X)
+    {
         leftJoyX = 0;
     }
-    if (leftJoyY > -DEADZONE_Y && leftJoyY < DEADZONE_Y) {
+    if (leftJoyY > -DEADZONE_Y && leftJoyY < DEADZONE_Y)
+    {
         leftJoyY = 0;
     }
 
     joystick_event.data2 = leftJoyX;
     joystick_event.data3 = leftJoyY;
 
-    // Used for strafing
+    /* Used for strafing */
     int16_t LT = data[8];
     int16_t RT = data[10];
 
-    if (LT > 5) {
+    if (LT > 5)
+    {
         joystick_event.data4 = -LT;
-    } else if (RT > 5) {
+    }
+    else if (RT > 5)
+    {
         joystick_event.data4 = RT;
-    } else {
+    }
+    else
+    {
         joystick_event.data4 = 0;
     }
 
@@ -427,23 +460,28 @@ static uint8_t hogp_notify_cb(struct bt_hogp *hogp,
         joystick_event.data2 != prev_joystick_event.data2 ||
         joystick_event.data3 != prev_joystick_event.data3 ||
         joystick_event.data4 != prev_joystick_event.data4 ||
-        joystick_event.data5 != prev_joystick_event.data5) {
+        joystick_event.data5 != prev_joystick_event.data5)
+    {
         D_PostEvent(&joystick_event);
         prev_joystick_event = joystick_event;
     }
-    if (dpad_up && !prev_dpad_up) {
+    if (dpad_up && !prev_dpad_up)
+    {
         keyboard_event.data1 = key_up;
         D_PostEvent(&keyboard_event);
     }
-    if (dpad_down && !prev_dpad_down) {
+    if (dpad_down && !prev_dpad_down)
+    {
         keyboard_event.data1 = key_down;
         D_PostEvent(&keyboard_event);
     }
-    if (button_back && !prev_button_back) {
+    if (button_back && !prev_button_back)
+    {
         keyboard_event.data1 = key_map_toggle;
         D_PostEvent(&keyboard_event);
     }
-    if (button_start && !prev_button_start) {
+    if (button_start && !prev_button_start)
+    {
         keyboard_event.data1 = key_menu_activate;
         D_PostEvent(&keyboard_event);
     }
@@ -453,47 +491,53 @@ static uint8_t hogp_notify_cb(struct bt_hogp *hogp,
     prev_button_back = button_back;
     prev_button_start = button_start;
 
-    // k_work_reschedule(&reset_work, K_MSEC(RESET_TIMEOUT_MS));
-
     return BT_GATT_ITER_CONTINUE;
 }
 
-static void hogp_ready_cb(struct bt_hogp *hogp) {
+static void hogp_ready_cb(struct bt_hogp *hogp)
+{
     k_work_submit(&hids_ready_work);
 }
 
-static void hids_on_ready(struct k_work *work) {
+static void hids_on_ready(struct k_work *work)
+{
     int err;
     struct bt_hogp_rep_info *rep = NULL;
 
     printk("HIDS is ready to work\n");
 
-    while (NULL != (rep = bt_hogp_rep_next(&hogp, rep))) {
-        if (bt_hogp_rep_type(rep) == BT_HIDS_REPORT_TYPE_INPUT) {
+    while (NULL != (rep = bt_hogp_rep_next(&hogp, rep)))
+    {
+        if (bt_hogp_rep_type(rep) == BT_HIDS_REPORT_TYPE_INPUT)
+        {
             printk("Subscribe to report id: %u\n", bt_hogp_rep_id(rep));
             err = bt_hogp_rep_subscribe(&hogp, rep, hogp_notify_cb);
-            if (err) {
+            if (err)
+            {
                 printk("Subscribe error (%d)\n", err);
             }
         }
     }
 }
 
-static void hogp_prep_fail_cb(struct bt_hogp *hogp, int err) {
+static void hogp_prep_fail_cb(struct bt_hogp *hogp, int err)
+{
     printk("ERROR: HIDS client preparation failed!\n");
 }
 
-/* HIDS client initialization parameters */
+/* HIDS client initialization parameters. */
 static const struct bt_hogp_init_params hogp_init_params = {
     .ready_cb = hogp_ready_cb,
     .prep_error_cb = hogp_prep_fail_cb,
 };
 
 void button_pressed(const struct device *dev, struct gpio_callback *cb,
-                    uint32_t pins) {
+                    uint32_t pins)
+{
     printk("Button Pressed\n");
 
-    if (auth_conn) {
+    if (auth_conn)
+    {
         bt_conn_auth_passkey_confirm(auth_conn);
         printk("Numeric Match, conn %p\n", auth_conn);
     }
@@ -501,7 +545,8 @@ void button_pressed(const struct device *dev, struct gpio_callback *cb,
     return;
 }
 
-static void auth_passkey_display(struct bt_conn *conn, unsigned int passkey) {
+static void auth_passkey_display(struct bt_conn *conn, unsigned int passkey)
+{
     char addr[BT_ADDR_LE_STR_LEN];
 
     bt_addr_le_to_str(bt_conn_get_dst(conn), addr, sizeof(addr));
@@ -509,7 +554,8 @@ static void auth_passkey_display(struct bt_conn *conn, unsigned int passkey) {
     printk("Passkey for %s: %06u\n", addr, passkey);
 }
 
-static void auth_passkey_confirm(struct bt_conn *conn, unsigned int passkey) {
+static void auth_passkey_confirm(struct bt_conn *conn, unsigned int passkey)
+{
     char addr[BT_ADDR_LE_STR_LEN];
 
     auth_conn = bt_conn_ref(conn);
@@ -520,7 +566,8 @@ static void auth_passkey_confirm(struct bt_conn *conn, unsigned int passkey) {
     printk("Press Button 1 to confirm, Button 2 to reject.\n");
 }
 
-static void auth_cancel(struct bt_conn *conn) {
+static void auth_cancel(struct bt_conn *conn)
+{
     char addr[BT_ADDR_LE_STR_LEN];
 
     bt_addr_le_to_str(bt_conn_get_dst(conn), addr, sizeof(addr));
@@ -528,7 +575,8 @@ static void auth_cancel(struct bt_conn *conn) {
     printk("Pairing cancelled: %s\n", addr);
 }
 
-static void pairing_complete(struct bt_conn *conn, bool bonded) {
+static void pairing_complete(struct bt_conn *conn, bool bonded)
+{
     char addr[BT_ADDR_LE_STR_LEN];
 
     bt_addr_le_to_str(bt_conn_get_dst(conn), addr, sizeof(addr));
@@ -536,7 +584,8 @@ static void pairing_complete(struct bt_conn *conn, bool bonded) {
     printk("Pairing completed: %s, bonded: %d\n", addr, bonded);
 }
 
-static void pairing_failed(struct bt_conn *conn, enum bt_security_err reason) {
+static void pairing_failed(struct bt_conn *conn, enum bt_security_err reason)
+{
     char addr[BT_ADDR_LE_STR_LEN];
 
     bt_addr_le_to_str(bt_conn_get_dst(conn), addr, sizeof(addr));
@@ -553,7 +602,8 @@ static struct bt_conn_auth_cb conn_auth_callbacks = {
 static struct bt_conn_auth_info_cb conn_auth_info_callbacks = {
     .pairing_complete = pairing_complete, .pairing_failed = pairing_failed};
 
-int bluetooth_main_xbox(void) {
+int bluetooth_main_xbox(void)
+{
     int err;
 
     printk("Starting Bluetooth Central HIDS example\n");
@@ -561,45 +611,47 @@ int bluetooth_main_xbox(void) {
     bt_hogp_init(&hogp, &hogp_init_params);
 
     err = bt_conn_auth_cb_register(&conn_auth_callbacks);
-    if (err) {
+    if (err)
+    {
         printk("failed to register authorization callbacks.\n");
         return 0;
     }
 
     err = bt_conn_auth_info_cb_register(&conn_auth_info_callbacks);
-    if (err) {
+    if (err)
+    {
         printk("Failed to register authorization info callbacks.\n");
         return 0;
     }
 
     err = bt_enable(NULL);
-    if (err) {
+    if (err)
+    {
         printk("Bluetooth init failed (err %d)\n", err);
         return 0;
     }
 
     printk("Bluetooth initialized\n");
 
-    // if (IS_ENABLED(CONFIG_SETTINGS)) {
-    //     settings_load();
-    // }
-
     scan_init();
 
-    if (!gpio_is_ready_dt(&button)) {
+    if (!gpio_is_ready_dt(&button))
+    {
         printk("Error: button device %s is not ready\n", button.port->name);
         return 0;
     }
 
     err = gpio_pin_configure_dt(&button, GPIO_INPUT);
-    if (err != 0) {
+    if (err != 0)
+    {
         printk("Error %d: failed to configure %s pin %d\n", err,
                button.port->name, button.pin);
         return 0;
     }
 
     err = gpio_pin_interrupt_configure_dt(&button, GPIO_INT_EDGE_TO_ACTIVE);
-    if (err != 0) {
+    if (err != 0)
+    {
         printk("Error %d: failed to configure interrupt on %s pin %d\n", err,
                button.port->name, button.pin);
         return 0;
@@ -611,7 +663,8 @@ int bluetooth_main_xbox(void) {
     k_work_init_delayable(&reset_work, reset_inputs);
 
     err = bt_scan_start(BT_SCAN_TYPE_SCAN_ACTIVE);
-    if (err) {
+    if (err)
+    {
         printk("Scanning failed to start (err %d)\n", err);
         return 0;
     }

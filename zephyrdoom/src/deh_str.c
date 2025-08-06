@@ -1,19 +1,19 @@
-//
-// Copyright(C) 2005-2014 Simon Howard
-//
-// This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU General Public License
-// as published by the Free Software Foundation; either version 2
-// of the License, or (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//
-//
-// Parses Text substitution sections in dehacked files
-//
+/*
+ * Copyright(C) 2005-2014 Simon Howard
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * DESCRIPTION:
+ * Parses Text substitution sections in dehacked files.
+ */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -36,8 +36,7 @@ static deh_substitution_t **hash_table = NULL;
 static int hash_table_entries;
 static int hash_table_length = -1;
 
-// This is the algorithm used by glib
-
+/* This is the algorithm used by glib. */
 static unsigned int strhash(char *s)
 {
     char *p = s;
@@ -56,9 +55,9 @@ static deh_substitution_t *SubstitutionForString(char *s)
 {
     int entry;
 
-    // Fallback if we have not initialized the hash table yet
+    /* Fallback if we have not initialized the hash table yet */
     if (hash_table_length < 0)
-    return NULL;
+        return NULL;
 
     entry = strhash(s) % hash_table_length;
 
@@ -66,20 +65,21 @@ static deh_substitution_t *SubstitutionForString(char *s)
     {
         if (!strcmp(hash_table[entry]->from_text, s))
         {
-            // substitution found!
+            /* Substitution found */
             return hash_table[entry];
         }
 
         entry = (entry + 1) % hash_table_length;
     }
 
-    // no substitution found
+    /* No substitution found */
     return NULL;
 }
 
-// Look up a string to see if it has been replaced with something else
-// This will be used throughout the program to substitute text
-
+/*
+ * Look up a string to see if it has been replaced with something else.
+ * This will be used throughout the program to substitute text.
+ */
 char *DEH_String(char *s)
 {
     deh_substitution_t *subst;
@@ -98,8 +98,7 @@ char *DEH_String(char *s)
 
 static void InitHashTable(void)
 {
-    // init hash table
-
+    /* Init hash table */
     hash_table_entries = 0;
     hash_table_length = 16;
     hash_table = Z_Malloc(sizeof(deh_substitution_t *) * hash_table_length,
@@ -115,21 +114,18 @@ static void IncreaseHashtable(void)
     int old_table_length;
     int i;
 
-    // save the old table
-
+    /* Save the old table */
     old_table = hash_table;
     old_table_length = hash_table_length;
 
-    // double the size
-
+    /* Double the size */
     hash_table_length *= 2;
     hash_table = Z_Malloc(sizeof(deh_substitution_t *) * hash_table_length,
                           PU_STATIC, NULL);
     memset(hash_table, 0, sizeof(deh_substitution_t *) * hash_table_length);
 
-    // go through the old table and insert all the old entries
-
-    for (i=0; i<old_table_length; ++i)
+    /* Go through the old table and insert all the old entries */
+    for (i = 0; i < old_table_length; ++i)
     {
         if (old_table[i] != NULL)
         {
@@ -137,8 +133,7 @@ static void IncreaseHashtable(void)
         }
     }
 
-    // free the old table
-
+    /* Free the old table */
     Z_Free(old_table);
 }
 
@@ -146,14 +141,13 @@ static void DEH_AddToHashtable(deh_substitution_t *sub)
 {
     int entry;
 
-    // if the hash table is more than 60% full, increase its size
-
+    /* If the hash table is more than 60% full, increase its size */
     if ((hash_table_entries * 10) / hash_table_length > 6)
     {
         IncreaseHashtable();
     }
 
-    // find where to insert it
+    /* Find where to insert it */
     entry = strhash(sub->from_text) % hash_table_length;
 
     while (hash_table[entry] != NULL)
@@ -170,13 +164,13 @@ void DEH_AddStringReplacement(char *from_text, char *to_text)
     deh_substitution_t *sub;
     size_t len;
 
-    // Initialize the hash table if this is the first time
+    /* Initialize the hash table if this is the first time */
     if (hash_table_length < 0)
     {
         InitHashTable();
     }
 
-    // Check to see if there is an existing substitution already in place.
+    /* Check to see if there is an existing substitution already in place */
     sub = SubstitutionForString(from_text);
 
     if (sub != NULL)
@@ -189,10 +183,10 @@ void DEH_AddStringReplacement(char *from_text, char *to_text)
     }
     else
     {
-        // We need to allocate a new substitution.
+        /* We need to allocate a new substitution */
         sub = Z_Malloc(sizeof(*sub), PU_STATIC, 0);
 
-        // We need to create our own duplicates of the provided strings.
+        /* We need to create our own duplicates of the provided strings */
         len = strlen(from_text) + 1;
         sub->from_text = Z_Malloc(len, PU_STATIC, NULL);
         memcpy(sub->from_text, from_text, len);
@@ -216,55 +210,68 @@ typedef enum
     FORMAT_ARG_SAVE_POS
 } format_arg_t;
 
-// Get the type of a format argument.
-// We can mix-and-match different format arguments as long as they
-// are for the same data type.
-
+/*
+ * Get the type of a format argument.
+ * We can mix-and-match different format arguments as long as they
+ * are for the same data type.
+ */
 static format_arg_t FormatArgumentType(char c)
 {
     switch (c)
     {
-        case 'd': case 'i': case 'o': case 'u': case 'x': case 'X':
-            return FORMAT_ARG_INT;
+    case 'd':
+    case 'i':
+    case 'o':
+    case 'u':
+    case 'x':
+    case 'X':
+        return FORMAT_ARG_INT;
 
-        case 'e': case 'E': case 'f': case 'F': case 'g': case 'G':
-        case 'a': case 'A':
-            return FORMAT_ARG_FLOAT;
+    case 'e':
+    case 'E':
+    case 'f':
+    case 'F':
+    case 'g':
+    case 'G':
+    case 'a':
+    case 'A':
+        return FORMAT_ARG_FLOAT;
 
-        case 'c': case 'C':
-            return FORMAT_ARG_CHAR;
+    case 'c':
+    case 'C':
+        return FORMAT_ARG_CHAR;
 
-        case 's': case 'S':
-            return FORMAT_ARG_STRING;
+    case 's':
+    case 'S':
+        return FORMAT_ARG_STRING;
 
-        case 'p':
-            return FORMAT_ARG_PTR;
+    case 'p':
+        return FORMAT_ARG_PTR;
 
-        case 'n':
-            return FORMAT_ARG_SAVE_POS;
+    case 'n':
+        return FORMAT_ARG_SAVE_POS;
 
-        default:
-            return FORMAT_ARG_INVALID;
+    default:
+        return FORMAT_ARG_INVALID;
     }
 }
 
-// Given the specified string, get the type of the first format
-// string encountered.
-
+/*
+ * Given the specified string, get the type of the first format
+ * string encountered.
+ */
 static format_arg_t NextFormatArgument(char **str)
 {
     format_arg_t argtype;
 
-    // Search for the '%' starting the next string.
-
+    /* Search for the '%' starting the next string */
     while (**str != '\0')
     {
         if (**str == '%')
         {
             ++*str;
 
-            // Don't stop for double-%s.
-
+            /* Don't stop for double-%s */
             if (**str != '%')
             {
                 break;
@@ -274,8 +281,7 @@ static format_arg_t NextFormatArgument(char **str)
         ++*str;
     }
 
-    // Find the type of the format string.
-
+    /* Find the type of the format string */
     while (**str != '\0')
     {
         argtype = FormatArgumentType(**str);
@@ -290,32 +296,30 @@ static format_arg_t NextFormatArgument(char **str)
         ++*str;
     }
 
-    // Stop searching, we have reached the end.
-
+    /* Stop searching, we have reached the end */
     *str = NULL;
 
     return FORMAT_ARG_INVALID;
 }
 
-// Check if the specified argument type is a valid replacement for
-// the original.
-
+/*
+ * Check if the specified argument type is a valid replacement for
+ * the original.
+ *
+ * In general, the original and replacement types should be
+ * identical. However, there are some cases where the replacement
+ * is valid and the types don't match.
+ */
 static boolean ValidArgumentReplacement(format_arg_t original,
                                         format_arg_t replacement)
 {
-    // In general, the original and replacement types should be
-    // identical.  However, there are some cases where the replacement
-    // is valid and the types don't match.
-
-    // Characters can be represented as ints.
-
+    /* Characters can be represented as ints */
     if (original == FORMAT_ARG_CHAR && replacement == FORMAT_ARG_INT)
     {
         return true;
     }
 
-    // Strings are pointers.
-
+    /* Strings are pointers */
     if (original == FORMAT_ARG_STRING && replacement == FORMAT_ARG_PTR)
     {
         return true;
@@ -324,17 +328,16 @@ static boolean ValidArgumentReplacement(format_arg_t original,
     return original == replacement;
 }
 
-// Return true if the specified string contains no format arguments.
-
+/* Return true if the specified string contains no format arguments. */
 static boolean ValidFormatReplacement(char *original, char *replacement)
 {
     char *rover1;
     char *rover2;
     int argtype1, argtype2;
 
-    // Check each argument in turn and compare types.
-
-    rover1 = original; rover2 = replacement;
+    /* Check each argument in turn and compare types */
+    rover1 = original;
+    rover2 = replacement;
 
     for (;;)
     {
@@ -343,20 +346,17 @@ static boolean ValidFormatReplacement(char *original, char *replacement)
 
         if (argtype2 == FORMAT_ARG_INVALID)
         {
-            // No more arguments left to read from the replacement string.
-
+            /* No more arguments left to read from the replacement string */
             break;
         }
         else if (argtype1 == FORMAT_ARG_INVALID)
         {
-            // Replacement string has more arguments than the original.
-
+            /* Replacement string has more arguments than the original */
             return false;
         }
         else if (!ValidArgumentReplacement(argtype1, argtype2))
         {
-            // Not a valid replacement argument.
-
+            /* Not a valid replacement argument */
             return false;
         }
     }
@@ -364,8 +364,7 @@ static boolean ValidFormatReplacement(char *original, char *replacement)
     return true;
 }
 
-// Get replacement format string, checking arguments.
-
+/* Get replacement format string, checking arguments. */
 static char *FormatStringReplacement(char *s)
 {
     char *repl;
@@ -375,7 +374,8 @@ static char *FormatStringReplacement(char *s)
     if (!ValidFormatReplacement(s, repl))
     {
         printf("WARNING: Unsafe dehacked replacement provided for "
-               "printf format string: %s\n", s);
+               "printf format string: %s\n",
+               s);
 
         return s;
     }
@@ -383,8 +383,7 @@ static char *FormatStringReplacement(char *s)
     return repl;
 }
 
-// printf(), performing a replacement on the format string.
-
+/* printf(), performing a replacement on the format string. */
 void DEH_printf(char *fmt, ...)
 {
     va_list args;
@@ -399,8 +398,7 @@ void DEH_printf(char *fmt, ...)
     va_end(args);
 }
 
-// fprintf(), performing a replacement on the format string.
-
+/* fprintf(), performing a replacement on the format string. */
 void DEH_fprintf(FILE *fstream, char *fmt, ...)
 {
     va_list args;
@@ -415,8 +413,7 @@ void DEH_fprintf(FILE *fstream, char *fmt, ...)
     va_end(args);
 }
 
-// snprintf(), performing a replacement on the format string.
-
+/* snprintf(), performing a replacement on the format string. */
 void DEH_snprintf(char *buffer, size_t len, char *fmt, ...)
 {
     va_list args;

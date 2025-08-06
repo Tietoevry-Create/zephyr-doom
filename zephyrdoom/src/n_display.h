@@ -29,13 +29,11 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #include <stdint.h>
 
-#define DISPLAY_PALETTE_SIZE (256*4)
+#define DISPLAY_PALETTE_SIZE (256 * 4)
 
-// SPI
+/* SPI */
 void N_display_spi_init();
 void N_display_power_reset();
 void N_display_spi_transfer_finish();

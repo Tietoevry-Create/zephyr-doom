@@ -1,19 +1,19 @@
-//
-// Copyright(C) 2005-2014 Simon Howard
-//
-// This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU General Public License
-// as published by the Free Software Foundation; either version 2
-// of the License, or (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//
-// DESCRIPTION:
-//      Loopback network module for server compiled into the client
-//
+/*
+ * Copyright(C) 2005-2014 Simon Howard
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * DESCRIPTION:
+ * Loopback network module for server compiled into the client.
+ */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -51,8 +51,7 @@ static void QueuePush(packet_queue_t *queue, net_packet_t *packet)
 
     if (new_tail == queue->head)
     {
-        // queue is full
-
+        /* Queue is full */
         return;
     }
 
@@ -66,8 +65,7 @@ static net_packet_t *QueuePop(packet_queue_t *queue)
 
     if (queue->tail == queue->head)
     {
-        // queue empty
-
+        /* Queue empty */
         return NULL;
     }
 
@@ -77,12 +75,7 @@ static net_packet_t *QueuePop(packet_queue_t *queue)
     return packet;
 }
 
-//-----------------------------------------------------------------------------
-//
-// Client end code
-//
-//-----------------------------------------------------------------------------
-
+/* Client end code. */
 static boolean NET_CL_InitClient(void)
 {
     QueueInit(&client_queue);
@@ -143,22 +136,17 @@ static net_addr_t *NET_CL_ResolveAddress(char *address)
 }
 
 net_module_t net_loop_client_module =
-{
-    NET_CL_InitClient,
-    NET_CL_InitServer,
-    NET_CL_SendPacket,
-    NET_CL_RecvPacket,
-    NET_CL_AddrToString,
-    NET_CL_FreeAddress,
-    NET_CL_ResolveAddress,
+    {
+        NET_CL_InitClient,
+        NET_CL_InitServer,
+        NET_CL_SendPacket,
+        NET_CL_RecvPacket,
+        NET_CL_AddrToString,
+        NET_CL_FreeAddress,
+        NET_CL_ResolveAddress,
 };
 
-//-----------------------------------------------------------------------------
-//
-// Server end code
-//
-//-----------------------------------------------------------------------------
-
+/* Server end code. */
 static boolean NET_SV_InitClient(void)
 {
     I_Error("NET_SV_InitClient: attempted to initialize server pipe end as a client!");
@@ -218,12 +206,12 @@ static net_addr_t *NET_SV_ResolveAddress(char *address)
 }
 
 net_module_t net_loop_server_module =
-{
-    NET_SV_InitClient,
-    NET_SV_InitServer,
-    NET_SV_SendPacket,
-    NET_SV_RecvPacket,
-    NET_SV_AddrToString,
-    NET_SV_FreeAddress,
-    NET_SV_ResolveAddress,
+    {
+        NET_SV_InitClient,
+        NET_SV_InitServer,
+        NET_SV_SendPacket,
+        NET_SV_RecvPacket,
+        NET_SV_AddrToString,
+        NET_SV_FreeAddress,
+        NET_SV_ResolveAddress,
 };
