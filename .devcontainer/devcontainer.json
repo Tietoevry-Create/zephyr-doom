@@ -21,6 +21,13 @@
         "zephyr-doom",
         "--env-file",
         "${localWorkspaceFolder}/.devcontainer/git.env"
+        "--volume",
+        "/dev/:/dev/,
+        "--volume",
+        "/${localWorkspaceFolder}/.devcontainer/JLink_Linux_V794e_x86_64.deb/:/home/developer/JLink_Linux_V794e_x86_64.deb/",
+        "--volume",
+        "/${localWorkspaceFolder}/.devcontainer/nrf-command-line-tools_10.24.2_amd64.deb/:/home/developer/nrf-command-line-tools_10.24.2_amd64.deb",
+        "--privileged"
     ],
     "customizations": {
         "vscode": {
