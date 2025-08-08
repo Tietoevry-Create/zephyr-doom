@@ -75,7 +75,7 @@ ARG USER_UID=1000
 ARG USER_GID=$USER_UID
 
 RUN userdel -rf ubuntu && \
-    groupadd -g "$USER_GID" "$USERNAME" \
-    && useradd -u "$USER_UID" -g "$USER_GID" -s /bin/bash -m "$USERNAME" \
-    && echo "$USERNAME ALL=(root) NOPASSWD:ALL" > "/etc/sudoers.d/$USERNAME" \
-    && chmod 440 "/etc/sudoers.d/$USERNAME"
+    groupadd -g "$USER_GID" "$USERNAME" && \
+    useradd -u "$USER_UID" -g "$USER_GID" -s /bin/bash -m "$USERNAME" && \
+    echo "$USERNAME ALL=(root) NOPASSWD:ALL" > "/etc/sudoers.d/$USERNAME" && \
+    chmod 440 "/etc/sudoers.d/$USERNAME"
