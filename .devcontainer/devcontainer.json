@@ -14,9 +14,13 @@
         "setup-nRF-env.sh": "bash ${containerWorkspaceFolder}/.devcontainer/scripts/setup-nRF-env.sh"
     },
     "containerEnv": {
-        "ZEPHYR_BASE": "$HOME/ncs/v2.6.0/zephyr"
+        "ZEPHYR_BASE": "/home/developer/ncs/v2.6.0/zephyr"
     },
+    "mounts": [
+        "type=bind,source=/dev,target=/dev"
+    ],
     "runArgs": [
+        "--privileged",
         "--hostname",
         "zephyr-doom",
         "--env-file",
@@ -25,15 +29,15 @@
     "customizations": {
         "vscode": {
             "extensions": [
-                "asciidoctor.asciidoctor-vscode@3.4.2",
+                "asciidoctor.asciidoctor-vscode@3.4.4",
                 "editorconfig.editorconfig@0.17.4",
-                "github.copilot@1.336.0",
+                "github.copilot@1.350.0",
                 "github.vscode-github-actions@0.27.2",
-                "ms-vscode.cmake-tools@1.20.53",
-                "ms-vscode.cpptools@1.25.3",
+                "ms-vscode.cmake-tools@1.21.36",
+                "ms-vscode.cpptools@1.26.3",
                 "ms-vscode.makefile-tools@0.12.17",
                 "nordic-semiconductor.nrf-connect-extension-pack@2025.4.4",
-                "timonwong.shellcheck@0.37.7",
+                "timonwong.shellcheck@0.38.3",
                 "tyriar.sort-lines@1.12.0"
             ],
             "settings": {

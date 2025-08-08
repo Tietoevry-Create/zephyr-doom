@@ -88,6 +88,13 @@ to the <<additional-config, Additional configuration>> chapter.
 
 === Additional configuration [[additional-config]]
 
+Due to licensing restrictions of the
+https://www.segger.com/downloads/jlink/[SEGGER J-Link] tool, the installation
+package must be downloaded manually and placed in the `.devcontainer` directory.
+
+NOTE: Make sure to download version `794e` of the package, as it is required for
+compatibility with this project's configuration.
+
 Helper extensions that could be installed:
 
 * https://marketplace.visualstudio.com/items?itemName=ms-azuretools.vscode-containers[Container Tools Extension]
