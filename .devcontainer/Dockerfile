@@ -53,6 +53,12 @@ RUN curl https://files.nordicsemi.com/artifactory/swtools/external/nrfutil/execu
     -o /usr/local/bin/nrfutil && \
     chmod +x /usr/local/bin/nrfutil
 
+# Install nRF command line tools for backward compatibility
+RUN curl https://nsscprodmedia.blob.core.windows.net/prod/software-and-other-downloads/desktop-software/nrf-command-line-tools/sw/versions-10-x-x/10-24-2/nrf-command-line-tools_10.24.2_amd64.deb \
+    -o /tmp/nrf-command-line-tools_10.24.2_amd64.deb && \
+    sudo apt-get -y install /tmp/nrf-command-line-tools_10.24.2_amd64.deb && \
+    rm -rf /tmp/nrf-command-line-tools_10.24.2_amd64.deb
+
 # Set the timezone to CET
 RUN ln -sf /usr/share/zoneinfo/CET /etc/localtime && \
     echo "CET" > /etc/timezone
