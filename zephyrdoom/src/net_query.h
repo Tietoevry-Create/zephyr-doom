@@ -1,19 +1,19 @@
-//
-// Copyright(C) 2005-2014 Simon Howard
-//
-// This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU General Public License
-// as published by the Free Software Foundation; either version 2
-// of the License, or (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//
-// DESCRIPTION:
-//     Querying servers to find their current status.
-//
+/*
+ * Copyright(C) 2005-2014 Simon Howard
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * DESCRIPTION:
+ * Querying servers to find their current status.
+ */
 
 #ifndef NET_QUERY_H
 #define NET_QUERY_H
@@ -40,4 +40,4 @@ extern void NET_Query_AddToMaster(net_addr_t *master_addr);
 extern boolean NET_Query_CheckAddedToMaster(boolean *result);
 extern void NET_Query_MasterResponse(net_packet_t *packet);
 
-#endif /* #ifndef NET_QUERY_H */
+#endif /* NET_QUERY_H */

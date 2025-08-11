@@ -1,20 +1,20 @@
-//
-// Copyright(C) 2005-2014 Simon Howard
-// Copyright(C) 2014 Fabian Greffrath
-//
-// This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU General Public License
-// as published by the Free Software Foundation; either version 2
-// of the License, or (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//
-//
-// Parses [STRINGS] sections in BEX files
-//
+/*
+ * Copyright(C) 2005-2014 Simon Howard
+ * Copyright(C) 2014 Fabian Greffrath
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * DESCRIPTION:
+ * Parses [STRINGS] sections in BEX files.
+ */
 
 #include <stdio.h>
 #include <string.h>
@@ -25,14 +25,15 @@
 
 #include "dstrings.h"
 
-typedef struct {
+typedef struct
+{
     char *macro;
     char *string;
 } bex_string_t;
 
-// mnemonic keys table
+/* mnemonic keys table. */
 static const bex_string_t bex_stringtable[] = {
-    // part 1 - general initialization and prompts
+    /* Part 1 - General initialization and prompts */
     {"D_DEVSTR", D_DEVSTR},
     {"D_CDROM", D_CDROM},
     {"QUITMSG", QUITMSG},
@@ -59,7 +60,8 @@ static const bex_string_t bex_stringtable[] = {
     {"EMPTYSTRING", EMPTYSTRING},
     {"GGSAVED", GGSAVED},
     {"SAVEGAMENAME", SAVEGAMENAME},
-    // part 2 - messages when the player gets things
+
+    /* Part 2 - Messages when the player gets things */
     {"GOTARMOR", GOTARMOR},
     {"GOTMEGA", GOTMEGA},
     {"GOTHTHBONUS", GOTHTHBONUS},
@@ -97,14 +99,16 @@ static const bex_string_t bex_stringtable[] = {
     {"GOTPLASMA", GOTPLASMA},
     {"GOTSHOTGUN", GOTSHOTGUN},
     {"GOTSHOTGUN2", GOTSHOTGUN2},
-    // part 3 - messages when keys are needed
+
+    /* Part 3 - Messages when keys are needed */
     {"PD_BLUEO", PD_BLUEO},
     {"PD_REDO", PD_REDO},
     {"PD_YELLOWO", PD_YELLOWO},
     {"PD_BLUEK", PD_BLUEK},
     {"PD_REDK", PD_REDK},
     {"PD_YELLOWK", PD_YELLOWK},
-    // part 4 - multiplayer messaging
+
+    /* Part 4 - Multiplayer messaging */
     {"HUSTR_MSGU", HUSTR_MSGU},
     {"HUSTR_MESSAGESENT", HUSTR_MESSAGESENT},
     {"HUSTR_CHATMACRO0", HUSTR_CHATMACRO0},
@@ -126,7 +130,8 @@ static const bex_string_t bex_stringtable[] = {
     {"HUSTR_PLRINDIGO", HUSTR_PLRINDIGO},
     {"HUSTR_PLRBROWN", HUSTR_PLRBROWN},
     {"HUSTR_PLRRED", HUSTR_PLRRED},
-    // part 5 - level names in the automap
+
+    /* Part 5 - Level names in the automap */
     {"HUSTR_E1M1", HUSTR_E1M1},
     {"HUSTR_E1M2", HUSTR_E1M2},
     {"HUSTR_E1M3", HUSTR_E1M3},
@@ -259,7 +264,8 @@ static const bex_string_t bex_stringtable[] = {
     {"THUSTR_30", THUSTR_30},
     {"THUSTR_31", THUSTR_31},
     {"THUSTR_32", THUSTR_32},
-    // part 6 - messages as a result of toggling states
+
+    /* Part 6 - Messages as a result of toggling states */
     {"AMSTR_FOLLOWON", AMSTR_FOLLOWON},
     {"AMSTR_FOLLOWOFF", AMSTR_FOLLOWOFF},
     {"AMSTR_GRIDON", AMSTR_GRIDON},
@@ -278,7 +284,8 @@ static const bex_string_t bex_stringtable[] = {
     {"STSTR_BEHOLDX", STSTR_BEHOLDX},
     {"STSTR_CHOPPERS", STSTR_CHOPPERS},
     {"STSTR_CLEV", STSTR_CLEV},
-    // part 7 - episode intermission texts
+
+    /* Part 7 - Episode intermission texts */
     {"E1TEXT", E1TEXT},
     {"E2TEXT", E2TEXT},
     {"E3TEXT", E3TEXT},
@@ -301,7 +308,8 @@ static const bex_string_t bex_stringtable[] = {
     {"T4TEXT", T4TEXT},
     {"T5TEXT", T5TEXT},
     {"T6TEXT", T6TEXT},
-    // part 8 - creature names for the finale
+
+    /* Part 8 - Creature names for the finale */
     {"CC_ZOMBIE", CC_ZOMBIE},
     {"CC_SHOTGUN", CC_SHOTGUN},
     {"CC_HEAVY", CC_HEAVY},
@@ -319,7 +327,8 @@ static const bex_string_t bex_stringtable[] = {
     {"CC_SPIDER", CC_SPIDER},
     {"CC_CYBER", CC_CYBER},
     {"CC_HERO", CC_HERO},
-    // part 9 - intermission tiled backgrounds
+
+    /* Part 9 - Intermission tiled backgrounds */
     {"BGFLATE1", "FLOOR4_8"},
     {"BGFLATE2", "SFLR6_1"},
     {"BGFLATE3", "MFLR8_4"},
@@ -339,7 +348,7 @@ static void *DEH_BEXStrStart(deh_context_t *context, char *line)
 
     if (sscanf(line, "%9s", s) == 0 || strncmp("[STRINGS]", s, sizeof(s)))
     {
-    DEH_Warning(context, "Parse error on section start");
+        DEH_Warning(context, "Parse error on section start");
     }
 
     return NULL;
@@ -352,25 +361,25 @@ static void DEH_BEXStrParseLine(deh_context_t *context, char *line, void *tag)
 
     if (!DEH_ParseAssignment(line, &variable_name, &value))
     {
-    DEH_Warning(context, "Failed to parse assignment");
-    return;
+        DEH_Warning(context, "Failed to parse assignment");
+        return;
     }
 
     for (i = 0; i < arrlen(bex_stringtable); i++)
     {
-    if (!strcmp(bex_stringtable[i].macro, variable_name))
-    {
-        DEH_AddStringReplacement(bex_stringtable[i].string, value);
-    }
+        if (!strcmp(bex_stringtable[i].macro, variable_name))
+        {
+            DEH_AddStringReplacement(bex_stringtable[i].string, value);
+        }
     }
 }
 
 deh_section_t deh_section_bexstr =
-{
-    "[STRINGS]",
-    NULL,
-    DEH_BEXStrStart,
-    DEH_BEXStrParseLine,
-    NULL,
-    NULL,
+    {
+        "[STRINGS]",
+        NULL,
+        DEH_BEXStrStart,
+        DEH_BEXStrParseLine,
+        NULL,
+        NULL,
 };
