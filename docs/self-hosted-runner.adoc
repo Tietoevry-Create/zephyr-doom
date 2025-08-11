@@ -433,6 +433,12 @@ NOTE: The `self-hosted` label is automatically assigned to the runner. You can
 define custom labels during runner setup to group and target specific runners in
 workflows.
 
+IMPORTANT: If a runner uses an outdated operating system, software packages or
+an incompatible system architecture (e.g., aarch64 instead of x86_64) some
+workflows may fail or produce unexpected results compared to other instances.
+Verify that the environment of the runner meets the workflow requirements for
+both software and architecture.
+
 == Runner removal
 
 === Direct runner

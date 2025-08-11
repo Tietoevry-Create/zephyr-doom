@@ -5,8 +5,12 @@ RUN apt-get update && apt-get -y install \
     bash-completion \
     ca-certificates \
     curl \
+    git \
+    gnupg \
     htop \
     man \
+    patch \
+    rsync \
     sudo \
     tar \
     tree \

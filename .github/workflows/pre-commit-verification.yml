@@ -7,15 +7,40 @@ run-name: >
 on:
   pull_request:
   workflow_dispatch:
+    inputs:
+      runner_label:
+        description: Label of the runner to execute the job
+        required: false
+        default: ubuntu-24.04
+        type: string
+
+env:
+  RUNNER_LABEL: ubuntu-24.04
 
 defaults:
   run:
     shell: bash
 
 jobs:
+  process-runner:
+    name: Process runner information to execute the job
+    runs-on: ubuntu-24.04
+    outputs:
+      label: ${{ steps.runner-label.outputs.label }}
+
+    steps:
+      - name: Set runner label
+        id: runner-label
+        run: |
+          echo "label=${INPUT_RUNNER_LABEL:-$RUNNER_LABEL}" >> $GITHUB_OUTPUT
+        env:
+          INPUT_RUNNER_LABEL: ${{ github.event.inputs.runner_label }}
+
   pre-commit-check:
     name: Run Pre-commit verification
-    runs-on: ubuntu-24.04
+    needs: process-runner
+    runs-on: ${{ needs.process-runner.outputs.label }}
+    timeout-minutes: 60
     if: github.ref_name != 'master' && github.ref_name != 'main'
 
     steps:
@@ -25,6 +50,7 @@ jobs:
       - name: Prepare runner env for pre-commit tool
         run: |
           sudo apt-get update && sudo apt-get install -y \
+          git \
           pre-commit
 
       - name: Run pre-commit command
