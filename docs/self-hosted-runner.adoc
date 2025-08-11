@@ -144,7 +144,8 @@ and the repository it executes from. +
 ----
 sudo su - runner
 ----
-.. Optionally add *SSH* authentication to ease the process and log in directly:
+.. Optionally set up *SSH* authentication to simplify the process and allow
+direct login from the host machine to the target machine:
 +
 [source,bash]
 ----
@@ -152,7 +153,7 @@ install -d -m 700 "$HOME/.ssh"
 touch "$HOME/.ssh/authorized_keys"
 chmod 600 "$HOME/.ssh/authorized_keys"
 
-# Write public key to the authorized_keys file
+# Write public key of the host machine to the authorized_keys file
 vim "$HOME/.ssh/authorized_keys"
 ----
 
@@ -179,13 +180,17 @@ and selecting the appropriate configuration.
 
 === Tooling download
 
-. Run the `download-runner-tooling.sh` script with the appropriate arguments:
+. Run the `download-runner-tooling.sh` script with the architecture, tooling
+version and optionally hash arguments:
 +
 [source,bash]
 ----
-./download-runner-tooling.sh -a arm64 -v 2.325.0 \
--s 0e916ad0d354089d320011c132d46bdbe3353c8b925a2e1056c7c8e85d2f2490
+./download-runner-tooling.sh -a arm64 -v 2.327.1 \
+-s 16102096988246f250a745c6a813a5a0b8901e2f554f9440c97e8573fd4da111
 ----
+
+NOTE: If unsure, view the help information by running
+`./download-runner-tooling.sh -h` command.
 
 === Instance configuration
 
@@ -197,6 +202,12 @@ authentication token:
  ./configure-runner-env.sh -r https://github.com/Tietoevry-Create/zephyr-doom \
 -t time_limited_auth_token_here
 ----
++
+IMPORTANT: Note the leading space. It prevents the command from being stored in
+history, avoiding exposure of the authentication token.
++
+NOTE: If unsure, view the help information by running
+`./configure-runner-env.sh -h` command.
 
 .. Additionally, the runner can be customized with a specific name and label to
 make it easier to identify or target in workflows:
@@ -265,7 +276,8 @@ information, please check the
 ----
 sudo su - runner
 ----
-.. Optionally add *SSH* authentication to ease the process and log in directly:
+.. Optionally set up *SSH* authentication to simplify the process and allow
+direct login from the host machine to the target machine:
 +
 [source,bash]
 ----
@@ -273,7 +285,7 @@ install -d -m 700 "$HOME/.ssh"
 touch "$HOME/.ssh/authorized_keys"
 chmod 600 "$HOME/.ssh/authorized_keys"
 
-# Write public key to the authorized_keys file
+# Write public key of the host machine to the authorized_keys file
 vim "$HOME/.ssh/authorized_keys"
 ----
 
@@ -350,15 +362,22 @@ https://docs.podman.io/en/latest/markdown/podman-system-migrate.1.html[podman sy
 
 === Build runner container image
 
-. Build the container runner image using the `build-runner-image.sh` script:
+. Build the container runner image using the `build-runner-image.sh` script with
+appropriate arguments:
 +
 [source,bash]
 ----
- ./build-runner-image.sh -a arm64 -v 2.325.0 \
--s 0e916ad0d354089d320011c132d46bdbe3353c8b925a2e1056c7c8e85d2f2490 \
+ ./build-runner-image.sh -a arm64 -v 2.327.1 \
+-s 16102096988246f250a745c6a813a5a0b8901e2f554f9440c97e8573fd4da111 \
 -r https://github.com/Tietoevry-Create/zephyr-doom \
 -t time_limited_auth_token_here
 ----
++
+IMPORTANT: Note the leading space. It prevents the command from being stored in
+history, avoiding exposure of the authentication token.
++
+NOTE: If unsure, view the help information by running
+`./build-runner-image.sh -h` command.
 
 .. Additionally, the runner can be customized with a specific name and label to
 make it easier to identify or target in workflows:
@@ -413,6 +432,46 @@ runs-on: self-hosted
 NOTE: The `self-hosted` label is automatically assigned to the runner. You can
 define custom labels during runner setup to group and target specific runners in
 workflows.
+
+== Runner removal
+
+=== Direct runner
+
+. To remove a runner from the repository, first obtain the authentication
+token. Go to *Settings* -> *Actions* -> *Runners*, find the runner instance you
+want to remove, click the *...* menu and select *Remove runner*.
+
+. Execute the script on the host where the runner instance is present:
++
+[source,bash]
+----
+ ./remove-runner.sh -t time_limited_auth_token_here
+----
++
+IMPORTANT: Note the leading space. It prevents the command from being stored in
+history, avoiding exposure of the authentication token.
++
+NOTE: The script will also remove files related to the runner that are present
+on the host.
+
+=== Container runner
+
+. Due to the character of this configuration, it is easier to remove the runner
+using the force removal option. Go to *Settings* -> *Actions* -> *Runners*, find
+the runner instance you want to remove, click the *...* menu, select
+*Remove runner* and then choose *Force remove this runner*.
+
+. Remove the container runner files on the host, for example by running:
++
+[source,bash]
+----
+podman system prune --all --force --volumes
+----
++
+IMPORTANT: This command will remove all unused containers, images, networks, and
+volumes. It may take some time depending on the amount of data being cleaned.
+Refer to the official Podman documentation for details ->
+https://docs.podman.io/en/stable/markdown/podman-system-prune.1.html[podman system prune command].
 
 == Links
 
