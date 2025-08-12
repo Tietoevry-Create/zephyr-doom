@@ -10,6 +10,11 @@ on:
       - 'zephyrdoom/**'
   workflow_dispatch:
     inputs:
+      runner_label:
+        description: Label of the runner to execute the job
+        required: false
+        default: ubuntu-24.04
+        type: string
       toolchain_version:
         description: Version of the nRF toolchain to install
         required: false
@@ -27,6 +32,7 @@ on:
         type: string
 
 env:
+  RUNNER_LABEL: ubuntu-24.04
   NRFUTIL_URL: https://files.nordicsemi.com/artifactory/swtools/external/nrfutil/executables/x86_64-unknown-linux-gnu/nrfutil
   TOOLCHAIN_VERSION: v2.6.2
   SDK_VERSION: v2.6.0
@@ -36,12 +42,45 @@ defaults:
   run:
     shell: bash
 
+permissions:
+  actions: write
+
 jobs:
-  build-artifacts:
-    name: Build and package artifacts
+  process-runner:
+    name: Process runner information to execute the job
     runs-on: ubuntu-24.04
+    outputs:
+      label: ${{ steps.runner-label.outputs.label }}
 
     steps:
+      - name: Set runner label
+        id: runner-label
+        run: |
+          echo "label=${INPUT_RUNNER_LABEL:-$RUNNER_LABEL}" >> $GITHUB_OUTPUT
+        env:
+          INPUT_RUNNER_LABEL: ${{ github.event.inputs.runner_label }}
+
+  build-artifacts:
+    name: Build and package artifacts
+    needs: process-runner
+    runs-on: ${{ needs.process-runner.outputs.label }}
+    timeout-minutes: 60
+
+    steps:
+      - name: Prepare runner environment for workflow execution
+        run: |
+          sudo apt-get update && sudo apt-get install -y \
+          gh
+
+      - name: Cancel run if architecture is ARM
+        if: runner.arch == 'ARM64' || runner.arch == 'ARM'
+        run: |
+          echo "Incompatible runner architecture detected, aborting ..."
+          gh run cancel ${{ github.run_id }}
+          gh run watch ${{ github.run_id }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+
       - name: Checkout repository
         uses: actions/checkout@v4
 
@@ -74,6 +113,13 @@ jobs:
 
       - name: Ensure the lastest version of nrfutil tool
         run: nrfutil self-upgrade
+
+      - name: Install nRF command line tools for backward compatibility
+        run: |
+          curl https://nsscprodmedia.blob.core.windows.net/prod/software-and-other-downloads/desktop-software/nrf-command-line-tools/sw/versions-10-x-x/10-24-2/nrf-command-line-tools_10.24.2_amd64.deb \
+          -o /tmp/nrf-command-line-tools_10.24.2_amd64.deb && \
+          sudo apt-get -y install /tmp/nrf-command-line-tools_10.24.2_amd64.deb && \
+          rm -rf /tmp/nrf-command-line-tools_10.24.2_amd64.deb
 
       - name: Install nRF toolchain
         run: |
