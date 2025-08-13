@@ -46,18 +46,26 @@ RUN apt-get update && apt-get -y install \
     docker-compose-plugin
 
 # Link libunistring library to avoid nrfutil runtime errors
-RUN cd /lib/x86_64-linux-gnu/ && ln -sf libunistring.so.5.0.0 libunistring.so.2
+RUN cd /lib/x86_64-linux-gnu/ && ln -sf libunistring.so.5 libunistring.so.2
+
+# Install nRF Command Line Tools for backward compatibility
+RUN curl https://nsscprodmedia.blob.core.windows.net/prod/software-and-other-downloads/desktop-software/nrf-command-line-tools/sw/versions-10-x-x/10-24-2/nrf-command-line-tools_10.24.2_amd64.deb \
+    -o /tmp/nrf-command-line-tools_10.24.2_amd64.deb && \
+    sudo apt-get -y install /tmp/nrf-command-line-tools_10.24.2_amd64.deb && \
+    rm -rf /tmp/nrf-command-line-tools_10.24.2_amd64.deb
+
+# Install SEGGER J-Link tool (delivered with nRF Command Line Tools).
+# Exclude the udevadm configuration from the J-Link package,
+# because the environment is not compatible.
+RUN sudo dpkg --unpack /opt/nrf-command-line-tools/share/JLink_Linux_V794e_x86_64.deb && \
+    sudo rm -f "/var/lib/dpkg/info/jlink.postinst" && \
+    sudo dpkg --force-all --configure jlink && \
+    sudo apt-get -y install -f
 
 # Install nrfutil tool
 RUN curl https://files.nordicsemi.com/artifactory/swtools/external/nrfutil/executables/x86_64-unknown-linux-gnu/nrfutil \
     -o /usr/local/bin/nrfutil && \
     chmod +x /usr/local/bin/nrfutil
-
-# Install nRF command line tools for backward compatibility
-RUN curl https://nsscprodmedia.blob.core.windows.net/prod/software-and-other-downloads/desktop-software/nrf-command-line-tools/sw/versions-10-x-x/10-24-2/nrf-command-line-tools_10.24.2_amd64.deb \
-    -o /tmp/nrf-command-line-tools_10.24.2_amd64.deb && \
-    sudo apt-get -y install /tmp/nrf-command-line-tools_10.24.2_amd64.deb && \
-    rm -rf /tmp/nrf-command-line-tools_10.24.2_amd64.deb
 
 # Set the timezone to CET
 RUN ln -sf /usr/share/zoneinfo/CET /etc/localtime && \

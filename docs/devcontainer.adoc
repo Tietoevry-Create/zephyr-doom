@@ -89,11 +89,10 @@ to the <<additional-config, Additional configuration>> chapter.
 === Additional configuration [[additional-config]]
 
 Due to licensing restrictions of the
-https://www.segger.com/downloads/jlink/[SEGGER J-Link] tool, the installation
-package must be downloaded manually and placed in the `.devcontainer` directory.
-
-NOTE: Make sure to download version `794e` of the package, as it is required for
-compatibility with this project's configuration.
+https://www.segger.com/downloads/jlink/[SEGGER J-Link] tool, if a version other
+than the one packaged with the `nRF Command Line Tools` (`794e` - required for
+this project's configuration) is needed, it must be downloaded manually and
+placed in the `.devcontainer` directory for further installation.
 
 Helper extensions that could be installed:
 

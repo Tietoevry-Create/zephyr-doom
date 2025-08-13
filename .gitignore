@@ -10,6 +10,9 @@
 # Environment files
 *.env
 *.gitconfig
+.venv/
+
+# Packages
 *.deb
 
 # Documentation files
@@ -17,6 +20,8 @@
 *.pdf
 
 # Archive files
+*.gz
+*.xz
 *.zip
 
 # Temporary/session files
@@ -34,3 +39,4 @@ output
 
 # SDK/vendor artifacts
 nRF5_SDK/
+ncs/
