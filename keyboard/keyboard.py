@@ -6,12 +6,23 @@ import time
 import threading
 
 def find_keyboard():
-    devices = [InputDevice(path) for path in evdev.list_devices()]
+    """
+    Finds the primary keyboard device by checking its capabilities,
+    not just its name.
+    """
+    devices = [evdev.InputDevice(path) for path in evdev.list_devices()]
     for device in devices:
-        print(f"Found device: {device.name} at {device.path}")
-        if "Keyboard" in device.name:
-            return device.path
+        # Check if the device has keyboard-like capabilities
+        capabilities = device.capabilities(verbose=False)
+        if ecodes.EV_KEY in capabilities:
+            # Check for a representative set of keys a regular keyboard would have.
+            # Using KEY_ENTER or KEY_A is a good bet.
+            keys = capabilities[ecodes.EV_KEY]
+            if ecodes.KEY_ENTER in keys and ecodes.KEY_A in keys:
+                print(f"Found primary keyboard: {device.name} at {device.path}")
+                return device.path
     return None
+
 
 modifier_map = {
     "KEY_LEFTCTRL": 0x01, "KEY_LEFTSHIFT": 0x02, "KEY_LEFTALT": 0x04, "KEY_LEFTMETA": 0x08,
@@ -92,8 +103,7 @@ def send_hid_report():
 def keyboard_listener():
     global current_modifiers, pressed_non_modifier_keys
 
-    # keyboard_path = find_keyboard()
-    keyboard_path = "/dev/input/event4"
+    keyboard_path = find_keyboard()
     if not keyboard_path:
         print("No keyboard found! Make sure it's connected.")
         return

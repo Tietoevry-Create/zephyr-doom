@@ -27,7 +27,7 @@ The simplest way is to:
 
     2.4. ```cd btferret && python3 btfpymake.py build```
 
-    2.5. ```pip install evdev```
+    2.5. ```sudo pip install evdev```
 
 3. Replace the keyboard.py file with the one in this folder.
 
