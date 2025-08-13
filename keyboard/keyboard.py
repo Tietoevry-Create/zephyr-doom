@@ -100,10 +100,9 @@ def send_hid_report():
     btfpy.Write_ctic(node, reportindex, report_data, 0)
 
 
-def keyboard_listener():
+def keyboard_listener(keyboard_path):
     global current_modifiers, pressed_non_modifier_keys
 
-    keyboard_path = find_keyboard()
     if not keyboard_path:
         print("No keyboard found! Make sure it's connected.")
         return
@@ -177,6 +176,7 @@ if(btfpy.Localnode() != 1):
   exit(0)
 
 node = btfpy.Localnode()
+keyboard_path = find_keyboard()
 
 uuid = [0x2A,0x4D]
 reportindex = btfpy.Find_ctic_index(node,btfpy.UUID_2,uuid)
@@ -201,7 +201,7 @@ btfpy.Set_le_wait(20000)
 btfpy.Le_pair(btfpy.Localnode(),btfpy.JUST_WORKS,0)
 
 print("Starting keyboard listener thread...")
-keyboard_thread = threading.Thread(target=keyboard_listener, daemon=True)
+keyboard_thread = threading.Thread(target=keyboard_listener, args=(keyboard_path,), daemon=True)
 keyboard_thread.start()
 
 print("Starting Bluetooth LE server...")
