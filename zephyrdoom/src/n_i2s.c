@@ -1,190 +1,172 @@
 /*
- * Copyright (c) 2019 - 2020, Nordic Semiconductor ASA
- * All rights reserved.
+ * Zephyr RTOS I2S-based backend for Doom audio (nRF5340 → PCM5102A / MAX98357).
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in the
- *    documentation and/or other materials provided with the distribution.
- *
- * 3. Neither the name of the copyright holder nor the names of its
- *    contributors may be used to endorse or promote products derived from this
- *    software without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
- * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
- * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
- * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
- * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
- * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
- * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
- * POSSIBILITY OF SUCH DAMAGE.
+ * Keeps the N_I2S_* API used by the Doom mixer, but routes audio via Zephyr's
+ * i2s_buf_write() from a dedicated high-priority feeder thread. If no mixed
+ * block is available, the feeder writes silence to avoid underruns.
  */
-
-
 
 #include "n_i2s.h"
 
 #include <stdio.h>
-#include "board_config.h"
-#include "nrf5340_application.h"
-#include <nrf.h>
+#include <string.h>
+#include <zephyr/device.h>
+#include <zephyr/drivers/i2s.h>
+#include <zephyr/kernel.h>
+#include <zephyr/sys/atomic.h>
+#include <zephyr/sys/printk.h>
 
-#define NRF_I2S NRF_I2S0_S
+#define SAMPLE_RATE 11025
+#define SAMPLE_BIT_WIDTH 16
+#define NUM_CHANNELS 2
+#define BYTES_PER_SAMPLE 2
 
-#define BUFFER_SIZE 512
+/* BUFFER_SIZE is the number of int16_t samples in a block (interleaved L/R). */
+#define BUFFER_SIZE 512 /* 256 frames x stereo */
 #define NUM_BUFFERS 5
-#define SAMPLE_RATE 10870
-#define ZERO_SAMPLE 0
+#define BUFFER_SIZE_BYTES (BUFFER_SIZE * BYTES_PER_SAMPLE)
 
 typedef enum {
-    BUF_EMPTY   = 0,
-    BUF_FILLED  = 1,
-    BUF_QUEUED  = 2,
-    BUF_PLAYING = 3
+    BUF_EMPTY = 0,
+    BUF_FILLED = 1,
 } buffer_state_t;
 
-boolean          i2s_started;
+static boolean i2s_started;
 
-int16_t       sampleBuffers[NUM_BUFFERS][BUFFER_SIZE];
-buffer_state_t bufferStates[NUM_BUFFERS];
-int            queuedBuffer;
+static int16_t sampleBuffers[NUM_BUFFERS][BUFFER_SIZE];
+static buffer_state_t bufferStates[NUM_BUFFERS];
+static int queuedBuffer;
+static int16_t zeros[BUFFER_SIZE];
 
-extern uint8_t pistol[];
-extern int pistol_length;
+/* Zephyr I2S device + TX slab for the driver's internal queue */
+#define I2S_DEV DT_NODELABEL(i2s0)
+K_MEM_SLAB_DEFINE(tx_mem_slab, BUFFER_SIZE_BYTES, 4, 4);
 
+#define AUDIO_STACK_SIZE 2048
+#define AUDIO_PRIO 0
+K_THREAD_STACK_DEFINE(audio_stack, AUDIO_STACK_SIZE);
+static struct k_thread audio_thread;
 
-static void zero_buffer(int bufIdx)
-{
-    for  (int j=0; j<BUFFER_SIZE; j++) {
-        sampleBuffers[bufIdx][j] = ZERO_SAMPLE;
+static const struct device *i2s_dev;
+static atomic_t g_recoveries = ATOMIC_INIT(0);
+
+static void zero_buffer(int bufIdx) {
+    int j;
+    for (j = 0; j < BUFFER_SIZE; j++) {
+        sampleBuffers[bufIdx][j] = 0;
     }
 }
 
-static void clear_buffers()
-{
-    for (int i=0; i<NUM_BUFFERS; i++) {
+static void clear_buffers(void) {
+    int i;
+    for (i = 0; i < NUM_BUFFERS; i++) {
         zero_buffer(i);
         bufferStates[i] = BUF_EMPTY;
     }
 }
 
-void I2S0_IRQHandler();
+static int i2s_write_block(void *payload) {
+    int r;
+    do {
+        r = i2s_buf_write(i2s_dev, payload, BUFFER_SIZE_BYTES);
+        if (r == -EAGAIN) {
+            k_sleep(K_MSEC(1));
+        }
+    } while (r == -EAGAIN);
+    return r;
+}
 
-void N_I2S_init()
-{
-    printf("N_I2S_init\n");
+static void audio_feeder(void *a, void *b, void *c) {
+    struct i2s_config cfg;
+    int idx;
+    void *payload;
+    int r;
 
-    // Pull SCK down
-    /* FIXME
-    NRF_P1_S->PIN_CNF[I2S_PIN_SCK&0x1F] = 3;
-    NRF_P1_S->OUT = NRF_P1_S->OUT & ~(1<<(I2S_PIN_SCK&0x1F));
-    */
+    i2s_dev = DEVICE_DT_GET(I2S_DEV);
+    if (!device_is_ready(i2s_dev)) {
+        printk("I2S not ready\n");
+        return;
+    }
 
-    NRF_I2S->PSEL.SCK   = I2S_PIN_BCK;
-    NRF_I2S->PSEL.LRCK  = I2S_PIN_LRCK;
-    NRF_I2S->PSEL.SDOUT = I2S_PIN_DIN;
+    cfg.word_size = SAMPLE_BIT_WIDTH;
+    cfg.channels = NUM_CHANNELS;
+    cfg.format = I2S_FMT_DATA_FORMAT_I2S;
+    cfg.options = I2S_OPT_BIT_CLK_MASTER | I2S_OPT_FRAME_CLK_MASTER;
+    cfg.frame_clk_freq = SAMPLE_RATE;
+    cfg.mem_slab = &tx_mem_slab;
+    cfg.block_size = BUFFER_SIZE_BYTES;
+    cfg.timeout = 50;
+    if (i2s_configure(i2s_dev, I2S_DIR_TX, &cfg) < 0) {
+        printk("i2s_configure failed\n");
+        return;
+    }
 
-    // fs = 44.1kHz
-    // bck = 44.1kHz*16*2 = 1.442Mhz
-    // bck 32x/1.442Mhz  - 64/2.8224Mhz  (48?)
+    /* Prefill with silence to prime the queue */
+    (void)i2s_write_block(zeros);
+    (void)i2s_write_block(zeros);
 
-    NRF_I2S->CONFIG.MODE = 0; // Master
-    NRF_I2S->CONFIG.TXEN = 1;
-    NRF_I2S->CONFIG.MCKEN = 1;
-    NRF_I2S->CONFIG.MCKFREQ = 185319424; // 1391304Hz MCK
-    NRF_I2S->CONFIG.RATIO = 4; // 1391304/128 = 10869.5Hz (11025kHz)
-    NRF_I2S->CONFIG.SWIDTH = 1; // 16-bit sample width
-    NRF_I2S->CONFIG.CHANNELS = 0; // Stereo (1=left only)
-    NRF_I2S->CONFIG.CLKCONFIG = 0; // 0=32Mhz clock, 1=AudioPLL
+    if (i2s_trigger(i2s_dev, I2S_DIR_TX, I2S_TRIGGER_START) < 0) {
+        printk("I2S START failed\n");
+        return;
+    }
 
+    for (;;) {
+        /* Advance ring index */
+        queuedBuffer = (queuedBuffer + 1) % NUM_BUFFERS;
+        idx = queuedBuffer;
 
-    NRF_I2S->RXTXD.MAXCNT = BUFFER_SIZE/2;
+        if (bufferStates[idx] == BUF_FILLED) {
+            payload = sampleBuffers[idx];
+        } else {
+            payload = zeros; /* fallback to silence */
+        }
 
+        r = i2s_write_block(payload);
+        if (r < 0) {
+            atomic_inc(&g_recoveries);
+            printk("audio: write=%d, recovering\n", r);
+            (void)i2s_trigger(i2s_dev, I2S_DIR_TX, I2S_TRIGGER_STOP);
+            (void)i2s_trigger(i2s_dev, I2S_DIR_TX, I2S_TRIGGER_DROP);
+            (void)i2s_write_block(zeros);
+            (void)i2s_write_block(zeros);
+            (void)i2s_trigger(i2s_dev, I2S_DIR_TX, I2S_TRIGGER_START);
+        }
+
+        /* Recycle the buffer slot after enqueue (copy-based API) */
+        if (payload == sampleBuffers[idx]) {
+            bufferStates[idx] = BUF_EMPTY;
+        }
+
+        k_yield();
+    }
+}
+
+void N_I2S_init(void) {
+    printf("N_I2S_init (Zephyr I2S)\n");
+    memset(zeros, 0, sizeof(zeros));
     clear_buffers();
     queuedBuffer = 0;
-    bufferStates[queuedBuffer] = BUF_QUEUED;
-
-    NRF_I2S->EVENTS_TXPTRUPD = 0;
-    // IRQ setup
-    IRQ_CONNECT(I2S0_IRQn, 3, I2S0_IRQHandler, NULL, 0);
-    NVIC_SetPriority(I2S0_IRQn, 3);
-    NVIC_EnableIRQ(I2S0_IRQn);
-    NRF_I2S->INTEN = I2S_INTEN_TXPTRUPD_Msk;
-
-    NRF_I2S->ENABLE = 1;
-
     i2s_started = false;
-
 }
 
 boolean N_I2S_next_buffer(int *buf_size, int16_t **buffer) {
-    int bufIdx = queuedBuffer;
-    while (1) {
-        bufIdx = (bufIdx+1)%NUM_BUFFERS;
-        switch (bufferStates[bufIdx]) {
-            case BUF_EMPTY:
-                // printf("Empty buffer at %d\n", bufIdx);
-                *buf_size = BUFFER_SIZE;
-                *buffer = sampleBuffers[bufIdx];
-                bufferStates[bufIdx] = BUF_FILLED;
-                return true;
-            case BUF_FILLED:
-                continue;
-            case BUF_QUEUED:
-                return false;
-            case BUF_PLAYING:
-                return false;
-            default:
-                // I_Error
-                break;
-        }
+    int next;
+    next = (queuedBuffer + 1) % NUM_BUFFERS;
+    if (bufferStates[next] == BUF_EMPTY) {
+        *buf_size = BUFFER_SIZE;
+        *buffer = sampleBuffers[next];
+        bufferStates[next] = BUF_FILLED;
+        return true;
     }
+    return false;
 }
 
-static void N_I2S_queue_buffers()
-{
-    for (int i=0; i<NUM_BUFFERS; i++) {
-        if (bufferStates[i] == BUF_PLAYING) {
-            bufferStates[i] = BUF_EMPTY;
-        }
-    }
-
-    bufferStates[queuedBuffer] = BUF_PLAYING;
-    queuedBuffer = (queuedBuffer+1)%NUM_BUFFERS;
-    if (bufferStates[queuedBuffer] == BUF_EMPTY) {
-        zero_buffer(queuedBuffer);
-    }
-    bufferStates[queuedBuffer] = BUF_QUEUED;
-
-    NRF_I2S->TXD.PTR = (uint32_t)(&sampleBuffers[queuedBuffer][0]);
-    NRF_I2S->EVENTS_TXPTRUPD = 0;
-}
-
-void N_I2S_process()
-{
+void N_I2S_process(void) {
     if (!i2s_started) {
-        printf("N_I2S_process: Starting I2S..\n");
-        N_I2S_queue_buffers();
-        NRF_I2S->TASKS_START = 1;
+        /* Start feeder with higher priority than the main/game thread */
+        k_thread_create(&audio_thread, audio_stack,
+                        K_THREAD_STACK_SIZEOF(audio_stack), audio_feeder, NULL,
+                        NULL, NULL, AUDIO_PRIO, 0, K_NO_WAIT);
         i2s_started = true;
     }
 }
-
-
-void I2S0_IRQHandler(void)
-{
-    if(NRF_I2S->EVENTS_TXPTRUPD  != 0)
-    {
-        N_I2S_queue_buffers();
-    }
-}
-

@@ -1,0 +1,21 @@
+&pinctrl {
+    i2s0_doom_pins: i2s0_doom_pins {
+        group1 {
+            psels = <NRF_PSEL(I2S_SCK_M, 1, 8)>,
+                    <NRF_PSEL(I2S_LRCK_M, 1, 6)>,
+                    <NRF_PSEL(I2S_SDOUT, 1, 7)>;
+        };
+    };
+};
+
+&i2s0 {
+    status = "okay";
+    pinctrl-0 = <&i2s0_doom_pins>;
+    pinctrl-names = "default";
+    clock-source = "ACLK";
+};
+
+&clock {
+    hfclkaudio-frequency = <2822400>;
+};
+

@@ -5,8 +5,8 @@
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
  *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
+ * 1. Redistributions of source code must retain the above copyright notice,
+ * this list of conditions and the following disclaimer.
  *
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
@@ -29,11 +29,10 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-
 #include <stdint.h>
+
 #include "doomtype.h"
 
 void N_I2S_init();
 boolean N_I2S_next_buffer(int *buf_size, int16_t **buffer);
 void N_I2S_process();
-
