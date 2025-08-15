@@ -40,4 +40,3 @@ sudo python3 keyboard.py
 ```
 
 2. Turn on the board running zephyr-doom. It should connect to the RPI and start receiving key presses.
-
