@@ -1,0 +1,83 @@
+---
+name: Cppcheck verification
+run-name: >
+  ${{ github.workflow }} — Triggered by
+  ${{ github.actor }} on ${{ github.ref_name }}
+
+on:
+  pull_request:
+    paths:
+      - 'zephyrdoom/**/*.c'
+      - 'zephyrdoom/**/*.h'
+  workflow_dispatch:
+    inputs:
+      runner_label:
+        description: Label of the runner to execute the job
+        required: false
+        default: ubuntu-24.04
+        type: string
+
+env:
+  RUNNER_LABEL: ubuntu-24.04
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  process-runner:
+    name: Process runner information to execute the job
+    runs-on: ubuntu-24.04
+    outputs:
+      label: ${{ steps.runner-label.outputs.label }}
+
+    steps:
+      - name: Set runner label
+        id: runner-label
+        run: |
+          echo "label=${INPUT_RUNNER_LABEL:-$RUNNER_LABEL}" >> $GITHUB_OUTPUT
+        env:
+          INPUT_RUNNER_LABEL: ${{ github.event.inputs.runner_label }}
+
+  cppcheck-lint:
+    name: Run Cppcheck verification
+    needs: process-runner
+    runs-on: ${{ needs.process-runner.outputs.label }}
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Prepare runner env for cppcheck tool
+        run: |
+          sudo apt-get update && sudo apt-get install -y \
+          cppcheck
+
+      - name: Run cppcheck command
+        run: |
+          cppcheck \
+          --force \
+          --language=c \
+          --std=c89 \
+          --platform=unix32 \
+          --check-level=exhaustive \
+          --enable=style \
+          -I "${{ github.workspace }}/zephyrdoom/src/" \
+          -I "${{ github.workspace }}/zephyrdoom/src/config/" \
+          -I "${{ github.workspace }}/zephyrdoom/src/doom/" \
+          "${{ github.workspace }}/zephyrdoom/src" \
+          2>&1 | tee cppcheck-${{ github.run_number }}.log
+
+      - name: Analyze cppcheck logs
+        run: |
+          "${{ github.workspace }}/.github/scripts/parse-cppcheck-logfile.sh" \
+          cppcheck-${{ github.run_number }}.log
+
+      - name: Upload cppcheck logs
+        uses: actions/upload-artifact@v4
+        with:
+          name: cppcheck-${{ github.run_number }}
+          path: |
+            cppcheck-${{ github.run_number }}.log
+            cppcheck-${{ github.run_number }}-summary.log

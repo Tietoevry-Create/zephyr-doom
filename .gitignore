@@ -1,9 +1,42 @@
-nRF5_SDK
-_build
+# IDE/editor files
+*.swp
+*~
+.cache/
+.vscode/
+
+# Log files
+*.log
+
+# Environment files
+*.env
+*.gitconfig
+.venv/
+
+# Packages
+*.deb
+
+# Documentation files
+*.html
+*.pdf
+
+# Archive files
+*.gz
+*.xz
+*.zip
+
+# Temporary/session files
 *.TMP
-log.log
-Output
 *.emSession
 *.jlink
+*.tmp
 
-.vscode/
+# Build artifacts
+Output
+_build/
+build*/
+build/
+output
+
+# SDK/vendor artifacts
+nRF5_SDK/
+ncs/

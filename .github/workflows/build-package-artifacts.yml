@@ -1,0 +1,338 @@
+---
+name: Build and package artifacts
+run-name: >
+  ${{ github.workflow }} — Triggered by
+  ${{ github.actor }} on ${{ github.ref_name }}
+
+on:
+  pull_request:
+    paths:
+      - 'zephyrdoom/**'
+  workflow_dispatch:
+    inputs:
+      runner_label:
+        description: Label of the runner to execute the job
+        required: false
+        default: ubuntu-24.04
+        type: string
+      toolchain_version:
+        description: Version of the nRF toolchain to install (only for X64)
+        required: false
+        default: v2.6.2
+        type: string
+      nrf_sdk_version:
+        description: Version of the nRF SDK to install
+        required: false
+        default: v2.6.0
+        type: string
+      zephyr_sdk_version:
+        description: Version of the Zephyr SDK to install (only for ARM64)
+        required: false
+        default: 0.16.5-1
+        type: string
+      board_target:
+        description: Target board for the build
+        required: false
+        default: nrf5340dk_nrf5340_cpuapp
+        type: string
+
+env:
+  RUNNER_LABEL: ubuntu-24.04
+  TOOLCHAIN_VERSION: v2.6.2
+  NRF_SDK_VERSION: v2.6.0
+  ZEPHYR_SDK_VERSION: 0.16.5-1
+  BOARD_TARGET: nrf5340dk_nrf5340_cpuapp
+
+defaults:
+  run:
+    shell: bash
+
+permissions:
+  actions: write
+
+jobs:
+  process-runner:
+    name: Process runner information to execute the job
+    runs-on: ubuntu-24.04
+    outputs:
+      label: ${{ steps.runner-label.outputs.label }}
+
+    steps:
+      - name: Set runner label
+        id: runner-label
+        run: echo "label=${INPUT_RUNNER_LABEL:-$RUNNER_LABEL}" >> $GITHUB_OUTPUT
+        env:
+          INPUT_RUNNER_LABEL: ${{ github.event.inputs.runner_label }}
+
+  build-artifacts:
+    name: Build and package artifacts
+    needs: process-runner
+    runs-on: ${{ needs.process-runner.outputs.label }}
+    timeout-minutes: 180
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set build env variables
+        run: |
+          echo "TOOLCHAIN_VERSION=${INPUT_TOOLCHAIN_VERSION:-$TOOLCHAIN_VERSION}" >> $GITHUB_ENV
+          echo "NRF_SDK_VERSION=${INPUT_NRF_SDK_VERSION:-$NRF_SDK_VERSION}" >> $GITHUB_ENV
+          echo "ZEPHYR_SDK_VERSION=${INPUT_ZEPHYR_SDK_VERSION:-$ZEPHYR_SDK_VERSION}" >> $GITHUB_ENV
+          echo "BOARD_TARGET=${INPUT_BOARD_TARGET:-$BOARD_TARGET}" >> $GITHUB_ENV
+        env:
+          INPUT_TOOLCHAIN_VERSION: ${{ github.event.inputs.toolchain_version }}
+          INPUT_NRF_SDK_VERSION: ${{ github.event.inputs.nrf_sdk_version }}
+          INPUT_ZEPHYR_SDK_VERSION: ${{ github.event.inputs.zephyr_sdk_version }}
+          INPUT_BOARD_TARGET: ${{ github.event.inputs.board_target }}
+
+      - name: Prepare runner env for nRF tooling
+        run: |
+          sudo apt-get update && sudo apt-get install -y \
+          libusb-1.0-0 \
+          $(apt-cache search '^libunistring[0-9]$' | \
+          awk '{print $1}' | \
+          sort -r | \
+          head -n 1)
+
+      # Required for nRF/Zephyr Toolchain/SDK in version <3.0.0
+      - name: Link libunistring library to avoid nrfutil runtime errors (X64)
+        if: runner.arch == 'X64'
+        run: |
+          if [ -f libunistring.so.5 ] && [ ! -f libunistring.so.2 ]; then
+              sudo ln -sf libunistring.so.5 libunistring.so.2
+          fi
+        working-directory: /lib/x86_64-linux-gnu
+
+      - name: Cache nRF Command Line Tools (X64)
+        id: nrf-cmd-x64
+        if: runner.arch == 'X64'
+        uses: actions/cache@v4
+        with:
+          path: /tmp/nrf-command-line-tools_10.24.2_amd64.deb
+          key: nrf-command-line-tools-x64
+
+      - name: Download nRF Command Line Tools for backward compatibility (X64)
+        if: runner.arch == 'X64' && steps.nrf-cmd-x64.outputs.cache-hit != 'true'
+        run: |
+          curl ${{ env.NRF_CMDLINE_X64_URL }} \
+          -o nrf-command-line-tools_10.24.2_amd64.deb
+        working-directory: /tmp
+        env:
+          NRF_CMDLINE_X64_URL: https://nsscprodmedia.blob.core.windows.net/prod/software-and-other-downloads/desktop-software/nrf-command-line-tools/sw/versions-10-x-x/10-24-2/nrf-command-line-tools_10.24.2_amd64.deb
+
+      - name: Install nRF Command Line Tools for backward compatibility (X64)
+        if: runner.arch == 'X64'
+        run: sudo apt-get -y install /tmp/nrf-command-line-tools_10.24.2_amd64.deb
+
+      # Exclude the udevadm configuration from the J-Link package, because the
+      # host environment is unknown and containers are not compatible.
+      - name: Install SEGGER J-Link tool delivered with nRF Command Line Tools (X64)
+        if: runner.arch == 'X64'
+        run: |
+          sudo dpkg --unpack /opt/nrf-command-line-tools/share/JLink_Linux_V794e_x86_64.deb
+          sudo rm -f /var/lib/dpkg/info/jlink.postinst
+          sudo dpkg --force-all --configure jlink
+          sudo apt-get -y install -f
+
+      - name: Cache nrfutil tool (X64)
+        id: nrfutil-x64
+        if: runner.arch == 'X64'
+        uses: actions/cache@v4
+        with:
+          path: /usr/local/bin/nrfutil
+          key: nrfutil-x64
+
+      - name: Download nrfutil tool (X64)
+        if: runner.arch == 'X64' && steps.nrfutil-x64.outputs.cache-hit != 'true'
+        run: sudo curl ${{ env.NRFUTIL_X64_URL }} -o nrfutil
+        working-directory: /usr/local/bin
+        env:
+          NRFUTIL_X64_URL: https://files.nordicsemi.com/artifactory/swtools/external/nrfutil/executables/x86_64-unknown-linux-gnu/nrfutil
+
+      - name: Configure nrfutil tool (X64)
+        if: runner.arch == 'X64'
+        run: sudo chmod +x /usr/local/bin/nrfutil
+
+      - name: Ensure the lastest version of nrfutil tool (X64)
+        if: runner.arch == 'X64'
+        run: nrfutil self-upgrade
+
+      - name: Install nRF device configuration (X64)
+        if: runner.arch == 'X64'
+        run: nrfutil install device
+
+      - name: Install nRF toolchain (X64)
+        if: runner.arch == 'X64'
+        run: |
+          nrfutil install toolchain-manager
+          nrfutil toolchain-manager install --ncs-version ${{ env.TOOLCHAIN_VERSION }}
+
+      - name: Install nRF SDK (X64)
+        if: runner.arch == 'X64'
+        run: |
+          nrfutil install sdk-manager
+          nrfutil sdk-manager install ${{ env.NRF_SDK_VERSION }}
+
+      - name: Build artifacts (X64)
+        if: runner.arch == 'X64'
+        run: |
+          nrfutil sdk-manager toolchain launch \
+          --ncs-version ${{ env.TOOLCHAIN_VERSION }} -- \
+          bash -c '
+            set -euo pipefail
+            export ZEPHYR_BASE="$HOME/ncs/${{ env.NRF_SDK_VERSION }}/zephyr"
+            west build \
+            --build-dir "${{ github.workspace }}/zephyrdoom/build" \
+            "${{ github.workspace }}/zephyrdoom" \
+            --pristine \
+            --board ${{ env.BOARD_TARGET }} \
+            -- -DNCS_TOOLCHAIN_VERSION=NONE \
+            2>&1 | tee build-${{ env.NRF_SDK_VERSION }}-${{ runner.arch }}-${{ github.run_number }}.log'
+
+      # Required for nRF/Zephyr Toolchain/SDK in version <3.0.0
+      - name: Link libunistring library to avoid nrfutil runtime errors (ARM64)
+        if: runner.arch == 'ARM64'
+        run: |
+          if [ -f libunistring.so.5 ] && [ ! -f libunistring.so.2 ]; then
+              sudo ln -sf libunistring.so.5 libunistring.so.2
+          fi
+        working-directory: /lib/aarch64-linux-gnu
+
+      - name: Prepare runner env for Zephyr SDK (ARM64)
+        if: runner.arch == 'ARM64'
+        run: |
+          sudo apt-get -y install \
+          ccache \
+          cmake \
+          device-tree-compiler \
+          dfu-util \
+          file \
+          gcc \
+          git \
+          gperf \
+          libmagic1 \
+          libsdl2-dev \
+          make \
+          ninja-build \
+          python3-dev \
+          python3-tk \
+          python3-venv \
+          wget \
+          xz-utils
+
+      - name: Cache nRF Command Line Tools (ARM64)
+        id: nrf-cmd-arm64
+        if: runner.arch == 'ARM64'
+        uses: actions/cache@v4
+        with:
+          path: /tmp/nrf-command-line-tools_10.24.2_arm64.deb
+          key: nrf-command-line-tools-arm64
+
+      - name: Download nRF Command Line Tools for backward compatibility (ARM64)
+        if: runner.arch == 'ARM64' && steps.nrf-cmd-arm64.outputs.cache-hit != 'true'
+        run: |
+          curl ${{ env.NRF_CMDLINE_ARM64_URL }} \
+          -o nrf-command-line-tools_10.24.2_arm64.deb
+        working-directory: /tmp
+        env:
+          NRF_CMDLINE_ARM64_URL: https://nsscprodmedia.blob.core.windows.net/prod/software-and-other-downloads/desktop-software/nrf-command-line-tools/sw/versions-10-x-x/10-24-2/nrf-command-line-tools_10.24.2_arm64.deb
+
+      - name: Install nRF Command Line Tools for backward compatibility (ARM64)
+        if: runner.arch == 'ARM64'
+        run: sudo apt-get -y install /tmp/nrf-command-line-tools_10.24.2_arm64.deb
+
+      # Exclude the udevadm configuration from the J-Link package, because the
+      # host environment is unknown and containers are not compatible.
+      - name: Install SEGGER J-Link tool delivered with nRF Command Line Tools (ARM64)
+        if: runner.arch == 'ARM64'
+        run: |
+          sudo dpkg --unpack /opt/nrf-command-line-tools/share/JLink_Linux_V794e_arm64.deb
+          sudo rm -f /var/lib/dpkg/info/jlink.postinst
+          sudo dpkg --force-all --configure jlink
+          sudo apt-get -y install -f
+
+      - name: Configure Python virutal environment with West workspace (ARM64)
+        if: runner.arch == 'ARM64'
+        run: |
+          python3 -m venv .venv
+          source .venv/bin/activate
+          pip install --upgrade pip
+          pip install west
+
+          west init -m https://github.com/nrfconnect/sdk-nrf \
+          --mr ${{ env.NRF_SDK_VERSION }} ncs/${{ env.NRF_SDK_VERSION }}
+
+          cd ncs/${{ env.NRF_SDK_VERSION }}
+          west update
+          west zephyr-export
+          pip install -U -r zephyr/scripts/requirements.txt
+
+      - name: Cache Zephyr SDK (ARM64)
+        id: zephyr-sdk-arm64
+        if: runner.arch == 'ARM64'
+        uses: actions/cache@v4
+        with:
+          path: ${{ github.workspace }}/ncs/${{ env.NRF_SDK_VERSION }}/zephyr-sdk-${{ env.ZEPHYR_SDK_VERSION }}_linux-aarch64.tar.xz
+          key: zephyr-sdk-${{ env.ZEPHYR_SDK_VERSION }}-${{ runner.arch }}
+
+      - name: Download Zephyr SDK (ARM64)
+        if: runner.arch == 'ARM64' && steps.zephyr-sdk-arm64.outputs.cache-hit != 'true'
+        run: |
+          curl -L ${{ env.ZEPHYR_ARM64_SDK_URL }} \
+          -o zephyr-sdk-${{ env.ZEPHYR_SDK_VERSION }}_linux-aarch64.tar.xz
+        working-directory: ${{ github.workspace }}/ncs/${{ env.NRF_SDK_VERSION }}
+        env:
+          ZEPHYR_ARM64_SDK_URL: https://github.com/zephyrproject-rtos/sdk-ng/releases/download/v${{ env.ZEPHYR_SDK_VERSION }}/zephyr-sdk-${{ env.ZEPHYR_SDK_VERSION }}_linux-aarch64.tar.xz
+
+      - name: Configure Zephyr SDK (ARM64)
+        if: runner.arch == 'ARM64'
+        run: |
+          tar -xJf zephyr-sdk-${{ env.ZEPHYR_SDK_VERSION }}_linux-aarch64.tar.xz
+          cd zephyr-sdk-${{ env.ZEPHYR_SDK_VERSION }}
+
+          ./setup.sh -c -h \
+          -t aarch64-zephyr-elf \
+          -t arm-zephyr-eabi \
+          -t riscv64-zephyr-elf \
+          -t x86_64-zephyr-elf
+        working-directory: ${{ github.workspace }}/ncs/${{ env.NRF_SDK_VERSION }}
+
+      - name: Build artifacts (ARM64)
+        if: runner.arch == 'ARM64'
+        run: |
+            source .venv/bin/activate
+            export ZEPHYR_BASE="${{ github.workspace }}/ncs/${{ env.NRF_SDK_VERSION }}/zephyr"
+
+            west build \
+            --build-dir zephyrdoom/build \
+            zephyrdoom \
+            --pristine \
+            --board ${{ env.BOARD_TARGET }} \
+            -- -DNCS_TOOLCHAIN_VERSION=NONE \
+            2>&1 | tee build-${{ env.NRF_SDK_VERSION }}-${{ runner.arch }}-${{ github.run_number }}.log
+
+      - name: Rename zephyrdoom artifacts
+        run: |
+          cp "zephyrdoom/build/zephyr/merged.hex" \
+          "merged-${{ env.NRF_SDK_VERSION }}-${{ runner.arch }}-${{ github.run_number }}.hex"
+          cp "zephyrdoom/build/zephyr/merged_domains.hex" \
+          "merged-domains-${{ env.NRF_SDK_VERSION }}-${{ runner.arch }}-${{ github.run_number }}.hex"
+          cp "zephyrdoom/build/zephyr/zephyr.hex" \
+          "zephyr-${{ env.NRF_SDK_VERSION }}-${{ runner.arch }}-${{ github.run_number }}.hex"
+          cp "zephyrdoom/build/zephyr/zephyr.elf" \
+          "zephyr-${{ env.NRF_SDK_VERSION }}-${{ runner.arch }}-${{ github.run_number }}.elf"
+          cp "zephyrdoom/build/zephyr/zephyr.map" \
+          "zephyr-${{ env.NRF_SDK_VERSION }}-${{ runner.arch }}-${{ github.run_number }}.map"
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-${{ env.NRF_SDK_VERSION }}-${{ runner.arch }}-${{ env.BOARD_TARGET }}-${{ github.run_number }}
+          path: |
+            merged-${{ env.NRF_SDK_VERSION }}-${{ runner.arch }}-${{ github.run_number }}.hex
+            merged-domains-${{ env.NRF_SDK_VERSION }}-${{ runner.arch }}-${{ github.run_number }}.hex
+            zephyr-${{ env.NRF_SDK_VERSION }}-${{ runner.arch }}-${{ github.run_number }}.hex
+            zephyr-${{ env.NRF_SDK_VERSION }}-${{ runner.arch }}-${{ github.run_number }}.elf
+            zephyr-${{ env.NRF_SDK_VERSION }}-${{ runner.arch }}-${{ github.run_number }}.map
+            build-${{ env.NRF_SDK_VERSION }}-${{ runner.arch }}-${{ github.run_number }}.log

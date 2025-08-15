@@ -188,7 +188,7 @@ void HardFault_c_handler(uint32_t * p_stack_address)
     };
 
     uint32_t cfsr = SCB->CFSR;
-    
+
     if (p_stack != NULL)
     {
         // Print information about error.

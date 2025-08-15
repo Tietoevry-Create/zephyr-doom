@@ -87,7 +87,7 @@ static void AddIWADDir(char *dir)
 
 static char *CheckDirectoryHasIWAD(char *dir, char *iwadname)
 {
-    char *filename; 
+    char *filename;
     char *probe;
 
     // As a special case, the "directory" may refer directly to an
@@ -137,7 +137,7 @@ static char *SearchDirectoryForIWAD(char *dir, int mask, GameMission_t *mission)
     char *filename;
     size_t i;
 
-    for (i=0; i<arrlen(iwads); ++i) 
+    for (i=0; i<arrlen(iwads); ++i)
     {
         if (((1 << iwads[i].mission) & mask) == 0)
         {
@@ -219,13 +219,13 @@ static void BuildIWADDirList(void)
 
 //
 // Searches WAD search paths for an WAD with a specific filename.
-// 
+//
 char *D_FindWADByName(char *name)
 {
     char *path;
     char *probe;
     int i;
-    
+
     // Absolute path?
 
     probe = M_FileCaseExists(name);
@@ -333,7 +333,7 @@ char *D_FindIWAD(int mask, GameMission_t *mission)
         {
             I_Error("IWAD file '%s' not found!", iwadfile);
         }
-        
+
         *mission = IdentifyIWADByName(result, mask);
     }
     else
@@ -344,13 +344,13 @@ char *D_FindIWAD(int mask, GameMission_t *mission)
 
         /* NRFD-TODO?
         BuildIWADDirList();
-    
+
         for (i=0; result == NULL && i<num_iwad_dirs; ++i)
         {
             result = SearchDirectoryForIWAD(iwad_dirs[i], mask, mission);
         }
         */
-        result = SearchDirectoryForIWAD("", mask, mission);        
+        result = SearchDirectoryForIWAD("", mask, mission);
     }
 
     return result;
@@ -451,4 +451,3 @@ char *D_SuggestGameName(GameMission_t mission, GameMode_t mode)
 
     return "Unknown game?";
 }
-

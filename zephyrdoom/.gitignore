@@ -1,9 +1,0 @@
-# editors
-*.swp
-*~
-.vscode/
-
-# build
-/build*/
-
-.cache/

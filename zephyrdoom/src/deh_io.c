@@ -298,7 +298,7 @@ char *DEH_ReadLine(deh_context_t *context, boolean extended)
             ++pos;
         }
     }
-    
+
     return context->readbuffer;
 }
 
@@ -334,4 +334,3 @@ boolean DEH_HadError(deh_context_t *context)
 {
     return context->had_error;
 }
-

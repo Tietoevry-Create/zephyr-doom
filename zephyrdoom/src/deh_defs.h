@@ -35,7 +35,7 @@ struct deh_section_s
     // Called on startup to initialize code
 
     deh_section_init_t init;
-    
+
     // This is called when a new section is started.  The pointer
     // returned is used as a tag for the following calls.
 
@@ -55,5 +55,3 @@ struct deh_section_s
 };
 
 #endif /* #ifndef DEH_DEFS_H */
-
-

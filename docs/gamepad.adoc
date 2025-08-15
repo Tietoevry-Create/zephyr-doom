@@ -1,0 +1,40 @@
+:email: <maciej.gebicz@tietoevry.com>
+:description: Description of the gamepad implementation
+:sectlinks:
+:sectnums:
+:toc:
+:toc-title: Content
+:toclevels: 2
+:source-highlighter: highlightjs
+
+= Bluetooth Gamepad
+
+== Overview
+
+This implementation connects a gamepad to the *nRF5340* board over
+*Bluetooth Low Energy (BLE)*. +
+The gamepad sends joystick position and button state data at regular intervals
+to the board.
+
+== Requirements
+
+- The https://microbit.org/new-microbit/[micro:bit v2] or compatible board.
+- For receiving data, the *nRF5340 DK* or compatible board running the available
+in this repository
+https://github.com/Tietoevry-Create/zephyr-doom/tree/master/zephyrdoom[zephyrdoom]
+code.
+
+== Build/Upload Sources
+
+. *Build the sources*
+* Open the sample directory in *Visual Studio Code* using the
+*NRF Connect extension* and build the project for appropriate board.
+* Functionality was tested on the
+https://microbit.org/new-microbit/[micro:bit v2] board using `prj_minimal.conf`
+and `app.overlay` files.
+
+. *Upload the sources*
+* Connect the gamepad to the computer and copy the
+`gamepad/microbit/build/zephyr/zephyr.hex` file to the gamepad.
+* The gamepad will automatically restart and launch the application.
+* The application will then connect to the *nRF5340* board when it is running.

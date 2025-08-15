@@ -1,0 +1,20 @@
+[user]
+	email = TPL_GIT_EMAIL
+	name = TPL_GIT_USERNAME
+[core]
+	editor = vim
+[log]
+	abbrevCommit
+	decorate
+[diff]
+	renameLimit = 10000
+	tool = vimdiff
+[difftool]
+	prompt = false
+[color]
+	ui = auto
+[filter "lfs"]
+	clean = git-lfs clean -- %f
+	smudge = git-lfs smudge -- %f
+	process = git-lfs filter-process
+	required = true

@@ -56,10 +56,10 @@
 typedef struct deh_mapping_s deh_mapping_t;
 typedef struct deh_mapping_entry_s deh_mapping_entry_t;
 
-struct deh_mapping_entry_s 
+struct deh_mapping_entry_s
 {
     // field name
-   
+
     char *name;
 
     // location relative to the base in the deh_mapping_t struct
@@ -90,4 +90,3 @@ void DEH_StructSHA1Sum(sha1_context_t *context, deh_mapping_t *mapping,
                        void *structptr);
 
 #endif /* #ifndef DEH_MAPPING_H */
-

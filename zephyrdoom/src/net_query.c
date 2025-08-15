@@ -729,7 +729,7 @@ static void NET_QueryPrintCallback(net_addr_t *addr,
 
     if (data->gamemode != indetermined)
     {
-        printf("(%s) ", GameDescription(data->gamemode, 
+        printf("(%s) ", GameDescription(data->gamemode,
                                         data->gamemission));
     }
 
@@ -949,4 +949,3 @@ char *NET_EndSecureDemo(sha1_digest_t demo_hash)
 
     return signature;
 }
-

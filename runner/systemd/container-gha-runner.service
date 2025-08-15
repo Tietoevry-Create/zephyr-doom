@@ -1,0 +1,18 @@
+[Unit]
+Description=Self-hosted Containerized GitHub Actions Runner
+Documentation=https://docs.github.com/en/actions/concepts/runners/about-self-hosted-runners
+After=network-online.target
+
+[Service]
+Type=simple
+# Try to gracefully shutdown the not stopped container with SIGKILL signal
+ExecStartPre=-/usr/bin/podman kill gha-runner
+# In case of any error of above command, clean any trace of previous environment
+ExecStartPre=/usr/bin/podman rm -fiv gha-runner
+ExecStart=/usr/bin/podman run --rm --name=gha-runner gha-runner-image:latest
+ExecStop=/usr/bin/podman stop -t15 gha-runner
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=default.target

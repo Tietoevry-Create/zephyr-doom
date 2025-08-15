@@ -457,9 +457,9 @@ void D_DoomLoop(void) {
     frame_time_prev = I_GetTimeRaw();
     // nrf_cache_profiling_set(NRF_CACHE_S, 1);
 
-    // Game keeps restarting at startup without this. 
+    // Game keeps restarting at startup without this.
     // Some device initialized above probably needs time to set up
-    k_msleep(2); 
+    k_msleep(2);
 
     while (1) {
         k_usleep(10);
@@ -1865,4 +1865,3 @@ void D_DoomMain(void) {
 
     D_DoomLoop();  // never returns
 }
-

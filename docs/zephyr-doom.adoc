@@ -1,0 +1,1075 @@
+:email: <maciej.gebicz@tietoevry.com>
+:description: Description of the Zephyr-Doom repository
+:sectlinks:
+:sectnums:
+:toc:
+:toc-title: Content
+:toclevels: 2
+:source-highlighter: highlightjs
+
+= Zephyr-Doom
+
+== Introduction
+
+This is a port of https://en.wikipedia.org/wiki/Doom_(1993_video_game)[Doom (1993)]
+for https://zephyrproject.org/[Zephyr RTOS].
+
+The project is forked from https://github.com/NordicPlayground/nrf-doom[nrf-doom]
+(commit https://github.com/NordicPlayground/nrf-doom/commit/2d42413b2c49cda7c60d3cd14b858df1b665533f[2d42413]),
+which is forked from https://www.chocolate-doom.org/wiki/index.php/Chocolate_Doom[Chocolate Doom]
+version 3.0.0.
+
+The objective of this internship project is to develop a Zephyr port of the
+game, making sure it can run on different System-on-Chips (SoCs). This endeavor
+will be divided into several stages, presented as Minimum Viable Product (MVP)
+packages.
+
+Zephyr-Doom has only been tested with Shareware version of Doom 1.
+
+[cols="1,1,1" options="header, autowidth"]
+|===
+^| Game
+^| Status
+^| Comment
+
+| Doom 1 Shareware
+| OK
+| N/A
+
+| Doom 1 Full Version
+| Not Tested
+| N/A
+
+| Doom 2
+| Not Tested
+| N/A
+|===
+
+== Status
+
+=== Backlog
+
+[cols="1,1,1" options="header, autowidth"]
+|===
+^| Feature
+^| Status
+^| Comment
+
+| Game data in QSPI flash
+| Done
+| N/A
+
+| Doom game engine running
+| Done
+| N/A
+
+| Devkit button control
+| Done
+| N/A
+
+| GPIO ILI9486 display support
+| Done
+| Currently, there is a limitation on the FPS and the picture is rotated by 90°.
+
+| SPI ILI9341 display support
+| Done
+| FPS got significantly decreased due to the multiple HW/SW limitations.
+
+| SPI FT810 display support
+| Done
+| FPS matching https://github.com/NordicPlayground/nrf-doom[nrf-doom]
+performance.
+
+| BLE game controller
+| Done
+| Transition from the original proprietary radio protocol to BLE using the
+Nordic UART Service (NUS) for data exchange.
+
+| BLE HID support
+| In progress
+| Replace NUS communication with BLE HID standard to allow control via gamepad
+(test with Xbox wireless controller) and keyboard (test with BLE keyboard built
+on RPi 400).
+
+| Game data (SD card to flash)
+| In progress
+| Automatically copy game data from SD card to flash during first start (or on
+demand).
+
+| Game save and load
+| Open
+| Enable save and load functionality to store/restore gameplay progress.
+
+| Pure Zephyr port
+| Open
+| Modify the code to make it compatible with any Zephyr device that meets the
+resource requirements by removing NRFX/NCS elements.
+
+| Basic CI
+| In progress
+| Build the code for target platforms in GitHub actions.
+
+| Static analysis
+| Open
+| N/A
+
+| Simulation on PC
+| Open
+| Native Posix target.
+
+| Gamepad calibration
+| Open
+| N/A
+
+| Touchscreen controls
+| Open
+| Use dedicated area of display to control movement and fire.
+
+| Sound
+| Open
+| N/A
+
+| Multiplayer
+| Open
+| N/A
+
+| Music
+| Open
+| N/A
+|===
+
+== Getting Started
+
+=== HW Configuration Index
+
+[cols="1,1,1" options="header, autowidth"]
+|===
+^| Item
+^| Version
+^| Comment
+
+| https://www.nordicsemi.com/Products/Low-power-short-range-wireless/nRF5340[nRF5340]
+dev kit
+| 2.0.1
+| N/A
+
+| 3,5" ILI9486
+https://www.laskakit.cz/320x480-barevny-lcd-tft-displej-3-5-shield-arduino-uno/[display]
+| N/A
+| N/A
+
+| 2,8" ILI9341
+https://cz.mouser.com/ProductDetail/Adafruit/1947?qs=GURawfaeGuArmJSJoJoDJA%3D%3D[SPI display]
+| N/A
+| N/A
+
+| 4,3" FT810
+https://www.hotmcu.com/43-graphical-ips-lcd-touchscreen-800x480-spi-ft810-p-333.html[SPI IPS display]
+| N/A
+| N/A
+
+| https://microbit.org/new-microbit/[micro:bit v2]
+| 2.x
+| N/A
+
+| https://shop.elecfreaks.com/products/elecfreaks-micro-bit-joystick-bit-v2-kit[joystick v2]
+| 2.x
+| N/A
+
+| https://www.xbox.com/en-US/accessories/controllers/xbox-wireless-controller[Xbox controller]
+| Model 1914
+| N/A
+
+| https://www.raspberrypi.com/products/raspberry-pi-400/[Keyboard]
+| RPi 400
+| N/A
+|===
+
+=== SW Configuration Index
+
+[cols="1,1,1" options="header, autowidth"]
+|===
+^| Item
+^| Version
+^| Comment
+
+| Windows 11 Enterprise
+| 10.0.22631
+| N/A
+
+| Visual Studio Code
+| 1.98.2
+| N/A
+
+| nRF Connect SDK
+| v2.6.2
+| N/A
+
+| nRF Connect for Visual Studio Code
+| 2025.1.127
+| Can be downloaded using the *Toolchain Manager* found in
+*nRF Connect for Desktop*. Alternatively, it can be downloaded directly from
+inside Visual Studio Code.
+|===
+
+=== Compatibility Matrix
+
+[cols="1,1", options="header, autowidth"]
+|===
+2+^| Legend
+
+^| ✅
+| Hardware supported.
+
+^| ❌
+| Hardware not supported.
+|===
+
+[cols="1,1,1,1,1,1,1" options="header, autowidth"]
+|===
+^| Item
+^| Version
+^| MPV1
+^| MVP2
+^| MVP3
+^| MVP4
+^| MVP5
+
+| https://www.nordicsemi.com/Products/Low-power-short-range-wireless/nRF5340[nRF5340]
+dev kit
+| 2.0.1
+^| ✅
+^| ✅
+^| ✅
+^| ✅
+^| ✅
+
+| 3,5" ILI9486
+https://www.laskakit.cz/320x480-barevny-lcd-tft-displej-3-5-shield-arduino-uno/[display]
+| N/A
+^| ✅
+^| ✅
+^| ❌
+^| ❌
+^| ❌
+
+| 2.8" ILI9341
+https://cz.mouser.com/ProductDetail/Adafruit/1947?qs=GURawfaeGuArmJSJoJoDJA%3D%3D[SPI display]
+| N/A
+^| ❌
+^| ❌
+^| ✅
+^| ❌
+^| ❌
+
+| 4.3"
+https://www.hotmcu.com/43-graphical-ips-lcd-touchscreen-800x480-spi-ft810-p-333.html[SPI IPS display]
+| N/A
+^| ❌
+^| ❌
+^| ❌
+^| ✅
+^| ✅
+
+| https://microbit.org/new-microbit/[micro:bit v2]
+| 2.x
+^| ❌
+^| ✅
+^| ✅
+^| ✅
+^| ❌
+
+| https://shop.elecfreaks.com/products/elecfreaks-micro-bit-joystick-bit-v2-kit[joystick v2]
+| 2.x
+^| ❌
+^| ✅
+^| ✅
+^| ✅
+^| ❌
+
+| https://www.xbox.com/en-US/accessories/controllers/xbox-wireless-controller[Xbox controller]
+| Model 1914
+^| ❌
+^| ❌
+^| ❌
+^| ❌
+^| ✅
+
+| https://www.raspberrypi.com/products/raspberry-pi-400/[Keyboard]
+| RPi 400
+^| ❌
+^| ❌
+^| ❌
+^| ❌
+^| ✅
+|===
+
+=== Prerequisites
+
+. Install the https://code.visualstudio.com/download[Visual Studio Code].
+. Install the https://www.nordicsemi.com/Products/Development-software/nRF-Connect-SDK/GetStarted[nRF Connect SDK].
+. Install the https://www.nordicsemi.com/Products/Development-tools/nRF-Connect-for-VS-Code/Download#infotabs[nRF Connect for VS Code].
+
+=== Build
+
+==== Game
+
+* *Visual Studio Code -> nRF Connect extension -> Add Folder as Application ->
+Select `zephyrdoom` folder;*
+* *Visual Studio Code -> nRF Connect extension -> Applications ->
+Add build configuration -> Select board target `nrf5340dk_nrf5340_cpuapp` ->
+Build Configuration;*
+
+==== Gamepad
+
+* *Visual Studio Code -> nRF Connect extension -> Add Folder as Application ->
+Select `gamepad/microbit` folder;*
+* *Visual Studio Code -> nRF Connect extension -> Applications ->
+Add build configuration -> Select board target `bbc_microbit_v2` ->
+Build Configuration;*
+
+=== Flash
+
+==== Game
+
+. Connect Nordic Semiconductor
+https://www.nordicsemi.com/Products/Low-power-short-range-wireless/nRF5340[nRF5340]
+dev kit.
+
+. Flash data (contains `WAD` file) to external flash:
++
+[source,bash]
+----
+nrfjprog --family nrf53 --qspicustominit --program qspi.hex --verify
+----
+
+. Select game app.
++
+*Visual Studio Code -> nRF Connect extension -> Applications ->
+Select `zephyrdoom`;*
+
+. Flash the game.
++
+*Visual Studio Code -> nRF Connect extension -> Actions -> Flash;*
+
+==== Gamepad
+
+. Connect https://microbit.org/new-microbit/[micro:bit v2].
+
+. Select gamepad app.
++
+*Visual Studio Code -> nRF Connect extension -> Applications ->
+Select microbit;*
+
+. Copy file `gamepad/microbit/build/zephyr/zephyr.hex` to `micro:bit` (acting as
+a removable USB device).
+
+==== Monitor
+
+. *Visual Studio Code -> nRF Connect extension -> Connected Devices -> VCOM1 ->
+Connect to Serial Port;*
+
+== MVPs
+
+=== MVP1
+
+* *Goals:*
+** Port https://github.com/NordicPlayground/nrf-doom[nrf-doom] to
+https://www.nordicsemi.com/Products/Development-software/nRF-Connect-SDK/GetStarted[nRF Connect SDK].
+** Get it up and running with display and basic control using dev kit buttons
+under Zephyr RTOS (still with dependency on nRF Connect SDK).
+
+* *Features:*
+** QSPI flash;
+** Doom engine running;
+** Basic display support;
+** Nordic Semiconductor
+https://www.nordicsemi.com/Products/Low-power-short-range-wireless/nRF5340[nRF5340]
+dev kit button control;
+
+* *Required Hardware:*
+** Nordic Semiconductor
+https://www.nordicsemi.com/Products/Low-power-short-range-wireless/nRF5340[nRF5340]
+dev kit;
+** 3,5" ILI9486
+https://www.laskakit.cz/320x480-barevny-lcd-tft-displej-3-5-shield-arduino-uno/[display]
+without touch feature;
+
+* *Pins mapping:*
+** Nordic Semiconductor
+https://www.nordicsemi.com/Products/Low-power-short-range-wireless/nRF5340[nRF5340]
+dev kit:
++
+[cols="1,1,1" options="header, autowidth"]
+|===
+^| Peripheral
+^| Function
+^| nRF5340 Pin
+
+| Buttons
+| Button 1
+| P0.23
+
+| Buttons
+| Button 2
+| P0.24
+
+| Buttons
+| Button 3
+| P0.8
+
+| Buttons
+| Button 4
+| P0.9
+
+| LEDs
+| LED 1
+| P0.28
+
+| LEDs
+| LED 2
+| P0.29
+
+| LEDs
+| LED 3
+| P0.30
+
+| LEDs
+| LED 4
+| P0.31
+
+| SPI/SD card
+| SS
+| P1.12
+
+| SPI/SD card
+| DI
+| P1.13
+
+| SPI/SD card
+| DO
+| P1.14
+
+| SPI/SD card
+| SCK
+| P1.15
+
+| QSPI Memory
+| SCK
+| P0.17
+
+| QSPI Memory
+| CSN
+| P0.18
+
+| QSPI Memory
+| IO0
+| P0.13
+
+| QSPI Memory
+| IO1
+| P0.14
+
+| QSPI Memory
+| IO2
+| P0.15
+
+| QSPI Memory
+| IO3
+| P0.16
+
+| LCD
+| Bit 1-2
+| P1.10 - P1.11
+
+| LCD
+| Bit 3-8
+| P1.04 - P1.09
+
+| LCD
+| RST
+| P0.25
+
+| LCD
+| CS
+| P0.07
+
+| LCD
+| RS
+| P0.06
+
+| LCD
+| WR
+| P0.05
+
+| LCD
+| RD
+| P0.04
+|===
+
+=== MVP2
+
+* *Goals:*
+** Integrate a Bluetooth Low Energy (BLE) game controller to enable game control
+through a `micro:bit` based gamepad.
+** This addition will enhance the gaming experience by allowing players to
+utilize the `micro:bit` as a game controller via wireless connectivity.
+
+* *Features:*
+** BLE game controller;
+
+* *Required Hardware:*
+** Nordic Semiconductor
+https://www.nordicsemi.com/Products/Low-power-short-range-wireless/nRF5340[nRF5340]
+dev kit;
+** 3,5" ILI9486
+https://www.laskakit.cz/320x480-barevny-lcd-tft-displej-3-5-shield-arduino-uno/[display]
+without touch feature;
+** https://microbit.org/new-microbit/[micro:bit v2];
+** ELECFREAKS
+https://shop.elecfreaks.com/products/elecfreaks-micro-bit-joystick-bit-v2-kit[joystick v2];
+
+* *Pins mapping:*
+** Nordic Semiconductor
+https://www.nordicsemi.com/Products/Low-power-short-range-wireless/nRF5340[nRF5340]
+dev kit:
++
+[cols="1,1,1" options="header, autowidth"]
+|===
+^| Peripheral
+^| Function
+^| nRF5340 Pin
+
+| Buttons
+| Button 1
+| P0.23
+
+| Buttons
+| Button 2
+| P0.24
+
+| Buttons
+| Button 3
+| P0.8
+
+| Buttons
+| Button 4
+| P0.9
+
+| LEDs
+| LED 1
+| P0.28
+
+| LEDs
+| LED 2
+| P0.29
+
+| LEDs
+| LED 3
+| P0.30
+
+| LEDs
+| LED 4
+| P0.31
+
+| SPI/SD card
+| SS
+| P1.12
+
+| SPI/SD card
+| DI
+| P1.13
+
+| SPI/SD card
+| DO
+| P1.14
+
+| SPI/SD card
+| SCK
+| P1.15
+
+| QSPI Memory
+| SCK
+| P0.17
+
+| QSPI Memory
+| CSN
+| P0.18
+
+| QSPI Memory
+| IO0
+| P0.13
+
+| QSPI Memory
+| IO1
+| P0.14
+
+| QSPI Memory
+| IO2
+| P0.15
+
+| QSPI Memory
+| IO3
+| P0.16
+
+| LCD
+| Bit 1-2
+| P1.10 - P1.11
+
+| LCD
+| Bit 3-8
+| P1.04 - P1.09
+
+| LCD
+| RST
+| P0.25
+
+| LCD
+| CS
+| P0.07
+
+| LCD
+| RS
+| P0.06
+
+| LCD
+| WR
+| P0.05
+
+| LCD
+| RD
+| P0.04
+|===
+
+=== MVP3
+
+* *Goals:*
+** Migrate from current display (connected via GPIO) to SPI one.
+** Support full screen.
+
+* *Features:*
+** New display;
+** Full screen compatibility;
+
+* *Required Hardware:*
+** Nordic Semiconductor
+https://www.nordicsemi.com/Products/Low-power-short-range-wireless/nRF5340[nRF5340]
+dev kit;
+** 2.8" ILI9341
+https://cz.mouser.com/ProductDetail/Adafruit/1947?qs=GURawfaeGuArmJSJoJoDJA%3D%3D[SPI display];
+** https://microbit.org/new-microbit/[micro:bit v2];
+** ELECFREAKS
+https://shop.elecfreaks.com/products/elecfreaks-micro-bit-joystick-bit-v2-kit[joystick v2];
+
+* *Pins mapping:*
+** Nordic Semiconductor
+https://www.nordicsemi.com/Products/Low-power-short-range-wireless/nRF5340[nRF5340]
+dev kit:
++
+[cols="1,1,1" options="header, autowidth"]
+|===
+^| Peripheral
+^| Function
+^| nRF5340 Pin
+
+| Buttons
+| Button 1
+| P0.23
+
+| Buttons
+| Button 2
+| P0.24
+
+| Buttons
+| Button 3
+| P0.8
+
+| Buttons
+| Button 4
+| P0.9
+
+| LEDs
+| LED 1
+| P0.28
+
+| LEDs
+| LED 2
+| P0.29
+
+| LEDs
+| LED 3
+| P0.30
+
+| LEDs
+| LED 4
+| P0.31
+
+| QSPI Memory
+| SCK
+| P0.17
+
+| QSPI Memory
+| CSN
+| P0.18
+
+| QSPI Memory
+| IO0
+| P0.13
+
+| QSPI Memory
+| IO1
+| P0.14
+
+| QSPI Memory
+| IO2
+| P0.15
+
+| QSPI Memory
+| IO3
+| P0.16
+
+| SPI/ILI9341
+| SCK
+| P1.15
+
+| SPI/ILI9341
+| MOSI
+| P1.13
+
+| SPI/ILI9341
+| MISO
+| P1.14
+
+| SPI/ILI9341
+| CS
+| P1.12
+|===
+
+=== MVP4
+
+* *Goals:*
+** Return back to 4.3" FT810
+https://www.hotmcu.com/43-graphical-ips-lcd-touchscreen-800x480-spi-ft810-p-333.html[SPI IPS display]
+used in original https://github.com/NordicPlayground/nrf-doom[nrf-doom] project.
+
+* *Features:*
+** Display supporting more than _30_ FPS;
+** Full screen compatibility;
+
+* *Required Hardware:*
+** Nordic Semiconductor
+https://www.nordicsemi.com/Products/Low-power-short-range-wireless/nRF5340[nRF5340]
+dev kit;
+** 4.3" FT810
+https://www.hotmcu.com/43-graphical-ips-lcd-touchscreen-800x480-spi-ft810-p-333.html[SPI IPS display];
+** https://microbit.org/new-microbit/[micro:bit v2];
+** ELECFREAKS
+https://shop.elecfreaks.com/products/elecfreaks-micro-bit-joystick-bit-v2-kit[joystick v2];
+
+* *Pins mapping:*
+** Nordic Semiconductor
+https://www.nordicsemi.com/Products/Low-power-short-range-wireless/nRF5340[nRF5340]
+dev kit:
++
+[cols="1,1,1" options="header, autowidth"]
+|===
+^| Peripheral
+^| Function
+^| nRF5340 Pin
+
+| Buttons
+| Button 1
+| P0.23
+
+| Buttons
+| Button 2
+| P0.24
+
+| Buttons
+| Button 3
+| P0.8
+
+| Buttons
+| Button 4
+| P0.9
+
+| LEDs
+| LED 1
+| P0.28
+
+| LEDs
+| LED 2
+| P0.29
+
+| LEDs
+| LED 3
+| P0.30
+
+| LEDs
+| LED 4
+| P0.31
+
+| QSPI Memory
+| SCK
+| P0.17
+
+| QSPI Memory
+| CSN
+| P0.18
+
+| QSPI Memory
+| IO0
+| P0.13
+
+| QSPI Memory
+| IO1
+| P0.14
+
+| QSPI Memory
+| IO2
+| P0.15
+
+| QSPI Memory
+| IO3
+| P0.16
+
+| SPI/FT810 Display
+| SCK
+| P0.06
+
+| SPI/FT810 Display
+| MISO
+| P0.05
+
+| SPI/FT810 Display
+| MOSI
+| P0.25
+
+| SPI/FT810 Display
+| CS_N
+| P0.07
+
+| SPI/FT810 Display
+| PD_N
+| P0.26
+|===
+
+=== MVP5
+
+* *Goals:*
+** Add option to connect BLE gamepad (Xbox wireless controller) and ideally BLE
+keyboard (built on RPi 400).
+** This step will enable full game control (all the available options).
+
+* *Features:*
+** Using BLE gamepad.
+** Using BLE keyboard, which enables full-fledged game control per original
+manual (including cheats).
+
+* *Required Hardware:*
+** Nordic Semiconductor
+https://www.nordicsemi.com/Products/Low-power-short-range-wireless/nRF5340[nRF5340]
+dev kit;
+** 4.3" FT810
+https://www.hotmcu.com/43-graphical-ips-lcd-touchscreen-800x480-spi-ft810-p-333.html[SPI IPS display];
+** https://www.xbox.com/en-US/accessories/controllers/xbox-wireless-controller[Xbox controller];
+** https://www.raspberrypi.com/products/raspberry-pi-400/[Keyboard];
+
+* *Pins/buttons mapping:*
+** Nordic Semiconductor
+https://www.nordicsemi.com/Products/Low-power-short-range-wireless/nRF5340[nRF5340]
+dev kit:
++
+[cols="1,1,1" options="header, autowidth"]
+|===
+^| Peripheral
+^| Function
+^| nRF5340 Pin
+
+| Buttons
+| Button 1
+| P0.23
+
+| Buttons
+| Button 2
+| P0.24
+
+| Buttons
+| Button 3
+| P0.8
+
+| Buttons
+| Button 4
+| P0.9
+
+| LEDs
+| LED 1
+| P0.28
+
+| LEDs
+| LED 2
+| P0.29
+
+| LEDs
+| LED 3
+| P0.30
+
+| LEDs
+| LED 4
+| P0.31
+
+| QSPI Memory
+| SCK
+| P0.17
+
+| QSPI Memory
+| CSN
+| P0.18
+
+| QSPI Memory
+| IO0
+| P0.13
+
+| QSPI Memory
+| IO1
+| P0.14
+
+| QSPI Memory
+| IO2
+| P0.15
+
+| QSPI Memory
+| IO3
+| P0.16
+
+| SPI/FT810 Display
+| SCK
+| P0.06
+
+| SPI/FT810 Display
+| MISO
+| P0.05
+
+| SPI/FT810 Display
+| MOSI
+| P0.25
+
+| SPI/FT810 Display
+| CS_N
+| P0.07
+
+| SPI/FT810 Display
+| PD_N
+| P0.26
+|===
+
+** https://www.xbox.com/en-US/accessories/controllers/xbox-wireless-controller[Xbox controller]:
++
+[cols="1,1" options="header, autowidth"]
+|===
+^| Xbox Button
+^| Description
+
+| Left Stick
+| Move forward/backward, look left/right;
+
+| A Button
+| Cycle through available weapons;
+
+| B Button
+| Fire current weapon / Select option in menu;
+
+| X Button
+| Hold to run;
+
+| Y Button
+| Open doors, activate switches;
+
+| D-Pad Up
+| Move up in menu;
+
+| D-Pad Down
+| Move down in menu;
+
+| Left Trigger
+| Strafe left;
+
+| Right Trigger
+| Strafe right;
+
+| Back Button
+| Toggle automap view;
+
+| Start Button
+| Show menu;
+|===
+
+* *Setup:*
+** https://www.xbox.com/en-US/accessories/controllers/xbox-wireless-controller[Xbox controller]:
+. Hold the pairing button on the front of the controller, until the light starts
+blinking quickly.
+. Restart the board running the `zephyrdoom` project.
+. Wait for *5-10* seconds.
+. Hold the pairing button again, until the light stops blinking and stays on.
+
+== Release Notes
+
+=== Fixed Bugs
+
+* N/A
+
+=== Known Bugs
+
+* N/A
+
+=== Implemented Improvements
+
+==== MVP1
+
+* N/A
+
+==== MVP2
+
+* FPS increase.
+* Moved from *proprietary radio com* between gamepad and game to *BLE com*.
+
+==== MVP3
+
+* N/A
+
+==== MVP4
+
+* Moved to 4.3" FT810
+https://www.hotmcu.com/43-graphical-ips-lcd-touchscreen-800x480-spi-ft810-p-333.html[SPI IPS display]
+used in original https://github.com/NordicPlayground/nrf-doom[nrf-doom] project.
+* More than _30_ FPS.
+
+==== MVP5
+
+* N/A
+
+=== Known Limitations
+
+==== MVP1
+
+* Low FPS (_~8_).
+* Picture is rotated by 90°. Plus, we are not using full display area.
+
+==== MVP2
+
+* Low FPS (_~14_).
+* Picture is rotated by 90°. Plus, we are not using full display area.
+* BLE game controller requires manual setting of offsets (hard-coded) to
+eliminate drift. Calibration procedure could help to address this issue.
+
+==== MVP3
+
+* Low FPS (_~5_).
+
+==== MVP4
+
+* N/A
+
+==== MVP5
+
+* N/A
