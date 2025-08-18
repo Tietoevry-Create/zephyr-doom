@@ -15,13 +15,10 @@
 #include <zephyr/fs/fs.h>
 #include <zephyr/kernel.h>
 #include <zephyr/logging/log.h>
-// #include <zephyr/sd/sd.h>
 #include <zephyr/storage/disk_access.h>
 
 LOG_MODULE_REGISTER(doom_main, CONFIG_DOOM_MAIN_LOG_LEVEL);
 
-// #include "bluetooth_control_keyboard.h"
-// #include "bluetooth_control_xbox.h"
 #include "bluetooth_control.h"
 
 /* 1000 msec = 1 sec */
@@ -138,7 +135,6 @@ int sd_card_list_files(char const* const path, char* buf, size_t* buf_size) {
         if (strlen(path) > CONFIG_FS_FATFS_MAX_LFN) {
             LOG_ERR("Path is too long");
             k_sem_give(&m_sem_sd_oper_ongoing);
-            // return -FR_INVALID_NAME;
             return -1;
         }
 
