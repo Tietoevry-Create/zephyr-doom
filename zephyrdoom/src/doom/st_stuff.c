@@ -386,7 +386,6 @@ static short      keyboxes[3];
 // a random number per tick
 static int      st_randomnumber;
 
-/* NRFD-TODO: Cheat
 cheatseq_t cheat_mus = CHEAT("idmus", 2);
 cheatseq_t cheat_god = CHEAT("iddqd", 0);
 cheatseq_t cheat_ammo = CHEAT("idkfa", 0);
@@ -408,7 +407,6 @@ cheatseq_t      cheat_powerup[7] =
 cheatseq_t cheat_choppers = CHEAT("idchoppers", 0);
 cheatseq_t cheat_clev = CHEAT("idclev", 2);
 cheatseq_t cheat_mypos = CHEAT("idmypos", 0);
-*/
 
 //
 // STATUS BAR CODE
@@ -462,7 +460,6 @@ ST_Responder (event_t* ev)
     }
   }
 
-    /* NRFD-TODO: Cheat
 
   // if a user keypress...
   else if (ev->type == ev_keydown)
@@ -681,7 +678,6 @@ ST_Responder (event_t* ev)
       G_DeferedInitNew(gameskill, epsd, map);
     }
   }
- */
   return false;
 }
 

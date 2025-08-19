@@ -264,7 +264,7 @@ static int markpointnum = 0; // next point to be assigned
 
 static int followplayer = 1; // specifies whether to follow the player around
 
-// cheatseq_t cheat_amap = CHEAT("iddt", 0);
+cheatseq_t cheat_amap = CHEAT("iddt", 0);
 
 static boolean stopped = true;
 
@@ -722,14 +722,12 @@ AM_Responder
             rc = false;
         }
 
-        /* NRFD-TODO: Cheats
         if ((!deathmatch || gameversion <= exe_doom_1_8)
          && cht_CheckCheat(&cheat_amap, ev->data2))
         {
             rc = false;
             cheating = (cheating + 1) % 3;
         }
-        */
     }
     else if (ev->type == ev_keyup)
     {
