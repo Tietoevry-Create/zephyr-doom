@@ -21,6 +21,12 @@ args_help() {
 }
 
 while getopts "a:v:s:h" arg; do
+    if [[ "${OPTARG}" == -* ]]; then
+        echo "${arg} option needs an argument!" >&2
+        usage
+        exit 1
+    fi
+
     case "$arg" in
         a) ARCH="${OPTARG}" ;;
         v) VERSION="${OPTARG}" ;;

@@ -24,6 +24,12 @@ args_help() {
 }
 
 while getopts "m:h" arg; do
+    if [[ "${OPTARG}" == -* ]]; then
+        echo "${arg} option needs an argument!" >&2
+        usage
+        exit 1
+    fi
+
     case "$arg" in
         m) MODE="${OPTARG}" ;;
         h) usage; echo; args_help; exit ;;

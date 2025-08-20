@@ -31,6 +31,12 @@ NAME="container-$(hostname)"
 LABELS="$NAME"
 
 while getopts "a:v:s:r:t:n:l:h" arg; do
+    if [[ "${OPTARG}" == -* ]]; then
+        echo "${arg} option needs an argument!" >&2
+        usage
+        exit 1
+    fi
+
     case "$arg" in
         a) ARCH="${OPTARG}" ;;
         v) VERSION="${OPTARG}" ;;
