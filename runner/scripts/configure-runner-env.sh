@@ -27,6 +27,12 @@ NAME=$(hostname)
 LABELS="$NAME"
 
 while getopts "r:t:n:l:h" arg; do
+    if [[ "${OPTARG}" == -* ]]; then
+        echo "${arg} option needs an argument!" >&2
+        usage
+        exit 1
+    fi
+
     case "$arg" in
         r) REPO_URL="${OPTARG}" ;;
         t) TOKEN="${OPTARG}" ;;
