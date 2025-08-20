@@ -1,9 +1,11 @@
 #!/usr/bin/python3
+
 import btfpy
 import evdev
 from evdev import InputDevice, categorize, ecodes
 import time
 import threading
+
 
 def find_keyboard():
     """
@@ -19,7 +21,8 @@ def find_keyboard():
             # Using KEY_ENTER or KEY_A is a good bet.
             keys = capabilities[ecodes.EV_KEY]
             if ecodes.KEY_ENTER in keys and ecodes.KEY_A in keys:
-                print(f"Found primary keyboard: {device.name} at {device.path}")
+                print(
+                    f"Found primary keyboard: {device.name} at {device.path}")
                 return device.path
     return None
 
@@ -61,14 +64,14 @@ current_modifiers = 0
 pressed_non_modifier_keys = set()
 MAX_SIMULTANEOUS_NON_MODIFIER_KEYS = 6
 
-reportmap = [0x05,0x01,0x09,0x06,0xA1,0x01,0x85,0x01,0x05,0x07,0x19,0xE0,0x29,0xE7,0x15,0x00,\
-             0x25,0x01,0x75,0x01,0x95,0x08,0x81,0x02,0x95,0x01,0x75,0x08,0x81,0x01,0x95,0x06,\
-             0x75,0x08,0x15,0x00,0x25,0x65,0x05,0x07,0x19,0x00,0x29,0x65,0x81,0x00,0xC0]
+reportmap = [0x05, 0x01, 0x09, 0x06, 0xA1, 0x01, 0x85, 0x01, 0x05, 0x07, 0x19, 0xE0, 0x29, 0xE7, 0x15, 0x00,
+             0x25, 0x01, 0x75, 0x01, 0x95, 0x08, 0x81, 0x02, 0x95, 0x01, 0x75, 0x08, 0x81, 0x01, 0x95, 0x06,
+             0x75, 0x08, 0x15, 0x00, 0x25, 0x65, 0x05, 0x07, 0x19, 0x00, 0x29, 0x65, 0x81, 0x00, 0xC0]
 name = "HID"
-appear = [0xC1,0x03]
-pnpinfo = [0x02,0x6B,0x1D,0x46,0x02,0x37,0x05]
+appear = [0xC1, 0x03]
+pnpinfo = [0x02, 0x6B, 0x1D, 0x46, 0x02, 0x37, 0x05]
 protocolmode = [0x01]
-hidinfo = [0x01,0x11,0x00,0x02]
+hidinfo = [0x01, 0x11, 0x00, 0x02]
 reportindex = -1
 node = 0
 
@@ -86,7 +89,6 @@ def send_hid_report():
     active_key_list = list(pressed_non_modifier_keys)
 
     if len(active_key_list) > MAX_SIMULTANEOUS_NON_MODIFIER_KEYS:
-        # print(f"Warning: More than {MAX_SIMULTANEOUS_NON_MODIFIER_KEYS} non-modifier keys pressed. Sending ErrorRollOver.")
         for i in range(MAX_SIMULTANEOUS_NON_MODIFIER_KEYS):
             report_data[i + 2] = 0x01
     else:
@@ -96,7 +98,6 @@ def send_hid_report():
             else:
                 report_data[i + 2] = 0
 
-    # print(f"Sending HID report: {report_data}")
     btfpy.Write_ctic(node, reportindex, report_data, 0)
 
 
@@ -124,7 +125,7 @@ def keyboard_listener(keyboard_path):
                     elif event.value == 0:
                         current_modifiers &= ~modifier_bit
                     elif event.value == 2:
-                         current_modifiers |= modifier_bit
+                        current_modifiers |= modifier_bit
                     send_hid_report()
 
                 elif keycode_name in keycode_map:
@@ -138,8 +139,8 @@ def keyboard_listener(keyboard_path):
                     elif event.value == 2:
                         pass
 
-                elif keycode_name != f"UNKNOWN_CODE_{event.code}" and event.value in (0,1,2):
-                     pass
+                elif keycode_name != f"UNKNOWN_CODE_{event.code}" and event.value in (0, 1, 2):
+                    pass
     except KeyboardInterrupt:
         print("\nKeyboard listener stopped by user.")
     except Exception as e:
@@ -151,61 +152,75 @@ def keyboard_listener(keyboard_path):
         send_hid_report()
 
 
-def lecallback(clientnode,op,cticn):
-  if(op == btfpy.LE_CONNECT):
-    print("Connected OK. Key presses sent to client. ESC stops server")
-    while True:
-        time.sleep(10)
+def lecallback(clientnode, op, cticn):
+    if (op == btfpy.LE_CONNECT):
+        print("Connected OK. Key presses sent to client. ESC stops server")
+        while True:
+            time.sleep(10)
 
-  if(op == btfpy.LE_KEYPRESS):
-    if(cticn == 27):
-        print("ESC received via LE_KEYPRESS, stopping server.")
-        return(btfpy.SERVER_EXIT)
-    print(f"LE_KEYPRESS cticn: {cticn}")
-  if(op == btfpy.LE_DISCONNECT):
-    print("Disconnected.")
-    return(btfpy.SERVER_EXIT)
-  return(btfpy.SERVER_CONTINUE)
+    if (op == btfpy.LE_KEYPRESS):
+        if (cticn == 27):
+            print("ESC received via LE_KEYPRESS, stopping server.")
+            return (btfpy.SERVER_EXIT)
+        print(f"LE_KEYPRESS cticn: {cticn}")
+    if (op == btfpy.LE_DISCONNECT):
+        print("Disconnected.")
+        return (btfpy.SERVER_EXIT)
+    return (btfpy.SERVER_CONTINUE)
 
 
-if(btfpy.Init_blue("keyboard.txt") == 0):
-  exit(0)
+if (btfpy.Init_blue("keyboard.txt") == 0):
+    exit(0)
 
-if(btfpy.Localnode() != 1):
-  print("ERROR - Edit keyboard.txt to set ADDRESS = " + btfpy.Device_address(btfpy.Localnode()))
-  exit(0)
+if (btfpy.Localnode() != 1):
+    print("ERROR - Edit keyboard.txt to set ADDRESS = " +
+          btfpy.Device_address(btfpy.Localnode()))
+    exit(0)
 
 node = btfpy.Localnode()
 keyboard_path = find_keyboard()
 
-uuid = [0x2A,0x4D]
-reportindex = btfpy.Find_ctic_index(node,btfpy.UUID_2,uuid)
-if(reportindex < 0):
-  print("Failed to find Report characteristic (2A4D)")
-  exit(0)
+uuid = [0x2A, 0x4D]
+reportindex = btfpy.Find_ctic_index(node, btfpy.UUID_2, uuid)
+if (reportindex < 0):
+    print("Failed to find Report characteristic (2A4D)")
+    exit(0)
 
-uuid_name = [0x2A,0x00]; btfpy.Write_ctic(node,btfpy.Find_ctic_index(node,btfpy.UUID_2,uuid_name),name,0)
-uuid_appear = [0x2A,0x01]; btfpy.Write_ctic(node,btfpy.Find_ctic_index(node,btfpy.UUID_2,uuid_appear),appear,0)
-uuid_proto = [0x2A,0x4E]; btfpy.Write_ctic(node,btfpy.Find_ctic_index(node,btfpy.UUID_2,uuid_proto),protocolmode,0)
-uuid_hidinfo = [0x2A,0x4A]; btfpy.Write_ctic(node,btfpy.Find_ctic_index(node,btfpy.UUID_2,uuid_hidinfo),hidinfo,0)
-uuid_reportmap = [0x2A,0x4B]; btfpy.Write_ctic(node,btfpy.Find_ctic_index(node,btfpy.UUID_2,uuid_reportmap),reportmap,0)
-uuid_pnp = [0x2A,0x50]; btfpy.Write_ctic(node,btfpy.Find_ctic_index(node,btfpy.UUID_2,uuid_pnp),pnpinfo,0)
+uuid_name = [0x2A, 0x00]
+btfpy.Write_ctic(node, btfpy.Find_ctic_index(
+    node, btfpy.UUID_2, uuid_name), name, 0)
+uuid_appear = [0x2A, 0x01]
+btfpy.Write_ctic(node, btfpy.Find_ctic_index(
+    node, btfpy.UUID_2, uuid_appear), appear, 0)
+uuid_proto = [0x2A, 0x4E]
+btfpy.Write_ctic(node, btfpy.Find_ctic_index(
+    node, btfpy.UUID_2, uuid_proto), protocolmode, 0)
+uuid_hidinfo = [0x2A, 0x4A]
+btfpy.Write_ctic(node, btfpy.Find_ctic_index(
+    node, btfpy.UUID_2, uuid_hidinfo), hidinfo, 0)
+uuid_reportmap = [0x2A, 0x4B]
+btfpy.Write_ctic(node, btfpy.Find_ctic_index(
+    node, btfpy.UUID_2, uuid_reportmap), reportmap, 0)
+uuid_pnp = [0x2A, 0x50]
+btfpy.Write_ctic(node, btfpy.Find_ctic_index(
+    node, btfpy.UUID_2, uuid_pnp), pnpinfo, 0)
 
 print("Sending initial all_keys_up HID report.")
 send_hid_report()
 
-randadd = [0xD3,0x56,0xDB,0x15,0x32,0xA0]
+randadd = [0xD3, 0x56, 0xDB, 0x15, 0x32, 0xA0]
 btfpy.Set_le_random_address(randadd)
 
 btfpy.Set_le_wait(20000)
-btfpy.Le_pair(btfpy.Localnode(),btfpy.JUST_WORKS,0)
+btfpy.Le_pair(btfpy.Localnode(), btfpy.JUST_WORKS, 0)
 
 print("Starting keyboard listener thread...")
-keyboard_thread = threading.Thread(target=keyboard_listener, args=(keyboard_path,), daemon=True)
+keyboard_thread = threading.Thread(
+    target=keyboard_listener, args=(keyboard_path,), daemon=True)
 keyboard_thread.start()
 
 print("Starting Bluetooth LE server...")
-btfpy.Le_server(lecallback,0)
+btfpy.Le_server(lecallback, 0)
 
 print("Bluetooth LE server stopped.")
 btfpy.Close_all()
