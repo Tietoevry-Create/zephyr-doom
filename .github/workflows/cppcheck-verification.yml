@@ -63,21 +63,21 @@ jobs:
           --platform=unix32 \
           --check-level=exhaustive \
           --enable=style \
-          -I "${{ github.workspace }}/zephyrdoom/src/" \
-          -I "${{ github.workspace }}/zephyrdoom/src/config/" \
-          -I "${{ github.workspace }}/zephyrdoom/src/doom/" \
-          "${{ github.workspace }}/zephyrdoom/src" \
+          -I ./zephyrdoom/src/ \
+          -I ./zephyrdoom/src/config/ \
+          -I ./zephyrdoom/src/doom/ \
+          ./zephyrdoom/src \
           2>&1 | tee cppcheck-${{ github.run_number }}.log
 
       - name: Analyze cppcheck logs
         run: |
-          "${{ github.workspace }}/.github/scripts/parse-cppcheck-logfile.sh" \
+          ./.github/scripts/parse-logfile.sh -m cppcheck \
           cppcheck-${{ github.run_number }}.log
 
       - name: Upload cppcheck logs
         uses: actions/upload-artifact@v4
         with:
-          name: cppcheck-${{ github.run_number }}
+          name: zephry-doom-cppcheck-${{ github.run_number }}
           path: |
             cppcheck-${{ github.run_number }}.log
             cppcheck-${{ github.run_number }}-summary.log

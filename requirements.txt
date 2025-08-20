@@ -1,0 +1,7 @@
+docopt
+evdev
+flake8
+flask
+isort
+pylint
+setuptools

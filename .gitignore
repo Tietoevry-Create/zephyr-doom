@@ -38,5 +38,6 @@ build/
 output
 
 # SDK/vendor artifacts
+btferret/
 nRF5_SDK/
 ncs/
