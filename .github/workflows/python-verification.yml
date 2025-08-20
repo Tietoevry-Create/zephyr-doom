@@ -1,0 +1,96 @@
+---
+name: Python verification
+run-name: >
+  ${{ github.workflow }} — Triggered by
+  ${{ github.actor }} on ${{ github.ref_name }}
+
+on:
+  pull_request:
+    paths:
+      - '**/*.py'
+  workflow_dispatch:
+    inputs:
+      runner_label:
+        description: Label of the runner to execute the job
+        required: false
+        default: ubuntu-24.04
+        type: string
+
+env:
+  RUNNER_LABEL: ubuntu-24.04
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  process-runner:
+    name: Process runner information to execute the job
+    runs-on: ubuntu-24.04
+    outputs:
+      label: ${{ steps.runner-label.outputs.label }}
+
+    steps:
+      - name: Set runner label
+        id: runner-label
+        run: |
+          echo "label=${INPUT_RUNNER_LABEL:-$RUNNER_LABEL}" >> $GITHUB_OUTPUT
+        env:
+          INPUT_RUNNER_LABEL: ${{ github.event.inputs.runner_label }}
+
+  shellcheck-verification:
+    name: Run Python verification
+    needs: process-runner
+    runs-on: ${{ needs.process-runner.outputs.label }}
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Prepare runner env for Python environment
+        run: |
+          sudo apt-get update && sudo apt-get install -y \
+          python3.12 \
+          python3.12-venv
+
+      - name: Configure Python virutal environment
+        run: |
+          python3 -m venv .venv
+          source .venv/bin/activate
+          pip install --use-pep517 -U pip
+          pip install --use-pep517 -U -r requirements.txt
+
+      - name: Run pylint command
+        run: |
+          source .venv/bin/activate
+          find . -path "*.venv" -prune -o -type f -name "*.py" -print | \
+          xargs pylint --exit-zero \
+          2>&1 | tee pylint-${{ github.run_number }}.log
+
+      - name: Analyze pylint logs
+        run: |
+          ./.github/scripts/parse-logfile.sh -m pylint \
+          pylint-${{ github.run_number }}.log
+
+      - name: Run flake8 command
+        run: |
+          source .venv/bin/activate
+          find . -path "*.venv" -prune -o -type f -name "*.py" -print | \
+          xargs flake8 --exit-zero --show-source --statistics \
+          2>&1 | tee flake8-${{ github.run_number }}.log
+
+      - name: Analyze flake8 logs
+        run: |
+          ./.github/scripts/parse-logfile.sh -m flake8 \
+          flake8-${{ github.run_number }}.log
+
+      - name: Upload shellcheck logs
+        uses: actions/upload-artifact@v4
+        with:
+          name: zephyr-doom-python-${{ github.run_number }}
+          path: |
+            pylint-${{ github.run_number }}.log
+            pylint-${{ github.run_number }}-summary.log
+            flake8-${{ github.run_number }}.log
+            flake8-${{ github.run_number }}-summary.log
