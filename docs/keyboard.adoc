@@ -1,0 +1,67 @@
+:email: <maciej.gebicz@tietoevry.com>
+:description: Description of the keyboard implementation
+:sectlinks:
+:sectnums:
+:toc:
+:toc-title: Content
+:toclevels: 2
+:source-highlighter: highlightjs
+
+= Raspberry Pi Keyboard
+
+
+== Introduction
+
+The code in this folder allows you to make a *Raspberry Pi* act as a Bluetooth
+keyboard that `zephyr-doom` can connect to.
+
+== Hardware Requirements
+
+* Any Raspberry Pi with Bluetooth support and a USB-A port (tested on
+`Raspberry Pi 4 Model B 1GB RAM` and `Raspberry Pi 400` - the model that
+includes a built-in keyboard).
+* Raspberry Pi power supply.
+* Raspberry Pi SD card.
+* Any USB-A keyboard (tested on `Dell KB-216` - not required when using the
+`Raspberry Pi 400` since it includes a built-in keyboard).
+
+== Setup
+
+The goal is to download and build the Python version of the
+https://github.com/petzval/btferret[btferret repository] on the Raspberry Pi
+and then replace the `keyboard.py` file in the repository with the `keyboard.py`
+file in this folder.
+
+The simplest way is to:
+
+. Set up the Raspberry Pi with an internet connection and SSH access. For that
+you can follow the instructions on the official Raspberry Pi
+https://www.raspberrypi.com/documentation/computers/getting-started.html[website].
+
+. Connect to the board using SSH and follow the Python instructions in the
+`btferret` repository:
++
+[source,bash]
+----
+sudo apt-get -y install git
+sudo git clone https://github.com/petzval/btferret.git
+sudo apt-get -y install python3 python3-dev python3-pip python3-setuptools
+sudo pip install --use-pep517 -U pip
+sudo pip install --use-pep517 -U evdev setuptools
+cd btferret && sudo python3 btfpymake.py build
+----
+
+. Replace the `keyboard.py` file with the one in this folder.
+
+== Usage
+
+. Connect the keyboard to the Raspberry Pi and run this command in the
+`btferret` repository:
++
+[source,bash]
+----
+sudo python3 keyboard.py
+----
+
+. Turn on the board running `zephyr-doom`. It should connect to the Raspberry Pi
+and start receiving key presses.
