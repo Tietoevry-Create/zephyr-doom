@@ -1156,6 +1156,10 @@ used in original https://github.com/NordicPlayground/nrf-doom[nrf-doom] project.
 
 * N/A
 
+==== MVP6
+
+* N/A
+
 === Known Limitations
 
 ==== MVP1
@@ -1181,3 +1185,7 @@ eliminate drift. Calibration procedure could help to address this issue.
 ==== MVP5
 
 * ~10s delay when switching from Xbox controller to BLE keyboard control.
+
+==== MVP6
+
+* N/A
