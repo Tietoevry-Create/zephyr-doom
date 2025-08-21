@@ -13,6 +13,9 @@
         "setup-git.sh": "bash ${containerWorkspaceFolder}/.devcontainer/scripts/setup-git.sh",
         "setup-nRF-env.sh": "bash ${containerWorkspaceFolder}/.devcontainer/scripts/setup-nRF-env.sh"
     },
+    "postAttachCommand": {
+        "setup-python-venv.sh": "bash ${containerWorkspaceFolder}/.devcontainer/scripts/setup-python-venv.sh"
+    },
     "containerEnv": {
         "ZEPHYR_BASE": "/home/developer/ncs/v2.6.0/zephyr"
     },
@@ -33,6 +36,12 @@
                 "editorconfig.editorconfig@0.17.4",
                 "github.copilot@1.350.0",
                 "github.vscode-github-actions@0.27.2",
+                "ms-python.autopep8@2025.2.0",
+                "ms-python.flake8@2025.2.0",
+                "ms-python.isort@2025.0.0",
+                "ms-python.pylint@2025.2.0",
+                "ms-python.python@2025.12.0",
+                "ms-python.vscode-pylance@2025.7.1",
                 "ms-vscode.cmake-tools@1.21.36",
                 "ms-vscode.cpptools@1.26.3",
                 "ms-vscode.makefile-tools@0.12.17",
@@ -53,7 +62,8 @@
                 "cmake.ignoreCMakeListsMissing": true,
                 "nrf-connect.applications": [
                     "${containerWorkspaceFolder}/zephyrdoom"
-                ]
+                ],
+                "python.defaultInterpreterPath": "${containerWorkspaceFolder}/.venv/bin/python3"
             }
         }
     }
