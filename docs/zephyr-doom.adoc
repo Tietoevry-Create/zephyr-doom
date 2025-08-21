@@ -86,7 +86,7 @@ performance.
 Nordic UART Service (NUS) for data exchange.
 
 | BLE HID support
-| In progress
+| Done
 | Replace NUS communication with BLE HID standard to allow control via gamepad
 (test with Xbox wireless controller) and keyboard (test with BLE keyboard built
 on RPi 400).
@@ -106,8 +106,8 @@ demand).
 resource requirements by removing NRFX/NCS elements.
 
 | Basic CI
-| In progress
-| Build the code for target platforms in GitHub actions.
+| Done
+| Build the code for target platforms using GitHub actions.
 
 | Static analysis
 | Open
@@ -126,7 +126,7 @@ resource requirements by removing NRFX/NCS elements.
 | Use dedicated area of display to control movement and fire.
 
 | Sound
-| Open
+| In progress
 | N/A
 
 | Multiplayer
@@ -857,14 +857,18 @@ dev kit:
 === MVP5
 
 * *Goals:*
-** Add option to connect BLE gamepad (Xbox wireless controller) and ideally BLE
+** Add option to connect BLE gamepad (Xbox wireless controller) and BLE
 keyboard (built on RPi 400).
-** This step will enable full game control (all the available options).
+** This step will enable full game control (all the available options including cheats).
 
 * *Features:*
 ** Using BLE gamepad.
 ** Using BLE keyboard, which enables full-fledged game control per original
 manual (including cheats).
+** Switching between Xbox and BLE keyboard in real-time (no need to restart the game).
+** LED indication (blinking = not connected, solid = connected):
+*** LED 1 - Xbox controller
+*** LED 2 - BLE keyboard
 
 * *Required Hardware:*
 ** Nordic Semiconductor
@@ -1004,6 +1008,110 @@ dev kit:
 | Show menu;
 |===
 
+=== MVP6
+
+* *Goals:*
+** Add sound.
+
+* *Features:*
+** Sound effects.
+
+* *Required Hardware:*
+** Nordic Semiconductor
+https://www.nordicsemi.com/Products/Low-power-short-range-wireless/nRF5340[nRF5340]
+dev kit;
+** 4.3" FT810
+https://www.hotmcu.com/43-graphical-ips-lcd-touchscreen-800x480-spi-ft810-p-333.html[SPI IPS display];
+** I2S audio decoding https://www.aliexpress.com/item/1005007477490325.html?spm=a2g0o.order_list.order_list_main.172.16071802jqGhmR[module];
+
+* *Pins/buttons mapping:*
+** Nordic Semiconductor
+https://www.nordicsemi.com/Products/Low-power-short-range-wireless/nRF5340[nRF5340]
+dev kit:
++
+[cols="1,1,1" options="header, autowidth"]
+|===
+^| Peripheral
+^| Function
+^| nRF5340 Pin
+
+| Buttons
+| Button 1
+| P0.23
+
+| Buttons
+| Button 2
+| P0.24
+
+| Buttons
+| Button 3
+| P0.8
+
+| Buttons
+| Button 4
+| P0.9
+
+| LEDs
+| LED 1
+| P0.28
+
+| LEDs
+| LED 2
+| P0.29
+
+| LEDs
+| LED 3
+| P0.30
+
+| LEDs
+| LED 4
+| P0.31
+
+| QSPI Memory
+| SCK
+| P0.17
+
+| QSPI Memory
+| CSN
+| P0.18
+
+| QSPI Memory
+| IO0
+| P0.13
+
+| QSPI Memory
+| IO1
+| P0.14
+
+| QSPI Memory
+| IO2
+| P0.15
+
+| QSPI Memory
+| IO3
+| P0.16
+
+| SPI/FT810 Display
+| SCK
+| P0.06
+
+| SPI/FT810 Display
+| MISO
+| P0.05
+
+| SPI/FT810 Display
+| MOSI
+| P0.25
+
+| SPI/FT810 Display
+| CS_N
+| P0.07
+
+| SPI/FT810 Display
+| PD_N
+| P0.26
+|===
+
 * *Setup:*
 ** https://www.xbox.com/en-US/accessories/controllers/xbox-wireless-controller[Xbox controller]:
 . Hold the pairing button on the front of the controller, until the light starts
@@ -1072,4 +1180,4 @@ eliminate drift. Calibration procedure could help to address this issue.
 
 ==== MVP5
 
-* N/A
+* ~10s delay when switching from Xbox controller to BLE keyboard control.
