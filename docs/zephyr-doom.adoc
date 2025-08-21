@@ -1008,6 +1008,14 @@ dev kit:
 | Show menu;
 |===
 
+* *Setup:*
+** https://www.xbox.com/en-US/accessories/controllers/xbox-wireless-controller[Xbox controller]:
+. Hold the pairing button on the front of the controller, until the light starts
+blinking quickly.
+. Restart the board running the `zephyrdoom` project.
+. Wait for *5-10* seconds.
+. Hold the pairing button again, until the light stops blinking and stays on.
+
 === MVP6
 
 * *Goals:*
@@ -1111,14 +1119,6 @@ dev kit:
 | PD_N
 | P0.26
 |===
-
-* *Setup:*
-** https://www.xbox.com/en-US/accessories/controllers/xbox-wireless-controller[Xbox controller]:
-. Hold the pairing button on the front of the controller, until the light starts
-blinking quickly.
-. Restart the board running the `zephyrdoom` project.
-. Wait for *5-10* seconds.
-. Hold the pairing button again, until the light stops blinking and stays on.
 
 == Release Notes
 
