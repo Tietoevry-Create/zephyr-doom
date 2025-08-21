@@ -96,6 +96,10 @@ on RPi 400).
 | Automatically copy game data from SD card to flash during first start (or on
 demand).
 
+| Sound
+| In progress
+| N/A
+
 | Game save and load
 | Open
 | Enable save and load functionality to store/restore gameplay progress.
@@ -124,10 +128,6 @@ resource requirements by removing NRFX/NCS elements.
 | Touchscreen controls
 | Open
 | Use dedicated area of display to control movement and fire.
-
-| Sound
-| In progress
-| N/A
 
 | Multiplayer
 | Open
