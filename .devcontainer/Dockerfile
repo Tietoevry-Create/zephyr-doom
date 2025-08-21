@@ -28,6 +28,14 @@ RUN apt-get update && apt-get -y install \
     make \
     pre-commit
 
+# Install Python packages
+RUN apt-get update && apt-get -y install \
+    python3 \
+    python3-dev \
+    python3-pip \
+    python3-setuptools \
+    python3-venv
+
 # Install Docker packages
 RUN install -m 0755 -d /etc/apt/keyrings
 RUN curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
