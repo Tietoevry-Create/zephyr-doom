@@ -1,19 +1,19 @@
-//
-// Copyright(C) 2005-2014 Simon Howard
-//
-// This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU General Public License
-// as published by the Free Software Foundation; either version 2
-// of the License, or (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//
-//
-// Parses "Frame" sections in dehacked files
-//
+/*
+ * Copyright(C) 2005-2014 Simon Howard
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * DESCRIPTION:
+ * Parses "Frame" sections in dehacked files.
+ */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -28,13 +28,13 @@
 #include "deh_mapping.h"
 
 DEH_BEGIN_MAPPING(state_mapping, state_t)
-  DEH_MAPPING("Sprite number",    sprite)
-  DEH_MAPPING("Sprite subnumber", frame)
-  DEH_MAPPING("Duration",         tics)
-  DEH_MAPPING("Next frame",       nextstate)
-  DEH_MAPPING("Unknown 1",        misc1)
-  DEH_MAPPING("Unknown 2",        misc2)
-  DEH_UNSUPPORTED_MAPPING("Codep frame")
+DEH_MAPPING("Sprite number", sprite)
+DEH_MAPPING("Sprite subnumber", frame)
+DEH_MAPPING("Duration", tics)
+DEH_MAPPING("Next frame", nextstate)
+DEH_MAPPING("Unknown 1", misc1)
+DEH_MAPPING("Unknown 2", misc2)
+DEH_UNSUPPORTED_MAPPING("Codep frame")
 DEH_END_MAPPING
 
 static void *DEH_FrameStart(deh_context_t *context, char *line)
@@ -57,7 +57,8 @@ static void *DEH_FrameStart(deh_context_t *context, char *line)
     if (frame_number >= DEH_VANILLA_NUMSTATES)
     {
         DEH_Warning(context, "Attempt to modify frame %i: this will cause "
-                             "problems in Vanilla dehacked.", frame_number);
+                             "problems in Vanilla dehacked.",
+                    frame_number);
     }
 
     state = &states[frame_number];
@@ -65,14 +66,15 @@ static void *DEH_FrameStart(deh_context_t *context, char *line)
     return state;
 }
 
-// Simulate a frame overflow: Doom has 967 frames in the states[] array, but
-// DOS dehacked internally only allocates memory for 966.  As a result,
-// attempts to set frame 966 (the last frame) will overflow the dehacked
-// array and overwrite the weaponinfo[] array instead.
-//
-// This is noticable in Batman Doom where it is impossible to switch weapons
-// away from the fist once selected.
-
+/*
+ * Simulate a frame overflow. Doom has 967 frames in the states[] array, but
+ * DOS dehacked internally only allocates memory for 966. As a result,
+ * attempts to set frame 966 (the last frame) will overflow the dehacked
+ * array and overwrite the weaponinfo[] array instead.
+ *
+ * This is noticable in Batman Doom where it is impossible to switch weapons
+ * away from the fist once selected.
+ */
 static void DEH_FrameOverflow(deh_context_t *context, char *varname, int value)
 {
     if (!strcasecmp(varname, "Duration"))
@@ -109,12 +111,11 @@ static void DEH_FrameParseLine(deh_context_t *context, char *line, void *tag)
     int ivalue;
 
     if (tag == NULL)
-       return;
+        return;
 
-    state = (state_t *) tag;
+    state = (state_t *)tag;
 
-    // Parse the assignment
-
+    /* Parse the assignment */
     if (!DEH_ParseAssignment(line, &variable_name, &value))
     {
         // Failed to parse
@@ -123,8 +124,7 @@ static void DEH_FrameParseLine(deh_context_t *context, char *line, void *tag)
         return;
     }
 
-    // all values are integers
-
+    /* All values are integers */
     ivalue = atoi(value);
 
     if (state == &states[NUMSTATES - 1])
@@ -133,8 +133,7 @@ static void DEH_FrameParseLine(deh_context_t *context, char *line, void *tag)
     }
     else
     {
-        // set the appropriate field
-
+        /* Set the appropriate field */
         DEH_SetMapping(context, &state_mapping, state, variable_name, ivalue);
     }
 }
@@ -143,18 +142,18 @@ static void DEH_FrameSHA1Sum(sha1_context_t *context)
 {
     int i;
 
-    for (i=0; i<NUMSTATES; ++i)
+    for (i = 0; i < NUMSTATES; ++i)
     {
         DEH_StructSHA1Sum(context, &state_mapping, &states[i]);
     }
 }
 
 deh_section_t deh_section_frame =
-{
-    "Frame",
-    NULL,
-    DEH_FrameStart,
-    DEH_FrameParseLine,
-    NULL,
-    DEH_FrameSHA1Sum,
+    {
+        "Frame",
+        NULL,
+        DEH_FrameStart,
+        DEH_FrameParseLine,
+        NULL,
+        DEH_FrameSHA1Sum,
 };

@@ -1,19 +1,19 @@
-//
-// Copyright(C) 2005-2014 Simon Howard
-//
-// This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU General Public License
-// as published by the Free Software Foundation; either version 2
-// of the License, or (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//
-//
-// Parses "Sound" sections in dehacked files
-//
+/*
+ * Copyright(C) 2005-2014 Simon Howard
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * DESCRIPTION:
+ * Parses "Sound" sections in dehacked files.
+ */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -25,15 +25,15 @@
 #include "sounds.h"
 
 DEH_BEGIN_MAPPING(sound_mapping, sfxinfo_t)
-    DEH_UNSUPPORTED_MAPPING("Offset")
-    DEH_UNSUPPORTED_MAPPING("Zero/One")
-    DEH_MAPPING("Value", priority)
-    DEH_MAPPING("Zero 1", link)
-    DEH_MAPPING("Zero 2", pitch)
-    DEH_MAPPING("Zero 3", volume)
-    DEH_UNSUPPORTED_MAPPING("Zero 4")
-    DEH_MAPPING("Neg. One 1", usefulness)
-    DEH_MAPPING("Neg. One 2", lumpnum)
+DEH_UNSUPPORTED_MAPPING("Offset")
+DEH_UNSUPPORTED_MAPPING("Zero/One")
+DEH_MAPPING("Value", priority)
+DEH_MAPPING("Zero 1", link)
+DEH_MAPPING("Zero 2", pitch)
+DEH_MAPPING("Zero 3", volume)
+DEH_UNSUPPORTED_MAPPING("Zero 4")
+DEH_MAPPING("Neg. One 1", usefulness)
+DEH_MAPPING("Neg. One 2", lumpnum)
 DEH_END_MAPPING
 
 static void *DEH_SoundStart(deh_context_t *context, char *line)
@@ -55,7 +55,8 @@ static void *DEH_SoundStart(deh_context_t *context, char *line)
     if (sound_number >= DEH_VANILLA_NUMSFX)
     {
         DEH_Warning(context, "Attempt to modify SFX %i.  This will cause "
-                             "problems in Vanilla dehacked.", sound_number);
+                             "problems in Vanilla dehacked.",
+                    sound_number);
     }
 
     return &S_sfx[sound_number];
@@ -68,34 +69,31 @@ static void DEH_SoundParseLine(deh_context_t *context, char *line, void *tag)
     int ivalue;
 
     if (tag == NULL)
-       return;
+        return;
 
-    sfx = (sfxinfo_t *) tag;
+    sfx = (sfxinfo_t *)tag;
 
-    // Parse the assignment
-
+    /* Parse the assignment */
     if (!DEH_ParseAssignment(line, &variable_name, &value))
     {
-        // Failed to parse
+        /* Failed to parse */
         DEH_Warning(context, "Failed to parse assignment");
         return;
     }
 
-    // all values are integers
-
+    /* All values are integers */
     ivalue = atoi(value);
 
-    // Set the field value
-
+    /* Set the field value */
     DEH_SetMapping(context, &sound_mapping, sfx, variable_name, ivalue);
 }
 
 deh_section_t deh_section_sound =
-{
-    "Sound",
-    NULL,
-    DEH_SoundStart,
-    DEH_SoundParseLine,
-    NULL,
-    NULL,
+    {
+        "Sound",
+        NULL,
+        DEH_SoundStart,
+        DEH_SoundParseLine,
+        NULL,
+        NULL,
 };
