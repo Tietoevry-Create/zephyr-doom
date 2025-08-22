@@ -3,4 +3,4 @@
 
 int bluetooth_control_init(void);
 
-#endif
+#endif /* BLUETOOTH_CONTROL_H__ */

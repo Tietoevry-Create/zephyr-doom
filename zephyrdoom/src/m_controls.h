@@ -1,18 +1,18 @@
-//
-// Copyright(C) 1993-1996 Id Software, Inc.
-// Copyright(C) 1993-2008 Raven Software
-// Copyright(C) 2005-2014 Simon Howard
-//
-// This program is free software; you can redistribute it and/or
-// modify it under the terms of the GNU General Public License
-// as published by the Free Software Foundation; either version 2
-// of the License, or (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//
+/*
+ * Copyright(C) 1993-1996 Id Software, Inc.
+ * Copyright(C) 1993-2008 Raven Software
+ * Copyright(C) 2005-2014 Simon Howard
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ */
 
 #ifndef __M_CONTROLS_H__
 #define __M_CONTROLS_H__
@@ -41,7 +41,7 @@ extern int key_invleft;
 extern int key_invright;
 extern int key_useartifact;
 
-// villsa [STRIFE] strife keys
+/* villsa [STRIFE] strife keys. */
 extern int key_usehealth;
 extern int key_invquery;
 extern int key_mission;
@@ -94,8 +94,7 @@ extern int key_map_grid;
 extern int key_map_mark;
 extern int key_map_clearmark;
 
-// menu keys:
-
+/* Menu keys. */
 extern int key_menu_activate;
 extern int key_menu_up;
 extern int key_menu_down;
@@ -165,4 +164,4 @@ void M_BindChatControls(unsigned int num_players);
 
 void M_ApplyPlatformDefaults(void);
 
-#endif /* #ifndef __M_CONTROLS_H__ */
+#endif /* __M_CONTROLS_H__ */
