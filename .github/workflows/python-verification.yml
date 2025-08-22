@@ -38,7 +38,7 @@ jobs:
         env:
           INPUT_RUNNER_LABEL: ${{ github.event.inputs.runner_label }}
 
-  shellcheck-verification:
+  python-verification:
     name: Run Python verification
     needs: process-runner
     runs-on: ${{ needs.process-runner.outputs.label }}
@@ -85,7 +85,7 @@ jobs:
           ./.github/scripts/parse-logfile.sh -m flake8 \
           flake8-${{ github.run_number }}.log
 
-      - name: Upload shellcheck logs
+      - name: Upload Python linter logs
         uses: actions/upload-artifact@v4
         with:
           name: zephyr-doom-python-${{ github.run_number }}
