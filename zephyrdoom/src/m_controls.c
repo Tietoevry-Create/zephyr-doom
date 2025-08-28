@@ -32,18 +32,18 @@ const int key_right = KEY_RIGHTARROW;
 const int key_left = KEY_LEFTARROW;
 
 const int key_up = KEY_UPARROW;
-const int key_down = KEY_DOWNARROW; 
+const int key_down = KEY_DOWNARROW;
 const int key_strafeleft = ',';
 const int key_straferight = '.';
 const int key_fire = 'h';
 const int key_use = 'j';
 const int key_strafe = KEY_RALT;
-const int key_speed = 'k'; 
+const int key_speed = 'k';
 
-// 
+//
 // Heretic keyboard controls
 //
- 
+
 const int key_flyup = KEY_PGUP;
 const int key_flydown = KEY_INS;
 const int key_flycenter = KEY_HOME;
@@ -201,19 +201,19 @@ const int joybnextweapon = 4;
 const int joybmenu = -1;
 const int joybautomap = 6;
 
-// Control whether if a mouse button is double clicked, it acts like 
+// Control whether if a mouse button is double clicked, it acts like
 // "use" has been pressed
 
 const int dclick_use = 1;
- 
-// 
+
+//
 // Bind all of the common controls used by Doom and all other games.
 //
 
 void M_BindBaseControls(void)
 {
     printf("NRFD-TODO: M_BindStrifeControls\n");
-    /* 
+    /*
     M_BindIntVariable("key_right",          &key_right);
     M_BindIntVariable("key_left",           &key_left);
     M_BindIntVariable("key_up",             &key_up);
@@ -255,7 +255,7 @@ void M_BindBaseControls(void)
 void M_BindHereticControls(void)
 {
     printf("NRFD-TODO: M_BindStrifeControls\n");
-    /* 
+    /*
     M_BindIntVariable("key_flyup",          &key_flyup);
     M_BindIntVariable("key_flydown",        &key_flydown);
     M_BindIntVariable("key_flycenter",      &key_flycenter);
@@ -273,7 +273,7 @@ void M_BindHereticControls(void)
 void M_BindHexenControls(void)
 {
     printf("NRFD-TODO: M_BindStrifeControls\n");
-    /* 
+    /*
 
     M_BindIntVariable("key_jump",           &key_jump);
     M_BindIntVariable("mouseb_jump",        &mousebjump);
@@ -293,7 +293,7 @@ void M_BindHexenControls(void)
 void M_BindStrifeControls(void)
 {
     printf("NRFD-TODO: M_BindStrifeControls\n");
-    /* 
+    /*
     // These are shared with all games, but have different defaults:
     key_message_refresh = '/';
 
@@ -408,7 +408,7 @@ void M_BindMenuControls(void)
 void M_BindChatControls(unsigned int num_players)
 {
     printf("NRFD-TODO: M_BindChatControls\n");
-    /* 
+    /*
     char name[32];  // haleyjd: 20 not large enough - Thank you, come again!
     unsigned int i; // haleyjd: signedness conflict
 
@@ -431,4 +431,3 @@ void M_ApplyPlatformDefaults(void)
 {
     // no-op. Add your platform-specific patches here.
 }
-

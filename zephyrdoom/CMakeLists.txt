@@ -7,8 +7,6 @@ target_include_directories(app PRIVATE src/config)
 
 target_sources(app PRIVATE
                 src/main.c
-                src/retarget.c
-                src/n_uart.c
                 src/n_qspi.c
                 src/n_fs.c
                 src/n_mem.c
@@ -49,6 +47,7 @@ target_sources(app PRIVATE
                 src/w_main.c
                 src/w_wad.c
                 src/z_native.c
+                src/bluetooth_control.c
                 src/doom/am_map.c
                 src/doom/doomstat.c
                 src/doom/d_main.c
@@ -96,8 +95,6 @@ target_sources(app PRIVATE
                 src/doom/statdump.c
                 src/doom/sounds.c
                 src/doom/wi_stuff.c
-                src/ili_screen_controller.c
-                src/ili_screen_controller.h
                 )
 
 

@@ -14,7 +14,7 @@
 // GNU General Public License for more details.
 //
 // DESCRIPTION:
-//	System specific interface stuff.
+//  System specific interface stuff.
 //
 
 
@@ -31,8 +31,8 @@
 
 typedef struct   __attribute__((packed))
 {
-    signed char	forwardmove;	// *2048 for move
-    signed char	sidemove;	// *2048 for move
+    signed char forwardmove;    // *2048 for move
+    signed char sidemove;   // *2048 for move
     short angleturn;            // <<16 for angle delta
     byte chatchar;
     byte buttons;
@@ -45,7 +45,7 @@ typedef struct   __attribute__((packed))
     /* NRFD-EXLUDE
     byte buttons2;
     int inventory;
-   
+
     // Heretic/Hexen specific:
 
     byte lookfly;               // look/fly up/down/centering

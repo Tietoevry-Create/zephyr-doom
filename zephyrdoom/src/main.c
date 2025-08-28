@@ -15,12 +15,11 @@
 #include <zephyr/fs/fs.h>
 #include <zephyr/kernel.h>
 #include <zephyr/logging/log.h>
-#include <zephyr/sd/sd.h>
 #include <zephyr/storage/disk_access.h>
 
-#include "deh_str.h"
-
 LOG_MODULE_REGISTER(doom_main, CONFIG_DOOM_MAIN_LOG_LEVEL);
+
+#include "bluetooth_control.h"
 
 /* 1000 msec = 1 sec */
 #define SLEEP_TIME_MS 1000
@@ -50,6 +49,12 @@ int no_sdcard = 1;
 #define PATH_MAX_LEN 260
 #define K_SEM_OPER_TIMEOUT_MS 500
 K_SEM_DEFINE(m_sem_sd_oper_ongoing, 1, 1);
+
+void clock_initialization() {
+    nrfx_clock_hfclk_start();
+    nrf_clock_hfclk_div_set(NRF_CLOCK_S, NRF_CLOCK_HFCLK_DIV_1);
+    nrfx_clock_divider_set(NRF_CLOCK_DOMAIN_HFCLK192M, NRF_CLOCK_HFCLK_DIV_1);
+}
 
 static const char* sd_root_path = "/SD:";
 static bool sd_init_success;
@@ -139,7 +144,6 @@ int sd_card_list_files(char const* const path, char* buf, size_t* buf_size) {
         if (strlen(path) > CONFIG_FS_FATFS_MAX_LFN) {
             LOG_ERR("Path is too long");
             k_sem_give(&m_sem_sd_oper_ongoing);
-            // return -FR_INVALID_NAME;
             return -1;
         }
 
@@ -285,19 +289,10 @@ static const char *disk_mount_pt = DISK_MOUNT_PT;
 
 int main(void) {
     LOG_INF("BOARD STARTING %s", CONFIG_BOARD);
-    // setup_lcd_pins_old();
-    // setup_lcd_pins_new();
 
     cpu_load_init();
 
     clock_initialization();
-
-    // N_uart_init();
-
-    printf("\n\n");
-    printf("----------------------------------\n");
-    printf("UART Initialized\n");
-    printf("---------------------------------\n");
 
     uint32_t hfclkctrl = NRF_CLOCK_S->HFCLKCTRL;
     printf("HFCLK_S: %d\n", hfclkctrl);
@@ -337,7 +332,11 @@ int main(void) {
 
     M_ArgvInit();
 
-    bluetooth_init();
+    int err = bluetooth_control_init();
+    if (err) {
+        LOG_ERR("Bluetooth control initialization failed.");
+        return 0;
+    }
 
     D_DoomMain();
 

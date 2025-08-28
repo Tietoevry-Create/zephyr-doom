@@ -1,0 +1,490 @@
+:email: <maciej.gebicz@tietoevry.com>
+:description: Setup of self-hosted GitHub Actions runner
+:sectlinks:
+:sectnums:
+:toc:
+:toc-title: Content
+:toclevels: 3
+:source-highlighter: highlightjs
+
+= Self-hosted GitHub Actions runner
+
+== Introduction
+
+GitHub Actions enables powerful automation for building, testing and releasing
+code directly from your repositories. While GitHub hosted runners offer a quick
+start, they come with limitations in terms of customization, runtime environment
+control and usage quotas.
+
+Self-hosted runners offer an alternative for one who wants more flexibility,
+access to local resources or better integration with custom hardware and
+software environments. By hosting own runner, one gain full control over system
+configuration, installed tools and network accessibility.
+
+This documentation guides through preparing a self-hosted GitHub Actions runner
+including installation, configuration and integration with GitHub repositories.
+
+While the setup process is largely platform agnostic, this guide uses a compact
+ARM based setup as a practical example of a cost effective, energy efficient
+and computationally capable runner.
+
+== Hardware overview
+
+For the purposes of this guide, the self-hosted runner will be deployed on a
+*Raspberry Pi 5*. This device is compact, affordable and powerful enough for
+many development automation tasks.
+
+The following hardware specification is used:
+
+[cols="1,1" options="header, autowidth"]
+|===
+^| Component
+^| Specification
+
+| Model
+| Raspberry Pi 5
+
+| RAM
+| 8 GB (LPDDR4X)
+
+| CPU
+| Quad-core ARM Cortex-A76 (2.4 GHz)
+
+| Storage
+| Samsung PRO Ultimate microSDXC (256 GB)
+
+| SD card performance
+| Read - Up to 200 MB/s +
+  Write - Up to 130 MB/s
+
+| Cooling
+| Passive heatsinks +
+  1 active cooling fan (30 x 30 mm)
+
+| Network
+| Gigabit Ethernet +
+  Wi-Fi 5 (802.11ac)
+
+| OS
+| Raspberry Pi OS Desktop (64 bit)
+
+| Power supply
+| USB-C 27 W (PD and QC supported)
+|===
+
+This hardware offers a balance of performance and efficiency, suitable for
+lightweight and moderate GitHub Actions workflows such as testing, building,
+scripting or integrating tasks.
+
+== RPi OS installation
+
+As mentioned in the previous chapter, the operating system chosen for this setup
+is *Raspberry Pi OS* with desktop features, based on the *aarch64* (64-bit ARM)
+architecture. This OS is the most suitable and officially supported option for
+the *Raspberry Pi 5* hardware.
+
+The system is installed onto the microSDXC card using the *Raspberry Pi Imager*
+tool. For more information, refer to the
+https://www.raspberrypi.com/software/[official download page].
+
+For step by step instructions and explanations of the installation process,
+refer to the
+https://www.raspberrypi.com/documentation/computers/getting-started.html#installing-the-operating-system[official getting started guide].
+
+== Installation of direct runner
+
+=== Prerequisites
+
+. Install required packages (to avoid blocking the installation process by
+built in `installDependencies.sh` script):
++
+[source,bash]
+----
+sudo apt install -y \
+    libkrb5-3 \
+    liblttng-ust1 \
+    zlib1g \
+    $(apt-cache search '^libicu[0-9][0-9]$' | \
+      awk '{print $1}' | \
+      sort -r | \
+      head -n 1) \
+    $(apt-cache search '^libssl[0-9]$' | \
+      awk '{print $1}' | \
+      sort -r | \
+      head -n 1)
+----
+
+. Create a `runner` user to isolate files and the processes it will start:
++
+[source,bash]
+----
+sudo useradd runner -m -s /bin/bash -c "User to manage Github Actions runner(s)"
+----
+.. If the `runner` user should be allowed to install packages required by a
+workflow, you can grant it passwordless `sudo` access. If `sudo` access is
+not granted, one will need to manually install the required packages or
+configure the environment to meet the requirements of the workflow:
++
+[source,bash]
+----
+sudo bash -c "echo 'runner ALL=(root) NOPASSWD:ALL' > '/etc/sudoers.d/runner'"
+sudo chmod 440 "/etc/sudoers.d/runner"
+----
++
+IMPORTANT: *Consider the security risks!* A compromised workflow could gain full
+control over the system. +
+Granting `sudo` access without a password allows the `runner` user to
+execute any command as `root` without restrictions. Such action is persistent,
+system wide change and should only be applied if you fully trust the workflow
+and the repository it executes from. +
+
+. Log in as `runner` user:
++
+[source,bash]
+----
+sudo su - runner
+----
+.. Optionally set up *SSH* authentication to simplify the process and allow
+direct login from the host machine to the target machine:
++
+[source,bash]
+----
+install -d -m 700 "$HOME/.ssh"
+touch "$HOME/.ssh/authorized_keys"
+chmod 600 "$HOME/.ssh/authorized_keys"
+
+# Write public key of the host machine to the authorized_keys file
+vim "$HOME/.ssh/authorized_keys"
+----
+
+. Clone the repository and navigate to the `scripts` directory:
++
+[source,bash]
+----
+git clone git@github.com:Tietoevry-Create/zephyr-doom.git
+cd zephyr-doom/runner/scripts
+----
+
+. Collect the necessary runner information for deployment:
+
+* Image type;
+* Architecture;
+* Tooling version;
+* (_Optionally_) Checksum hash of the archive to download;
+* Repository URL;
+* Time-limited authentication token;
+
+NOTE: You can obtain this information in the repository by navigating to
+*Settings* -> *Actions* -> *Runners* -> *New self-hosted runner*
+and selecting the appropriate configuration.
+
+=== Tooling download
+
+. Run the `download-runner-tooling.sh` script with the architecture, tooling
+version and optionally hash arguments:
++
+[source,bash]
+----
+./download-runner-tooling.sh -a arm64 -v 2.327.1 \
+-s 16102096988246f250a745c6a813a5a0b8901e2f554f9440c97e8573fd4da111
+----
+
+NOTE: If unsure, view the help information by running
+`./download-runner-tooling.sh -h` command.
+
+=== Instance configuration
+
+. Execute the `configure-runner-env.sh` script with the repository URL and
+authentication token:
++
+[source,bash]
+----
+ ./configure-runner-env.sh -r https://github.com/Tietoevry-Create/zephyr-doom \
+-t time_limited_auth_token_here
+----
++
+IMPORTANT: Note the leading space. It prevents the command from being stored in
+history, avoiding exposure of the authentication token.
++
+NOTE: If unsure, view the help information by running
+`./configure-runner-env.sh -h` command.
+
+.. Additionally, the runner can be customized with a specific name and label to
+make it easier to identify or target in workflows:
+* Use the `--name` option to specify a custom runner name. Defaults to the
+system hostname.
+* Use the `--labels` option to define additional custom labels. By default, the
+hostname is also used as a label.
+** To specify multiple labels at once, separate them with commas e.g.
+`custom-label1,custom-label2,custom-label3`.
+
+=== Enabling the instance
+
+. Start the runner manually using the `start-runner.sh` script:
++
+[source,bash]
+----
+./start-runner.sh
+----
+
+. Alternatively, configure the runner as a `systemd` service to start it
+automatically on boot:
+.. Enable *lingering* for the configured `runner` user:
++
+[source,bash]
+----
+sudo loginctl enable-linger runner
+----
+.. Configure the `systemd` service and start the runner with:
++
+[source,bash]
+----
+./start-runner-service.sh
+----
+... To verify the service status as `runner` user, use:
++
+[source,bash]
+----
+systemctl --user status gha-runner.service
+----
+
+== Installation of container runner
+
+=== Prerequisites
+
+. Create a `runner` user to isolate files and the processes it will start:
++
+[source,bash]
+----
+sudo useradd runner -m -s /bin/bash -c "User to manage Github Actions runner(s)"
+----
+
+. Install *Podman* environment:
++
+[source,bash]
+----
+sudo apt install -y podman
+----
+
+. Configure *Podman* environment to be able to run in rootless mode. For more
+information, please check the
+<<rootless_podman_env,Configure rootless Podman environment>> chapter.
+
+. Log in as `runner` user:
++
+[source,bash]
+----
+sudo su - runner
+----
+.. Optionally set up *SSH* authentication to simplify the process and allow
+direct login from the host machine to the target machine:
++
+[source,bash]
+----
+install -d -m 700 "$HOME/.ssh"
+touch "$HOME/.ssh/authorized_keys"
+chmod 600 "$HOME/.ssh/authorized_keys"
+
+# Write public key of the host machine to the authorized_keys file
+vim "$HOME/.ssh/authorized_keys"
+----
+
+. Clone the repository and navigate to the `scripts` directory:
++
+[source,bash]
+----
+git clone git@github.com:Tietoevry-Create/zephyr-doom.git
+cd zephyr-doom/runner/scripts
+----
+
+. Collect the necessary runner information for deployment:
+
+* Image type;
+* Architecture;
+* Tooling version;
+* Checksum hash of the archive to download;
+* Repository URL;
+* Time-limited authentication token;
+
+NOTE: You can obtain this information in the repository by navigating to
+*Settings* -> *Actions* -> *Runners* -> *New self-hosted runner*
+and selecting the appropriate configuration.
+
+==== Configure rootless Podman environment [[rootless_podman_env]]
+
+Rootless Podman requires the user running containers to have a range of UIDs
+configured. To achieve such configuration for the given user, execute the
+following steps:
+
+. Add according entry to `/etc/subuid` file.
+. Add according entry to `/etc/subgid` file.
+.. The format of the line to be added for above files is
+`username:start_uid:total_uids`.
+... `username` is the actual user that can be listed in `/etc/passwd` file.
+... `start_uid` is the initial UID allocated for the user and should have higher
+value than other users.
+... `total_uids` is the range of UIDs allocated for the user.
++
+[source,bash]
+----
+cat /etc/subuid
+gebicmac:100000:65536
+runner:165536:65536
+
+cat /etc/subgid
+gebicmac:100000:65536
+runner:165536:65536
+----
++
+IMPORTANT: Ensure both `/etc/subuid` and `/etc/subgid` contain identical entries
+for the same user and they are not overlapping with other entries!
+
+. Run the following command as *the user* whose namespace was just configured.
+This is not a global command, it only applies to the currently logged in user
+environment:
++
+[source,bash]
+----
+podman system migrate
+----
++
+The command should be executed every time the user namespace configuration
+is changed (`/etc/subuid` and `/etc/subgid` have been modified for the given
+user). In such case we should notify Podman to recreate user namespace
+ranges.
++
+IMPORTANT: In case files have been modified significantly, command should be
+executed for each mentioned user in the files individually.
++
+For more information about complete process behind this command, please check
+the following link ->
+https://docs.podman.io/en/latest/markdown/podman-system-migrate.1.html[podman system migrate command]
+
+=== Build runner container image
+
+. Build the container runner image using the `build-runner-image.sh` script with
+appropriate arguments:
++
+[source,bash]
+----
+ ./build-runner-image.sh -a arm64 -v 2.327.1 \
+-s 16102096988246f250a745c6a813a5a0b8901e2f554f9440c97e8573fd4da111 \
+-r https://github.com/Tietoevry-Create/zephyr-doom \
+-t time_limited_auth_token_here
+----
++
+IMPORTANT: Note the leading space. It prevents the command from being stored in
+history, avoiding exposure of the authentication token.
++
+NOTE: If unsure, view the help information by running
+`./build-runner-image.sh -h` command.
+
+.. Additionally, the runner can be customized with a specific name and label to
+make it easier to identify or target in workflows:
+* Use the `--name` option to specify a custom runner name. Defaults to the
+hostname of container host with prefix.
+* Use the `--labels` option to define additional custom labels. By default, the
+hostname of container host with prefix is also used as a label.
+** To specify multiple labels at once, separate them with commas e.g.
+`custom-label1,custom-label2,custom-label3`.
+
+=== Start runner container instance
+
+. Start the runner container manually using the `start-container-runner.sh`
+script:
++
+[source,bash]
+----
+./start-container-runner.sh
+----
+
+. Alternatively, configure the container runner as a `systemd` service to start
+it automatically on boot:
+.. Enable *lingering* for the configured `runner` user:
++
+[source,bash]
+----
+sudo loginctl enable-linger runner
+----
+.. Configure the `systemd` service and start the runner with:
++
+[source,bash]
+----
+./start-container-runner-service.sh
+----
+... To verify the service status as `runner` user, use:
++
+[source,bash]
+----
+systemctl --user status container-gha-runner.service
+----
+
+== Runner usage
+
+. To use a *self-hosted* runner in workflows, add the following to the YAML
+workflow file for each job:
++
+[source,yaml]
+----
+runs-on: self-hosted
+----
++
+NOTE: The `self-hosted` label is automatically assigned to the runner. You can
+define custom labels during runner setup to group and target specific runners in
+workflows.
+
+IMPORTANT: If a runner uses an outdated operating system, software packages or
+an incompatible system architecture (e.g., aarch64 instead of x86_64) some
+workflows may fail or produce unexpected results compared to other instances.
+Verify that the environment of the runner meets the workflow requirements for
+both software and architecture.
+
+== Runner removal
+
+=== Direct runner
+
+. To remove a runner from the repository, first obtain the authentication
+token. Go to *Settings* -> *Actions* -> *Runners*, find the runner instance you
+want to remove, click the *...* menu and select *Remove runner*.
+
+. Execute the script on the host where the runner instance is present:
++
+[source,bash]
+----
+ ./remove-runner.sh -t time_limited_auth_token_here
+----
++
+IMPORTANT: Note the leading space. It prevents the command from being stored in
+history, avoiding exposure of the authentication token.
++
+NOTE: The script will also remove files related to the runner that are present
+on the host.
+
+=== Container runner
+
+. Due to the character of this configuration, it is easier to remove the runner
+using the force removal option. Go to *Settings* -> *Actions* -> *Runners*, find
+the runner instance you want to remove, click the *...* menu, select
+*Remove runner* and then choose *Force remove this runner*.
+
+. Remove the container runner files on the host, for example by running:
++
+[source,bash]
+----
+podman system prune --all --force --volumes
+----
++
+IMPORTANT: This command will remove all unused containers, images, networks, and
+volumes. It may take some time depending on the amount of data being cleaned.
+Refer to the official Podman documentation for details ->
+https://docs.podman.io/en/stable/markdown/podman-system-prune.1.html[podman system prune command].
+
+== Links
+
+For in depth information, about *GitHub Actions runners*, please refer to
+official documentation pages:
+
+* https://docs.github.com/en/actions/concepts/runners/about-self-hosted-runners[About self-hosted documentation];
+* https://docs.github.com/en/actions/how-tos/hosting-your-own-runners/managing-self-hosted-runners/adding-self-hosted-runners#adding-a-self-hosted-runner-to-a-repository[Adding a self-hosted runner to a repository];
+* https://docs.github.com/en/organizations/managing-organization-settings/disabling-or-limiting-github-actions-for-your-organization#limiting-the-use-of-self-hosted-runners[Limiting the use of self-hosted runners];
+* https://docs.github.com/en/actions/how-tos/security-for-github-actions/security-guides/security-hardening-for-github-actions#hardening-for-self-hosted-runners[Hardening for self-hosted runners];

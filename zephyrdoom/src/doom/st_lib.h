@@ -39,11 +39,11 @@ typedef struct __attribute__((packed))
     short     y;
 
     // max # of digits in number
-    short width;    
+    short width;
 
     // last number value
     short     oldnum;
-    
+
     // pointer to current value
     short*    num;
 
@@ -56,7 +56,7 @@ typedef struct __attribute__((packed))
 
     // user data
     int data;
-    
+
 } st_number_t;
 
 
@@ -70,7 +70,7 @@ typedef struct
 
     // percent sign graphic
     patch_t*        p;
-    
+
 } st_percent_t;
 
 
@@ -79,7 +79,7 @@ typedef struct
 typedef struct __attribute__((packed))
 {
      // center-justified location of icons
-    
+
     short           x;
     short           y;
 
@@ -95,10 +95,10 @@ typedef struct __attribute__((packed))
 
     // list of icons
     patch_t**       p;
-    
+
     // user data
     int         data;
-    
+
 } st_multicon_t;
 
 
@@ -120,12 +120,12 @@ typedef struct __attribute__((packed))
 
     // pointer to boolean
     //  stating whether to update icon
-    boolean*        on;  
+    boolean*        on;
 
 
     patch_t*        p;  // icon
     int         data;   // user data
-    
+
 } st_binicon_t;
 
 

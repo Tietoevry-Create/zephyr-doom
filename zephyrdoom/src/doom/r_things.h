@@ -20,7 +20,7 @@
 #ifndef __R_THINGS__
 #define __R_THINGS__
 
-// NRFD-TODO: 
+// NRFD-TODO:
 #define MAXVISSPRITES   64
 // #define MAXVISSPRITES   128
 

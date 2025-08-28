@@ -30,4 +30,3 @@ void DEH_Warning(deh_context_t *context, char *msg, ...);
 boolean DEH_HadError(deh_context_t *context);
 
 #endif /* #ifndef DEH_IO_H */
-

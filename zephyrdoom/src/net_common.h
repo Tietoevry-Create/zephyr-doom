@@ -66,7 +66,7 @@ typedef enum
 
 typedef struct net_reliable_packet_s net_reliable_packet_t;
 
-typedef struct 
+typedef struct
 {
     net_connstate_t state;
     net_disconnect_reason_t disconnect_reason;
@@ -99,4 +99,3 @@ boolean NET_ValidGameSettings(GameMode_t mode, GameMission_t mission,
                               net_gamesettings_t *settings);
 
 #endif /* #ifndef NET_COMMON_H */
-

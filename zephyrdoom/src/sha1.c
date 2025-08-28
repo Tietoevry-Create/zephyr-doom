@@ -1,5 +1,5 @@
 /* sha1.c - SHA1 hash function
- *	Copyright (C) 1998, 1999, 2000, 2001 Free Software Foundation, Inc.
+ *  Copyright (C) 1998, 1999, 2000, 2001 Free Software Foundation, Inc.
  *
  * Please see below for more legal information!
  *
@@ -95,15 +95,15 @@ static void Transform(sha1_context_t *hd, byte *data)
 #define rol(x,n) ( ((x) << (n)) | ((x) >> (32-(n))) )
 
 #define M(i) ( tm =   x[i&0x0f] ^ x[(i-14)&0x0f] \
-		    ^ x[(i-8)&0x0f] ^ x[(i-3)&0x0f] \
-	       , (x[i&0x0f] = rol(tm,1)) )
+            ^ x[(i-8)&0x0f] ^ x[(i-3)&0x0f] \
+           , (x[i&0x0f] = rol(tm,1)) )
 
 #define R(a,b,c,d,e,f,k,m)  do { e += rol( a, 5 )     \
-				      + f( b, c, d )  \
-				      + k	      \
-				      + m;	      \
-				 b = rol( b, 30 );    \
-			       } while(0)
+                      + f( b, c, d )  \
+                      + k         \
+                      + m;        \
+                 b = rol( b, 30 );    \
+                   } while(0)
     R( a, b, c, d, e, F1, K1, x[ 0] );
     R( e, a, b, c, d, F1, K1, x[ 1] );
     R( d, e, a, b, c, F1, K1, x[ 2] );
@@ -202,31 +202,31 @@ void SHA1_Update(sha1_context_t *hd, byte *inbuf, size_t inlen)
     if (hd->count == 64)
     {
         /* flush the buffer */
-	Transform(hd, hd->buf);
-	hd->count = 0;
-	hd->nblocks++;
+    Transform(hd, hd->buf);
+    hd->count = 0;
+    hd->nblocks++;
     }
     if (!inbuf)
-	return;
+    return;
     if (hd->count)
     {
-	for (; inlen && hd->count < 64; inlen--)
-	    hd->buf[hd->count++] = *inbuf++;
-	SHA1_Update(hd, NULL, 0);
-	if (!inlen)
-	    return;
+    for (; inlen && hd->count < 64; inlen--)
+        hd->buf[hd->count++] = *inbuf++;
+    SHA1_Update(hd, NULL, 0);
+    if (!inlen)
+        return;
     }
 
     while (inlen >= 64)
     {
-	Transform(hd, inbuf);
-	hd->count = 0;
-	hd->nblocks++;
-	inlen -= 64;
-	inbuf += 64;
+    Transform(hd, inbuf);
+    hd->count = 0;
+    hd->nblocks++;
+    inlen -= 64;
+    inbuf += 64;
     }
     for (; inlen && hd->count < 64; inlen--)
-	hd->buf[hd->count++] = *inbuf++;
+    hd->buf[hd->count++] = *inbuf++;
 }
 
 
@@ -251,7 +251,7 @@ void SHA1_Final(sha1_digest_t digest, sha1_context_t *hd)
     /* add the count */
     t = lsb;
     if ((lsb += hd->count) < t)
-	msb++;
+    msb++;
     /* multiply by 8 to make a bit count */
     t = lsb;
     lsb <<= 3;
@@ -261,36 +261,36 @@ void SHA1_Final(sha1_digest_t digest, sha1_context_t *hd)
     if (hd->count < 56)
     {
         /* enough room */
-	hd->buf[hd->count++] = 0x80; /* pad */
-	while (hd->count < 56)
-	    hd->buf[hd->count++] = 0;  /* pad */
+    hd->buf[hd->count++] = 0x80; /* pad */
+    while (hd->count < 56)
+        hd->buf[hd->count++] = 0;  /* pad */
     }
     else
     {
         /* need one extra block */
-	hd->buf[hd->count++] = 0x80; /* pad character */
-	while (hd->count < 64)
-	    hd->buf[hd->count++] = 0;
-	SHA1_Update(hd, NULL, 0);  /* flush */;
-	memset(hd->buf, 0, 56 ); /* fill next block with zeroes */
+    hd->buf[hd->count++] = 0x80; /* pad character */
+    while (hd->count < 64)
+        hd->buf[hd->count++] = 0;
+    SHA1_Update(hd, NULL, 0);  /* flush */;
+    memset(hd->buf, 0, 56 ); /* fill next block with zeroes */
     }
     /* append the 64 bit count */
     hd->buf[56] = msb >> 24;
     hd->buf[57] = msb >> 16;
     hd->buf[58] = msb >>  8;
-    hd->buf[59] = msb	   ;
+    hd->buf[59] = msb      ;
     hd->buf[60] = lsb >> 24;
     hd->buf[61] = lsb >> 16;
     hd->buf[62] = lsb >>  8;
-    hd->buf[63] = lsb	   ;
+    hd->buf[63] = lsb      ;
     Transform(hd, hd->buf);
 
     p = hd->buf;
 #ifdef SYS_BIG_ENDIAN
 #define X(a) do { *(uint32_t*)p = hd->h##a ; p += 4; } while(0)
 #else /* little endian */
-#define X(a) do { *p++ = hd->h##a >> 24; *p++ = hd->h##a >> 16;	 \
-		      *p++ = hd->h##a >> 8; *p++ = hd->h##a; } while(0)
+#define X(a) do { *p++ = hd->h##a >> 24; *p++ = hd->h##a >> 16;  \
+              *p++ = hd->h##a >> 8; *p++ = hd->h##a; } while(0)
 #endif
     X(0);
     X(1);
@@ -318,4 +318,3 @@ void SHA1_UpdateString(sha1_context_t *context, char *str)
 {
     SHA1_Update(context, (byte *) str, strlen(str) + 1);
 }
-
