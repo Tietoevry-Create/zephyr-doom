@@ -227,27 +227,7 @@ wad_file_t *W_AddFile(char *filename) {
             uint8_t *block_data = N_malloc(N_QSPI_BLOCK_SIZE);
             int block_loc = 0;
             boolean data_mismatch = do_wad_transfer;
-
-            /*
-            for (i = 0; i<num_blocks; i++) {
-                printf("Verifying block %d of %d\n", i, num_blocks);
-                int block_next = block_loc + N_QSPI_BLOCK_SIZE;
-                int block_size = block_next > file_size ?
-            (file_size%N_QSPI_BLOCK_SIZE) : N_QSPI_BLOCK_SIZE;
-                printf("N_fs_read\n");
-                N_fs_read(wad_file, block_loc, block_data, block_size);
-                printf("Comparing...\n");
-                for (int j = 0; j<block_size; j++) {
-                    if (block_data[j] != qspi_data[block_loc+j]) {
-                        data_mismatch = true;
-                        printf("Found mismatch in byte %d\n", block_loc+j);
-                        break;
-                    }
-                }
-                if (data_mismatch) break;
-                block_loc = block_next;
-            }
-            */
+            boolean led_flash_started = false;
 
             if (data_mismatch) {
                 printf("Uploading WAD data to QSPI flash memory..");
@@ -366,7 +346,13 @@ wad_file_t *W_AddFile(char *filename) {
                 }
             }
             N_free(block_data);
+            fs_close(&fs_file);
         }
+
+        // Read header from QSPI flash
+        wadinfo_t header_buffer;
+        flash_read(flash_dev, 0, &header_buffer, sizeof(wadinfo_t));
+        wadinfo_t *header_ptr = &header_buffer;
 
         uint8_t *dat_buffer = k_malloc(300);
         if (dat_buffer != NULL) {
@@ -424,307 +410,263 @@ wad_file_t *W_AddFile(char *filename) {
         printf("Info table: %d\n", header_ptr->infotableofs);
 
         if (numlumps != 0) {
-            if (numlumps != 0) {
-                I_Error("NRFD-TODO: Multiple WADs not supported yet\n");
-            }
+            I_Error("NRFD-TODO: Multiple WADs not supported yet\n");
+        }
 
-            if ((numlumps + header_ptr->numlumps) > MAX_NUMLUMPS) {
-                I_Error("W_AddFile: MAX_NUMLUMPS reached\n");
-            }
+        if ((numlumps + header_ptr->numlumps) > MAX_NUMLUMPS) {
+            I_Error("W_AddFile: MAX_NUMLUMPS reached\n");
+        }
 
-            first_lump_pos = header_ptr->infotableofs;
-            filelumps = (filelump_t *)N_qspi_data_pointer(first_lump_pos);
-            numlumps += header_ptr->numlumps;
-            /*
-            for (i = 0; i < header_ptr->numlumps; i++)
+        first_lump_pos = header_ptr->infotableofs;
+        filelumps = (filelump_t *)N_qspi_data_pointer(first_lump_pos);
+        numlumps += header_ptr->numlumps;
+
+        wad_file_data->path = filename;
+        wad_file_data->length = file_size;
+    }
+
+    if (lumphash != NULL) {
+        Z_Free(lumphash);
+        lumphash = NULL;
+    }
+
+    return wad_file_data;
+}
+
+void *W_LumpDataPointer(lumpindex_t lump) {
+    return N_qspi_data_pointer(LONG(filelumps[lump].filepos));
+}
+
+//
+// W_NumLumps
+//
+int W_NumLumps(void) { return numlumps; }
+
+//
+// W_CheckNumForName
+// Returns -1 if name not found.
+//
+
+lumpindex_t W_CheckNumForName(const char *name) {
+    lumpindex_t i;
+
+    // Do we have a hash table yet?
+
+    /* NRFD-TODO: lump hash table */
+    /*
+    if (lumphash != NULL)
+    {
+        int hash;
+
+        // We do! Excellent.
+
+        hash = W_LumpNameHash(name) % numlumps;
+
+        for (i = lumphash[hash]; i != -1; i = lumpinfo[i]->next)
+        {
+            if (!strncasecmp(lumpinfo[i]->name, name, 8))
             {
-                filelump_t filelump;
-                int lump_pos = header_ptr->infotableofs+sizeof(filelump_t)*i;
-                // W_Read(wad_file, lump_pos, &filelump, sizeof(filelump_t));
-                filelump = *((filelump_t*)(N_qspi_data_pointer(lump_pos)));
-                lumpinfo_t *lump_p = &lumpinfo[numlumps];
-                // lump_p->wad_file = wad_file; // NRFD-TODO: Support multiple
-            files
-                // lump_p->position = LONG(filelump.filepos);
-                unsigned int lump_filepos = LONG(filelump.filepos);
-                lump_p->size = LONG(filelump.size);
-                // lump_p->cache = NULL;
-                lump_p->cache = N_qspi_data_pointer(lump_filepos);
-                strncpy(lump_p->name, filelump.name, 8);
-
-                // printf("Lump %.8s: num: %d size: %d location: %X\n",
-            lump_p->name, numlumps, lump_p->size, (unsigned int)lump_p->cache);
-
-                if (0) //!strncasecmp(filelump.name, "ENDOOM", 8))
-                {
-                    printf("Found ENDOOM at %X\n", lump_filepos);
-                    char *endoom = lump_p->cache;
-                    printf("%X\n", (unsigned int)(endoom));
-                    for (int i=0; i<80*4; i++) {
-                        char c = endoom[i];
-                        if (i%2==1) continue;
-                        if ((i/2)%80==0)
-                            printf("\n");
-                        if (c < 32 || c > 127)
-                            printf("X");
-                        else
-                            printf("%c", c);
-                    }
-                    printf("\n");
-                }
-
-                numlumps += 1;
+                return i;
             }
-            */
-
-            wad_file_data->path = filename;
-            wad_file_data->length = file_size;
         }
-
-        if (lumphash != NULL) {
-            Z_Free(lumphash);
-            lumphash = NULL;
-        }
-
-        return wad_file_data;
     }
+    else*/
+    {
+        // We don't have a hash table generate yet. Linear search :-(
+        //
+        // scan backwards so patch lump files take precedence
 
-    void *W_LumpDataPointer(lumpindex_t lump) {
-        return N_qspi_data_pointer(LONG(filelumps[lump].filepos));
-    }
-
-    //
-    // W_NumLumps
-    //
-    int W_NumLumps(void) { return numlumps; }
-
-    //
-    // W_CheckNumForName
-    // Returns -1 if name not found.
-    //
-
-    lumpindex_t W_CheckNumForName(const char *name) {
-        lumpindex_t i;
-
-        // Do we have a hash table yet?
-
-        /* NRFD-TODO: lump hash table */
-        /*
-        if (lumphash != NULL)
-        {
-            int hash;
-
-            // We do! Excellent.
-
-            hash = W_LumpNameHash(name) % numlumps;
-
-            for (i = lumphash[hash]; i != -1; i = lumpinfo[i]->next)
+        for (i = numlumps - 1; i >= 0; --i) {
+            if (!strncasecmp(filelumps[i].name, name, 8))
+            // if (!strncasecmp(lumpinfo[i].name, name, 8))
             {
-                if (!strncasecmp(lumpinfo[i]->name, name, 8))
-                {
-                    return i;
-                }
+                return i;
             }
         }
-        else*/
-        {
-            // We don't have a hash table generate yet. Linear search :-(
-            //
-            // scan backwards so patch lump files take precedence
+    }
 
-            for (i = numlumps - 1; i >= 0; --i) {
-                if (!strncasecmp(filelumps[i].name, name, 8))
-                // if (!strncasecmp(lumpinfo[i].name, name, 8))
-                {
-                    return i;
+    // TFB. Not found.
+
+    return -1;
+}
+
+//
+// W_GetNumForName
+// Calls W_CheckNumForName, but bombs out if not found.
+//
+lumpindex_t W_GetNumForName(const char *name) {
+    lumpindex_t i;
+
+    i = W_CheckNumForName(name);
+
+    if (i < 0) {
+        I_Error("W_GetNumForName: %s not found!", name);
+    }
+
+    return i;
+}
+
+char *W_LumpName(lumpindex_t lump) { return filelumps[lump].name; }
+
+//
+// W_LumpLength
+// Returns the buffer size needed to load the given lump.
+//
+int W_LumpLength(lumpindex_t lump) {
+    if (lump >= numlumps) {
+        I_Error("W_LumpLength: %i >= numlumps", lump);
+    }
+
+    // return lumpinfo[lump].size;
+    return LONG(filelumps[lump].size);
+}
+
+//
+// W_ReadLump
+// Loads the lump into the given buffer,
+//  which must be >= W_LumpLength().
+//
+void W_ReadLump(lumpindex_t lump, void *dest) {
+    if (lump >= numlumps) {
+        I_Error("W_ReadLump: %i >= numlumps", lump);
+    }
+
+    // lumpinfo_t *l;
+    // l = &lumpinfo[lump];
+    // printf("W_ReadLump(dummy): %.8s\n", l->name);
+
+    // V_BeginRead(l->size);
+    filelump_t *filelump = &filelumps[lump];
+    void *ptr = N_qspi_data_pointer(LONG(filelump->filepos));
+    memcpy(dest, ptr, LONG(filelump->size));
+
+    // memcpy(dest, l->cache, l->size);
+
+    /* NRFD-EXCLUDE
+
+    // int c;
+    // printf("Read lump at %d with size %d to %X\n", l->position, l->size,
+    (unsigned int)(dest));
+    // c = W_Read(l->wad_file, l->position, dest, l->size);
+    // c = W_Read(wad_file, l->position, dest, l->size);
+
+    if (c < l->size)
+    {
+        I_Error("W_ReadLump: only read %i of %i on lump %i",
+                c, l->size, lump);
+    }*/
+}
+
+//
+// W_CacheLumpNum
+//
+// Load a lump into memory and return a pointer to a buffer containing
+// the lump data.
+//
+// 'tag' is the type of zone memory buffer to allocate for the lump
+// (usually PU_STATIC or PU_CACHE).  If the lump is loaded as
+// PU_STATIC, it should be released back using W_ReleaseLumpNum
+// when no longer needed (do not use Z_ChangeTag).
+//
+
+void *W_CacheLumpNum(lumpindex_t lumpnum, int tag) {
+    byte *result;
+    // lumpinfo_t *lump;
+
+    if ((unsigned)lumpnum >= numlumps) {
+        I_Error("W_CacheLumpNum: %i >= numlumps", lumpnum);
+    }
+
+    // lump = &lumpinfo[lumpnum];
+
+    // Get the pointer to return.  If the lump is in a Memory-mapped
+    // file, we can just return a pointer to within the memory-mapped
+    // region.  If the lump is in an ordinary file, we may already
+    // have it cached; otherwise, load it into memory.
+
+    // result = lump->cache;
+    /*
+    for (int i=0;i<debugLumpCount;i++) {
+        if (debugLumpNums[i]==lumpnum) {
+            byte *cache = debugLumpCache[i];
+            byte *qspi_data = W_LumpDataPointer(lumpnum);
+            for (int j=0;j<filelumps[lumpnum].size;j++) {
+                if (cache[j] != qspi_data[j]) {
+                    printf("X");
                 }
             }
+            return cache;
         }
+    }
+    */
+    result = W_LumpDataPointer(lumpnum);
+    // N_ldbg("W_CacheLumpNum: %.8s\n", lump->name);
 
-        // TFB. Not found.
+    /* NRFD-EXCLUDE:
+    if (lump->wad_file->mapped != NULL)
+    {
+        // Memory mapped file, return from the mmapped region.
 
-        return -1;
+        result = lump->wad_file->mapped + lump->position;
+    }
+    else if (lump->cache != NULL)
+    {
+        // Already cached, so just switch the zone tag.
+
+        result = lump->cache;
+        Z_ChangeTag(lump->cache, tag);
+    }
+    else
+    {
+        // Not yet loaded, so load it now
+        lump->cache = Z_Malloc(W_LumpLength(lumpnum), tag, &lump->cache);
+        W_ReadLump (lumpnum, lump->cache);
+        result = lump->cache;
+    }
+    */
+
+    return result;
+}
+
+//
+// W_CacheLumpName
+//
+void *W_CacheLumpName(char *name, int tag) {
+    return W_CacheLumpNum(W_GetNumForName(name), tag);
+}
+
+//
+// Release a lump back to the cache, so that it can be reused later
+// without having to read from disk again, or alternatively, discarded
+// if we run out of memory.
+//
+// Back in Vanilla Doom, this was just done using Z_ChangeTag
+// directly, but now that we have WAD mmap, things are a bit more
+// complicated ...
+//
+
+void W_ReleaseLumpNum(lumpindex_t lumpnum) {
+    if ((unsigned)lumpnum >= numlumps) {
+        I_Error("W_ReleaseLumpNum: %i >= numlumps", lumpnum);
     }
 
-    //
-    // W_GetNumForName
-    // Calls W_CheckNumForName, but bombs out if not found.
-    //
-    lumpindex_t W_GetNumForName(const char *name) {
-        lumpindex_t i;
+    /* NRFD-EXCLUDE
 
-        i = W_CheckNumForName(name);
+    lumpinfo_t *lump;
+    lump = &lumpinfo[lumpnum];
 
-        if (i < 0) {
-            I_Error("W_GetNumForName: %s not found!", name);
-        }
-
-        return i;
+    if (lump->wad_file->mapped != NULL)
+    {
+        // Memory-mapped file, so nothing needs to be done here.
     }
-
-    char *W_LumpName(lumpindex_t lump) { return filelumps[lump].name; }
-
-    //
-    // W_LumpLength
-    // Returns the buffer size needed to load the given lump.
-    //
-    int W_LumpLength(lumpindex_t lump) {
-        if (lump >= numlumps) {
-            I_Error("W_LumpLength: %i >= numlumps", lump);
-        }
-
-        // return lumpinfo[lump].size;
-        return LONG(filelumps[lump].size);
+    else
+    {
+        Z_ChangeTag(lump->cache, PU_CACHE);
     }
+    */
+}
 
-    //
-    // W_ReadLump
-    // Loads the lump into the given buffer,
-    //  which must be >= W_LumpLength().
-    //
-    void W_ReadLump(lumpindex_t lump, void *dest) {
-        if (lump >= numlumps) {
-            I_Error("W_ReadLump: %i >= numlumps", lump);
-        }
-
-        // lumpinfo_t *l;
-        // l = &lumpinfo[lump];
-        // printf("W_ReadLump(dummy): %.8s\n", l->name);
-
-        // V_BeginRead(l->size);
-        filelump_t *filelump = &filelumps[lump];
-        void *ptr = N_qspi_data_pointer(LONG(filelump->filepos));
-        memcpy(dest, ptr, LONG(filelump->size));
-
-        // memcpy(dest, l->cache, l->size);
-
-        /* NRFD-EXCLUDE
-
-        // int c;
-        // printf("Read lump at %d with size %d to %X\n", l->position, l->size,
-        (unsigned int)(dest));
-        // c = W_Read(l->wad_file, l->position, dest, l->size);
-        // c = W_Read(wad_file, l->position, dest, l->size);
-
-        if (c < l->size)
-        {
-            I_Error("W_ReadLump: only read %i of %i on lump %i",
-                    c, l->size, lump);
-        }*/
-    }
-
-    //
-    // W_CacheLumpNum
-    //
-    // Load a lump into memory and return a pointer to a buffer containing
-    // the lump data.
-    //
-    // 'tag' is the type of zone memory buffer to allocate for the lump
-    // (usually PU_STATIC or PU_CACHE).  If the lump is loaded as
-    // PU_STATIC, it should be released back using W_ReleaseLumpNum
-    // when no longer needed (do not use Z_ChangeTag).
-    //
-
-    void *W_CacheLumpNum(lumpindex_t lumpnum, int tag) {
-        byte *result;
-        // lumpinfo_t *lump;
-
-        if ((unsigned)lumpnum >= numlumps) {
-            I_Error("W_CacheLumpNum: %i >= numlumps", lumpnum);
-        }
-
-        // lump = &lumpinfo[lumpnum];
-
-        // Get the pointer to return.  If the lump is in a Memory-mapped
-        // file, we can just return a pointer to within the memory-mapped
-        // region.  If the lump is in an ordinary file, we may already
-        // have it cached; otherwise, load it into memory.
-
-        // result = lump->cache;
-        /*
-        for (int i=0;i<debugLumpCount;i++) {
-            if (debugLumpNums[i]==lumpnum) {
-                byte *cache = debugLumpCache[i];
-                byte *qspi_data = W_LumpDataPointer(lumpnum);
-                for (int j=0;j<filelumps[lumpnum].size;j++) {
-                    if (cache[j] != qspi_data[j]) {
-                        printf("X");
-                    }
-                }
-                return cache;
-            }
-        }
-        */
-        result = W_LumpDataPointer(lumpnum);
-        // N_ldbg("W_CacheLumpNum: %.8s\n", lump->name);
-
-        /* NRFD-EXCLUDE:
-        if (lump->wad_file->mapped != NULL)
-        {
-            // Memory mapped file, return from the mmapped region.
-
-            result = lump->wad_file->mapped + lump->position;
-        }
-        else if (lump->cache != NULL)
-        {
-            // Already cached, so just switch the zone tag.
-
-            result = lump->cache;
-            Z_ChangeTag(lump->cache, tag);
-        }
-        else
-        {
-            // Not yet loaded, so load it now
-            lump->cache = Z_Malloc(W_LumpLength(lumpnum), tag, &lump->cache);
-            W_ReadLump (lumpnum, lump->cache);
-            result = lump->cache;
-        }
-        */
-
-        return result;
-    }
-
-    //
-    // W_CacheLumpName
-    //
-    void *W_CacheLumpName(char *name, int tag) {
-        return W_CacheLumpNum(W_GetNumForName(name), tag);
-    }
-
-    //
-    // Release a lump back to the cache, so that it can be reused later
-    // without having to read from disk again, or alternatively, discarded
-    // if we run out of memory.
-    //
-    // Back in Vanilla Doom, this was just done using Z_ChangeTag
-    // directly, but now that we have WAD mmap, things are a bit more
-    // complicated ...
-    //
-
-    void W_ReleaseLumpNum(lumpindex_t lumpnum) {
-        if ((unsigned)lumpnum >= numlumps) {
-            I_Error("W_ReleaseLumpNum: %i >= numlumps", lumpnum);
-        }
-
-        /* NRFD-EXCLUDE
-
-        lumpinfo_t *lump;
-        lump = &lumpinfo[lumpnum];
-
-        if (lump->wad_file->mapped != NULL)
-        {
-            // Memory-mapped file, so nothing needs to be done here.
-        }
-        else
-        {
-            Z_ChangeTag(lump->cache, PU_CACHE);
-        }
-        */
-    }
-
-    void W_ReleaseLumpName(char *name) {
-        W_ReleaseLumpNum(W_GetNumForName(name));
-    }
+void W_ReleaseLumpName(char *name) { W_ReleaseLumpNum(W_GetNumForName(name)); }
 
 #if 0
 
@@ -791,113 +733,112 @@ void W_Profile (void)
 
 #endif
 
-    // Generate a hash table for fast lookups
+// Generate a hash table for fast lookups
 
-    void W_GenerateHashTable(void) {
-        lumpindex_t i;
-        printf("NRDF-TODO? W_GenerateHashTable\n");
-
-        /*
-        // Free the old hash table, if there is one:
-        if (lumphash != NULL)
-        {
-            Z_Free(lumphash);
-        }
-
-        // Generate hash table
-        if (numlumps > 0)
-        {
-            lumphash = Z_Malloc(sizeof(lumpindex_t) * numlumps, PU_STATIC,
-        NULL);
-
-            for (i = 0; i < numlumps; ++i)
-            {
-                lumphash[i] = -1;
-            }
-
-            for (i = 0; i < numlumps; ++i)
-            {
-                unsigned int hash;
-
-                hash = W_LumpNameHash(lumpinfo[i]->name) % numlumps;
-
-                // Hook into the hash table
-
-                lumpinfo[i]->next = lumphash[hash];
-                lumphash[hash] = i;
-            }
-        }
-        */
-
-        // All done!
-    }
-
-    // The Doom reload hack. The idea here is that if you give a WAD file to
-    // -file prefixed with the ~ hack, that WAD file will be reloaded each time
-    // a new level is loaded. This lets you use a level editor in parallel and
-    // make incremental changes to the level you're working on without having to
-    // restart the game after every change. But: the reload feature is a fragile
-    // hack...
-    void W_Reload(void) {
-        /* NRFD-EXCLUDE
-        char *filename;
-        lumpindex_t i;
-
-        if (reloadname == NULL)
-        {
-            return;
-        }
-
-        // We must free any lumps being cached from the PWAD we're about to
-        reload: for (i = reloadlump; i < numlumps; ++i)
-        {
-            if (lumpinfo[i]->cache != NULL)
-            {
-                Z_Free(lumpinfo[i]->cache);
-            }
-        }
-
-        // Reset numlumps to remove the reload WAD file:
-        numlumps = reloadlump;
-
-        // Now reload the WAD file.
-        filename = reloadname;
-
-        W_CloseFile(reloadhandle);
-        free(reloadlumps);
-
-        reloadname = NULL;
-        reloadlump = -1;
-        reloadhandle = NULL;
-        W_AddFile(filename);
-        free(filename);
-
-        // The WAD directory has changed, so we have to regenerate the
-        // fast lookup hashtable:
-        W_GenerateHashTable();
-        */
-    }
+void W_GenerateHashTable(void) {
+    lumpindex_t i;
+    printf("NRDF-TODO? W_GenerateHashTable\n");
 
     /*
-    void W_DebugLump(int lump)
+    // Free the old hash table, if there is one:
+    if (lumphash != NULL)
     {
-        return;
-        if (lump != 561) return;
+        Z_Free(lumphash);
+    }
 
-        filelump_t *filelump = &filelumps[lump];
+    // Generate hash table
+    if (numlumps > 0)
+    {
+        lumphash = Z_Malloc(sizeof(lumpindex_t) * numlumps, PU_STATIC, NULL);
 
-        printf("W_DebugLump: %d size: %d\n", lump, filelump->size);
-
-        byte *cache = N_malloc(filelump->size);
-
-        // N_fs_read(wad_file, filelump->filepos, cache, filelump->size);
-        byte *qspi_data = W_LumpDataPointer(lump);
-        for (int i=0;i<filelump->size;i++) {
-            cache[i] = qspi_data[i];
+        for (i = 0; i < numlumps; ++i)
+        {
+            lumphash[i] = -1;
         }
 
-        debugLumpNums[debugLumpCount] = lump;
-        debugLumpCache[debugLumpCount] = cache;
-        debugLumpCount++;
+        for (i = 0; i < numlumps; ++i)
+        {
+            unsigned int hash;
+
+            hash = W_LumpNameHash(lumpinfo[i]->name) % numlumps;
+
+            // Hook into the hash table
+
+            lumpinfo[i]->next = lumphash[hash];
+            lumphash[hash] = i;
+        }
     }
     */
+
+    // All done!
+}
+
+// The Doom reload hack. The idea here is that if you give a WAD file to -file
+// prefixed with the ~ hack, that WAD file will be reloaded each time a new
+// level is loaded. This lets you use a level editor in parallel and make
+// incremental changes to the level you're working on without having to restart
+// the game after every change.
+// But: the reload feature is a fragile hack...
+void W_Reload(void) {
+    /* NRFD-EXCLUDE
+    char *filename;
+    lumpindex_t i;
+
+    if (reloadname == NULL)
+    {
+        return;
+    }
+
+    // We must free any lumps being cached from the PWAD we're about to reload:
+    for (i = reloadlump; i < numlumps; ++i)
+    {
+        if (lumpinfo[i]->cache != NULL)
+        {
+            Z_Free(lumpinfo[i]->cache);
+        }
+    }
+
+    // Reset numlumps to remove the reload WAD file:
+    numlumps = reloadlump;
+
+    // Now reload the WAD file.
+    filename = reloadname;
+
+    W_CloseFile(reloadhandle);
+    free(reloadlumps);
+
+    reloadname = NULL;
+    reloadlump = -1;
+    reloadhandle = NULL;
+    W_AddFile(filename);
+    free(filename);
+
+    // The WAD directory has changed, so we have to regenerate the
+    // fast lookup hashtable:
+    W_GenerateHashTable();
+    */
+}
+
+/*
+void W_DebugLump(int lump)
+{
+    return;
+    if (lump != 561) return;
+
+    filelump_t *filelump = &filelumps[lump];
+
+    printf("W_DebugLump: %d size: %d\n", lump, filelump->size);
+
+    byte *cache = N_malloc(filelump->size);
+
+    // N_fs_read(wad_file, filelump->filepos, cache, filelump->size);
+    byte *qspi_data = W_LumpDataPointer(lump);
+    for (int i=0;i<filelump->size;i++) {
+        cache[i] = qspi_data[i];
+    }
+
+    debugLumpNums[debugLumpCount] = lump;
+    debugLumpCache[debugLumpCount] = cache;
+    debugLumpCount++;
+}
+*/

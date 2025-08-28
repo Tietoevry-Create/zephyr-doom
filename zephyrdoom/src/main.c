@@ -35,13 +35,6 @@ static const struct gpio_dt_spec led = GPIO_DT_SPEC_GET(LED0_NODE, gpios);
 #define GPIO0 ((NRF_GPIO_Type*)0x50842500UL)
 #define GPIO1 ((NRF_GPIO_Type*)0x50842800UL)
 
-void clock_initialization() {
-    nrfx_clock_hfclk_start();
-    nrf_clock_hfclk_div_set(NRF_CLOCK_S, NRF_CLOCK_HFCLK_DIV_1);
-    nrfx_clock_divider_set(NRF_CLOCK_DOMAIN_HFCLK192M, NRF_CLOCK_HFCLK_DIV_1);
-    // nrfx_clock_divider_set(NRF_CLOCK_DOMAIN_HFCLK, NRF_CLOCK_HFCLK_DIV_1);
-}
-
 int no_sdcard = 1;
 
 #define SD_ROOT_PATH "/SD:/"

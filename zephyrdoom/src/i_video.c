@@ -457,9 +457,6 @@ void I_GraphicsCheckCommandLine(void)
 
 void I_InitGraphics(void)
 {
-<<<<<<< HEAD
-    printk("I_InitGraphics\n");
-=======
     printf("I_InitGraphics\n");
     N_display_init();
     display_palette_locs[0] = N_display_ram_alloc(DISPLAY_PALETTE_SIZE);
@@ -477,7 +474,6 @@ void I_InitGraphics(void)
     I_VideoBuffer = I_VideoBuffers[1];
     I_VideoBackBuffer = I_VideoBuffers[0];
     initialized = true;
->>>>>>> origin/master
 }
 
 // Bind all variables controlling video options into the configuration
