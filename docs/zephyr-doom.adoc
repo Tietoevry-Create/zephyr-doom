@@ -1004,6 +1004,65 @@ dev kit:
 | Show menu;
 |===
 
+** Keyboard:
++
+[cols="1,1" options="header, autowidth"]
+|===
+^| Key
+^| Description
+
+| Up Arrow
+| Move forward;
+
+| Down Arrow
+| Move backward;
+
+| Left Arrow
+| Turn left;
+
+| Right Arrow
+| Turn right;
+
+| H
+| Fire current weapon;
+
+| J
+| Open doors, activate switches;
+
+| K
+| Hold to run;
+
+| ALT
+| Hold to strafe (use with Left/Right);
+
+| Comma (,)
+| Strafe left;
+
+| Period (.)
+| Strafe right;
+
+| M
+| Toggle automap view;
+
+| ESC
+| Show menu;
+
+| Up Arrow (menu)
+| Move up in menu;
+
+| Down Arrow (menu)
+| Move down in menu;
+
+| ENTER
+| Select option in menu;
+
+| BACKSPACE
+| Go back in menu;
+
+| 1–8
+| Select weapons;
+|===
+
 * *Setup:*
 ** https://www.xbox.com/en-US/accessories/controllers/xbox-wireless-controller[Xbox controller]:
 . Hold the pairing button on the front of the controller, until the light starts
