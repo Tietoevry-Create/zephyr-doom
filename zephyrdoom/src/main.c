@@ -192,25 +192,6 @@ int sd_card_list_files(char const* const path, char* buf, size_t* buf_size) {
     return 0;
 }
 
-// void boot_net()
-// {
-//     printf("Booting NetMCU\n");
-
-//     // Network owns 30/31 (LED3/4)
-//     nrf_gpio_pin_mcu_select(LED_PIN_3, NRF_GPIO_PIN_MCUSEL_NETWORK);
-//     nrf_gpio_pin_mcu_select(LED_PIN_4, NRF_GPIO_PIN_MCUSEL_NETWORK);
-
-//     // Hand over UART GPIOs to NetMcu
-//     nrf_gpio_pin_mcu_select(LED_PIN_3, NRF_GPIO_PIN_MCUSEL_NETWORK);
-//     nrf_gpio_pin_mcu_select(LED_PIN_4, NRF_GPIO_PIN_MCUSEL_NETWORK);
-
-//     // Set NetMcu as secure
-//     NRF_SPU_S->EXTDOMAIN[0].PERM = 2 | (1<<4);
-
-//     // Wake up NetMcu
-//     NRF_RESET_S->NETWORK.FORCEOFF = 0;
-// }
-
 #include <ff.h>
 #include <zephyr/device.h>
 #include <zephyr/fs/fs.h>
@@ -289,8 +270,6 @@ int main(void) {
 
     NRF_CACHE_S->ENABLE = 1;
 
-    // sd_card_init(); // TODO: Get this working (all references to N_fs have
-    // been commented out in w_wad and m_misc) N_qspi_init();
     mp.mnt_point = disk_mount_pt;
 
     int res = fs_mount(&mp);
@@ -305,18 +284,6 @@ int main(void) {
     }
 
     // fs_unmount(&mp);
-
-    // while (1) {
-    //  k_sleep(K_MSEC(1000));
-    // }
-
-    // if (!no_sdcard) {
-    //     N_fs_init();
-    //     printf("\n\n");
-    //     printf("----------------------------------\n");
-    //     printf("NFS Initialized\n");
-    //     printf("---------------------------------\n");
-    // }
 
     N_ButtonsInit();
 
