@@ -1013,7 +1013,7 @@ blinking quickly.
 . Wait for *5-10* seconds.
 . Hold the pairing button again, until the light stops blinking and stays on.
 
-** Keyboard:
+* Keyboard:
 +
 [cols="1,1" options="header, autowidth"]
 |===
