@@ -7,7 +7,7 @@
     pinctrl-0 = <&spi2_default>;
     pinctrl-names = "default";
 
-    cs-gpios = <&gpio1 12 GPIO_ACTIVE_LOW>;
+    cs-gpios = <&gpio1 12 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
 
     sdhc0: sdhc@0 {
         compatible = "zephyr,sdhc-spi-slot";
