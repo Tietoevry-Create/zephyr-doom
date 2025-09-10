@@ -280,8 +280,10 @@ wad_file_t *W_AddFile(char *filename) {
                     // Write to QSPI flash
                     off_t flash_offset = block_loc;
 
-                    // Erase flash sector before writing
-                    int rc = flash_erase(flash_dev, flash_offset, block_size);
+                    // Erase full 64KB block before writing (required: erase
+                    // size aligned)
+                    int rc =
+                        flash_erase(flash_dev, flash_offset, N_QSPI_BLOCK_SIZE);
                     if (rc != 0) {
                         printf("Flash erase failed (err %d)\n", rc);
                         if (led_flash_started) {
