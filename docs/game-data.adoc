@@ -11,7 +11,8 @@
 
 == Version Notice
 This documentation is valid for the code from *MVP6* release and requires an SPI Micro SD card reader.
-== Shield Pin Mapping
+
+== SD Card Reader Pin Mapping
 
 [cols="1,1,1" options="header, autowidth"]
 |===
