@@ -16,7 +16,7 @@
 #include <zephyr/sys/atomic.h>
 #include <zephyr/sys/printk.h>
 
-#define SAMPLE_RATE 11025
+#define SAMPLE_RATE 10870
 #define SAMPLE_BIT_WIDTH 16
 #define NUM_CHANNELS 2
 #define BYTES_PER_SAMPLE 2
