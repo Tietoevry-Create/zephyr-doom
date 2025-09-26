@@ -71,7 +71,7 @@ void N_display_spi_init() {
     gpio_pin_configure(gpio0_dev, DISPLAY_PIN_CS_N, GPIO_OUTPUT_ACTIVE);
     gpio_pin_configure(gpio0_dev, DISPLAY_PIN_PD_N, GPIO_OUTPUT_ACTIVE);
 
-    /* SPI config: 8-bit, mode0, MSB first, 32MHz */
+    /* Start at 16 MHz for reliable init; can switch to 32 MHz after */
     spi_cfg.frequency = 16000000U;
     spi_cfg.operation = SPI_WORD_SET(8) | SPI_TRANSFER_MSB;
     spi_cfg.slave = 0;
@@ -285,6 +285,10 @@ void N_display_init() {
     N_display_spi_wr8(FT810_REG_PWM_DUTY, 0xFF);  // Backlight PWM duty cycle
 
     N_display_spi_wr8(FT810_REG_PCLK, 2);  // Pixel Clock
+
+    /* After FT810 init is complete, increase SPI to 32 MHz to match old build
+     */
+    spi_cfg.frequency = 32000000U;
 
     N_display_spi_wr8(FT810_REG_ROTATE, 1);  // inverted (up-down)
 }
