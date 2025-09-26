@@ -20,47 +20,78 @@
 
 #undef PACKED_STRUCT
 #include <zephyr/kernel.h>
+#include "board_config.h"
 
 //
 // I_GetTime
 // returns time in 1/35th second tics
 //
 
-// static Uint32 basetime = 0;
+//static Uint32 basetime = 0;
 
 // NRFD-TODO: Handle overflow of timer
 
-int I_GetTime(void) {
-    /* Return tics (35 Hz) since boot */
-    uint32_t ms = k_uptime_get_32();
-    return (int)((ms * TICRATE) / 1000u);
+int  I_GetTime (void)
+{
+    NRF_DOOM_TIMER->TASKS_CAPTURE[0] = 1;
+    uint64_t cc = NRF_DOOM_TIMER->CC[0];
+    uint64_t tickTime = (cc * TICRATE)*10/312/1000;
+    return tickTime;
 }
 
 //
 // Same as I_GetTime, but returns time in milliseconds
 //
 
-int I_GetTimeMS(void) { return (int)k_uptime_get_32(); }
-
-uint32_t I_RawTimeToFps(uint32_t time_delta) {
-    /* Convert a delta in milliseconds to FPS */
-    if (time_delta == 0u) {
-        return 0u;
-    }
-    return 1000u / time_delta;
+int I_GetTimeMS(void)
+{
+    NRF_DOOM_TIMER->TASKS_CAPTURE[0] = 1;
+    uint64_t cc = NRF_DOOM_TIMER->CC[0];
+    cc = cc*10/312;
+    return cc;
 }
 
-uint32_t I_GetTimeRaw(void) {
-    /* Raw time in milliseconds */
-    return k_uptime_get_32();
+uint32_t I_RawTimeToFps(uint32_t time_delta)
+{
+    return 31200/time_delta;
+}
+
+uint32_t I_GetTimeRaw(void)
+{
+    NRF_DOOM_TIMER->TASKS_CAPTURE[0] = 1;
+    uint32_t cc = NRF_DOOM_TIMER->CC[0];
+    return cc;
 }
 
 // Sleep for a specified number of ms
 
-void I_Sleep(int ms) { k_msleep(ms); }
+void I_Sleep(int ms)
+{
+    k_msleep(ms);
+}
 
-void I_SleepUS(int us) { k_usleep(us); }
 
-void I_WaitVBL(int count) { I_Sleep((count * 1000) / 70); }
+void I_SleepUS(int us)
+{
+    k_usleep(us);
+}
 
-void I_InitTimer(void) { /* No hardware init needed; Zephyr provides uptime */ }
+void I_WaitVBL(int count)
+{
+    I_Sleep((count * 1000) / 70);
+}
+
+
+void I_InitTimer(void)
+{
+    // initialize timer
+    NRF_DOOM_TIMER->MODE = TIMER_MODE_MODE_Timer;
+    NRF_DOOM_TIMER->BITMODE = TIMER_BITMODE_BITMODE_32Bit;
+    NRF_DOOM_TIMER->PRESCALER = 9;
+    // fTIMER = 16 MHz / (2*PRESCALER)
+    // 2**9 = 512
+    // fTIMER = 31.25Khz;
+    // NOTE: If timer is changed, update HU_Ticker (or make global variable)
+    NRF_DOOM_TIMER->TASKS_START = 1;
+}
+
