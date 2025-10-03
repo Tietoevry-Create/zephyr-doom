@@ -43,12 +43,6 @@ static const struct device *spi_dev;
 static struct spi_config spi_cfg;
 static const struct device *gpio0_dev;
 
-#define BUF_MAXCNT 8
-
-volatile int display_spi_tip;  // transfer-in-progress
-volatile uint8_t display_spi_txd_buf[BUF_MAXCNT];
-volatile uint8_t display_spi_rxd_buf[BUF_MAXCNT];
-
 void N_display_gpiote_end_to_cs() {
     /* No-op in Zephyr SPI path; CS is handled manually via GPIO */
 }
@@ -77,7 +71,6 @@ void N_display_spi_init() {
     spi_cfg.slave = 0;
     /* Manual CS via GPIO */
 
-    display_spi_tip = 0;
     printk("Display SPI initialized at %u Hz\n", spi_cfg.frequency);
 }
 
@@ -194,33 +187,6 @@ void N_display_spi_wr(uint32_t addr, int dataSize, uint8_t *data) {
     (void)spi_write(spi_dev, &spi_cfg, &tx);
     gpio_pin_set(gpio0_dev, DISPLAY_PIN_CS_N, 1);
 }
-
-// void N_display_spi_transfer_data_async() {
-//   NRF_DISPLAY_SPIM->EVENTS_END = 0;
-//   NRF_DISPLAY_SPIM->TASKS_START = 1;
-//   while (NRF_DISPLAY_SPIM->EVENTS_END == 0) {
-//   }
-// }
-
-// void N_display_spi_wr_async(uint32_t addr, int dataSize, uint8_t *data) {
-//   uint8_t *addrBytes = (uint8_t*)&addr;
-
-//   // Assuming MCU is Little-Endian
-//   display_spi_txd_buf[0] = addrBytes[2] | 0x80;
-//   display_spi_txd_buf[1] = addrBytes[1];
-//   display_spi_txd_buf[2] = addrBytes[0];
-
-//   N_display_spi_transfer_start();
-
-//   N_display_spi_setup(3, display_spi_txd_buf, 0, NULL);
-//   N_display_spi_transfer_data();
-
-//   volatile uint8_t *dataPtr = (volatile uint8_t*)data;
-//   N_display_spi_setup(dataSize, dataPtr, 0, NULL);
-//   N_display_spi_transfer_data();
-
-//   N_display_spi_transfer_end();
-// }
 
 uint8_t N_display_spi_rd8(uint32_t addr) {
     uint8_t *addrBytes = (uint8_t *)&addr;
