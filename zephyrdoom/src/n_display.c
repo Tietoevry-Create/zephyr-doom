@@ -43,6 +43,44 @@ static const struct device *spi_dev;
 static struct spi_config spi_cfg;
 static const struct device *gpio0_dev;
 
+/* Async framebuffer transfer support */
+static struct k_thread display_spi_thread;
+static K_THREAD_STACK_DEFINE(display_spi_stack, 1024);
+static struct k_sem display_spi_start_sem;
+static struct k_sem display_spi_done_sem;
+static volatile const uint8_t *display_async_data_ptr;
+static volatile size_t display_async_data_len;
+static uint8_t display_addr_buf[3];
+static volatile int display_spi_tip;
+
+static void display_spi_thread_fn(void *p1, void *p2, void *p3) {
+    ARG_UNUSED(p1);
+    ARG_UNUSED(p2);
+    ARG_UNUSED(p3);
+
+    for (;;) {
+        k_sem_take(&display_spi_start_sem, K_FOREVER);
+
+        /* CS low */
+        gpio_pin_set(gpio0_dev, DISPLAY_PIN_CS_N, 0);
+
+        struct spi_buf bufs[2];
+        bufs[0].buf = (void *)display_addr_buf;
+        bufs[0].len = sizeof(display_addr_buf);
+        bufs[1].buf = (void *)display_async_data_ptr;
+        bufs[1].len = (size_t)display_async_data_len;
+        const struct spi_buf_set tx = {.buffers = bufs, .count = 2};
+
+        (void)spi_write(spi_dev, &spi_cfg, &tx);
+
+        /* CS high */
+        gpio_pin_set(gpio0_dev, DISPLAY_PIN_CS_N, 1);
+
+        display_spi_tip = 0;
+        k_sem_give(&display_spi_done_sem);
+    }
+}
+
 void N_display_gpiote_end_to_cs() {
     /* No-op in Zephyr SPI path; CS is handled manually via GPIO */
 }
@@ -72,6 +110,15 @@ void N_display_spi_init() {
     /* Manual CS via GPIO */
 
     printk("Display SPI initialized at %u Hz\n", spi_cfg.frequency);
+
+    /* Async SPI worker */
+    k_sem_init(&display_spi_start_sem, 0, 1);
+    k_sem_init(&display_spi_done_sem, 0, 1);
+    display_spi_tip = 0;
+    k_thread_create(&display_spi_thread, display_spi_stack,
+                    K_THREAD_STACK_SIZEOF(display_spi_stack),
+                    display_spi_thread_fn, NULL, NULL, NULL, K_PRIO_PREEMPT(3),
+                    0, K_NO_WAIT);
 }
 
 void N_display_power_reset() {
@@ -87,7 +134,10 @@ void N_display_spi_setup(int txdMaxCnt, volatile uint8_t *txdPtr, int rxdMaxCnt,
 }
 
 void N_display_spi_transfer_finish() {
-    /* No pending async transfer in Zephyr path */
+    if (display_spi_tip) {
+        k_sem_take(&display_spi_done_sem, K_FOREVER);
+        display_spi_tip = 0;
+    }
 }
 
 void N_display_spi_transfer_start() {
@@ -178,6 +228,21 @@ void N_display_spi_wr(uint32_t addr, int dataSize, uint8_t *data) {
     addr_buf[0] = addrBytes[2] | 0x80;
     addr_buf[1] = addrBytes[1];
     addr_buf[2] = addrBytes[0];
+    /* For large transfers (e.g., framebuffer), run in background */
+    if (dataSize >= 2048) {
+        /* Ensure previous transfer finished before starting a new one */
+        N_display_spi_transfer_finish();
+        display_addr_buf[0] = addr_buf[0];
+        display_addr_buf[1] = addr_buf[1];
+        display_addr_buf[2] = addr_buf[2];
+        display_async_data_ptr = data;
+        display_async_data_len = (size_t)dataSize;
+        display_spi_tip = 1;
+        k_sem_give(&display_spi_start_sem);
+        return;
+    }
+
+    /* Small transfers remain synchronous */
     struct spi_buf bufs[2] = {
         {.buf = addr_buf, .len = sizeof(addr_buf)},
         {.buf = data, .len = (size_t)dataSize},
