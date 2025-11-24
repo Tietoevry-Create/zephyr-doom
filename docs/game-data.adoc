@@ -10,7 +10,7 @@
 = Zephyr Doom - Game Data
 
 == Version Notice
-This documentation is valid for the code from *MVP6* release and requires an SPI Micro SD card reader.
+This documentation is valid for the code from *MVP5* release and requires an SPI Micro SD card reader.
 
 == SD Card Reader Pin Mapping
 
@@ -21,58 +21,37 @@ This documentation is valid for the code from *MVP6* release and requires an SPI
 ^| nRF5340 Pin
 
 | SPI/SD card
-| SS
+| 3.3V
+| VDD
+
+| SPI/SD card
+| GND
+| GND
+
+| SPI/SD card
+| SS or CS
 | P1.12
 
 | SPI/SD card
-| DI
-| P1.13
+| DI, MOSI
+| P1.13 on P5 connector
 
 | SPI/SD card
-| DO
-| P1.14
+| DO or MISO
+| P1.14 on P5 connector
 
 | SPI/SD card
-| SCK
-| P1.15
+| SCK or CLK
+| P1.15 on P5 connector
 
 |===
 
-== QSPI Flash Upload
+== First Steps
 
-. Ensure that the Nordic command line tools are installed (`nrfjprog`).
-
-. Connect the board via USB.
-
-. Erase the external *QSPI flash* and then program it with the data in the
-`qspi.hex` file with the following commands:
-+
-[source,bash]
-----
-nrfjprog --family nrf53 --qspicustominit --qspieraseall
-nrfjprog --family nrf53 --qspicustominit --program qspi.hex --verify
-----
-
-== Custom WAD Files [[custom-wad-files]]
-
-If you want to play with the *modified DOOM WAD* file(s):
-
-. Format an SD card to `FAT32` format.
-. Copy the *custom WAD file* to the root directory of the SD card.
-. Rename the *custom WAD file* to "doom.wad".
-. Insert the SD card into the card slot connected to the board.
-. Hold down *button 4* while restarting the board, which will cause the game to
-load the *WAD file* and write it to the *external QSPI flash*.
-. The game will now use *custom WAD file*.
-
-The `qspi.hex` file in this folder was created in the following way:
-
-. Download the
-https://archive.org/details/DoomsharewareEpisode[DOOM shareware v1.9 WAD file].
-
-. Follow the steps above to upload the *WAD file* to the external *QSPI flash*.
-
-. Use the below command to read the contents of the *QSPI flash* and save it as
+. Backup QSPI flash memory content.
+** For Nordic Semiconductor based boards make sure that the Nordic command line tools are installed (`nrfjprog`).
+*** Connect the board via USB.
+*** Use the below command to read the contents of the *QSPI flash* and save it as
 `qspi.hex`:
 +
 [source,bash]
@@ -80,7 +59,7 @@ https://archive.org/details/DoomsharewareEpisode[DOOM shareware v1.9 WAD file].
 nrfjprog --family nrf53 --readqspi qspi.hex
 ----
 
-== Edit WAD Files
+== Edit WAD File
 
 Follow these steps to modify and integrate the *custom WAD file(s)*:
 
@@ -92,6 +71,7 @@ graphics, audio, textures, and map editing.
 Primarily focused on creating and editing maps.
 
 . *Edit the WAD file*
+* Download the https://archive.org/details/DoomsharewareEpisode[DOOM shareware v1.9 WAD file].
 * Open the *WAD file* using your chosen editor:
 ** Replace textures or sprites.
 ** Edit or create new maps.
@@ -101,7 +81,7 @@ Primarily focused on creating and editing maps.
 * Save your changes as a *new WAD file* (e.g. `MYDOOM.WAD`).
 
 . *Load your custom WAD onto the board*
-* Follow the steps outlined in the <<custom-wad-files, Custom WAD Files>>
+* Follow the steps outlined in the <<custom-wad-file, Use Custom WAD File>>
 chapter to transfer the *edited WAD* onto the board's *external QSPI flash*.
 
 === Tips
@@ -111,3 +91,31 @@ chapter to transfer the *edited WAD* onto the board's *external QSPI flash*.
 external flash (*8 MiB*).
 * Test the *custom WAD file* thoroughly on a desktop DOOM port (like Chocolate
 Doom) before deploying it to the board, making the debugging easier.
+
+== Use Custom WAD File [[custom-wad-file]]
+
+If you want to play with the *modified DOOM WAD* file(s):
+
+. Format an SD card to `FAT32` format.
+. Copy the *custom WAD file* to the root directory of the SD card.
+. Rename the *custom WAD file* to "doom.wad".
+. Insert the SD card into the card slot connected to the board.
+. Hold down *button 4* while restarting the board, which will cause the game to
+load the *WAD file* and write it to the *external QSPI flash*.
+. The game will now use *custom WAD file*.
+
+== Other QSPI Operations
+
+. *Erase the external *QSPI flash*:*
++
+[source,bash]
+----
+nrfjprog --family nrf53 --qspicustominit --qspieraseall
+----
+
+. *Program the external *QSPI flash* with the data in the `qspi.hex` file:*
++
+[source,bash]
+----
+nrfjprog --family nrf53 --qspicustominit --program qspi.hex --verify
+----
