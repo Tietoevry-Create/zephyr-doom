@@ -86,28 +86,35 @@ performance.
 Nordic UART Service (NUS) for data exchange.
 
 | BLE HID support
-| In progress
+| Done
 | Replace NUS communication with BLE HID standard to allow control via gamepad
 (test with Xbox wireless controller) and keyboard (test with BLE keyboard built
 on RPi 400).
 
 | Game data (SD card to flash)
+| Done
+| Automatically copy game data (WAD file) from SD card to flash.
+
+| Basic CI
+| Done
+| Build the code for target platforms in GitHub actions.
+
+| Sound
 | In progress
-| Automatically copy game data from SD card to flash during first start (or on
-demand).
+| Add support for game sounds (I2S peripheral for interfacing with external DAC)
+
+| Pure Zephyr port
+| In progress
+| Modify the code to make it compatible with any Zephyr device that meets the
+resource requirements by removing NRFX/NCS elements. Validate on new SoC.
 
 | Game save and load
 | Open
 | Enable save and load functionality to store/restore gameplay progress.
 
-| Pure Zephyr port
+| Multiplayer
 | Open
-| Modify the code to make it compatible with any Zephyr device that meets the
-resource requirements by removing NRFX/NCS elements.
-
-| Basic CI
-| In progress
-| Build the code for target platforms in GitHub actions.
+| N/A
 
 | Static analysis
 | Open
@@ -124,14 +131,6 @@ resource requirements by removing NRFX/NCS elements.
 | Touchscreen controls
 | Open
 | Use dedicated area of display to control movement and fire.
-
-| Sound
-| Open
-| N/A
-
-| Multiplayer
-| Open
-| N/A
 
 | Music
 | Open
@@ -225,7 +224,7 @@ inside Visual Studio Code.
 | Hardware not supported.
 |===
 
-[cols="1,1,1,1,1,1,1" options="header, autowidth"]
+[cols="1,1,1,1,1,1,1,1" options="header, autowidth"]
 |===
 ^| Item
 ^| Version
@@ -234,10 +233,12 @@ inside Visual Studio Code.
 ^| MVP3
 ^| MVP4
 ^| MVP5
+^| MVP6
 
 | https://www.nordicsemi.com/Products/Low-power-short-range-wireless/nRF5340[nRF5340]
 dev kit
 | 2.0.1
+^| ✅
 ^| ✅
 ^| ✅
 ^| ✅
@@ -252,6 +253,7 @@ https://www.laskakit.cz/320x480-barevny-lcd-tft-displej-3-5-shield-arduino-uno/[
 ^| ❌
 ^| ❌
 ^| ❌
+^| ❌
 
 | 2.8" ILI9341
 https://cz.mouser.com/ProductDetail/Adafruit/1947?qs=GURawfaeGuArmJSJoJoDJA%3D%3D[SPI display]
@@ -259,6 +261,7 @@ https://cz.mouser.com/ProductDetail/Adafruit/1947?qs=GURawfaeGuArmJSJoJoDJA%3D%3
 ^| ❌
 ^| ❌
 ^| ✅
+^| ❌
 ^| ❌
 ^| ❌
 
@@ -270,6 +273,7 @@ https://www.hotmcu.com/43-graphical-ips-lcd-touchscreen-800x480-spi-ft810-p-333.
 ^| ❌
 ^| ✅
 ^| ✅
+^| ✅
 
 | https://microbit.org/new-microbit/[micro:bit v2]
 | 2.x
@@ -277,6 +281,7 @@ https://www.hotmcu.com/43-graphical-ips-lcd-touchscreen-800x480-spi-ft810-p-333.
 ^| ✅
 ^| ✅
 ^| ✅
+^| ❌
 ^| ❌
 
 | https://shop.elecfreaks.com/products/elecfreaks-micro-bit-joystick-bit-v2-kit[joystick v2]
@@ -286,6 +291,7 @@ https://www.hotmcu.com/43-graphical-ips-lcd-touchscreen-800x480-spi-ft810-p-333.
 ^| ✅
 ^| ✅
 ^| ❌
+^| ❌
 
 | https://www.xbox.com/en-US/accessories/controllers/xbox-wireless-controller[Xbox controller]
 | Model 1914
@@ -293,6 +299,7 @@ https://www.hotmcu.com/43-graphical-ips-lcd-touchscreen-800x480-spi-ft810-p-333.
 ^| ❌
 ^| ❌
 ^| ❌
+^| ✅
 ^| ✅
 
 | https://www.raspberrypi.com/products/raspberry-pi-400/[Keyboard]
@@ -302,6 +309,26 @@ https://www.hotmcu.com/43-graphical-ips-lcd-touchscreen-800x480-spi-ft810-p-333.
 ^| ❌
 ^| ❌
 ^| ✅
+^| ✅
+
+| https://www.ti.com/product/PCM5102[DAC]
+| PCM5102A
+^| ❌
+^| ❌
+^| ❌
+^| ❌
+^| ❌
+^| ✅
+
+| https://www.aliexpress.com/item/1005005302035188.html?spm=a2g0o.order_list.order_list_main.205.45501802xbtOmK[Micro SD card reader]
+| N/A
+^| ❌
+^| ❌
+^| ❌
+^| ❌
+^| ❌
+^| ✅
+
 |===
 
 === Prerequisites
@@ -875,6 +902,9 @@ https://www.hotmcu.com/43-graphical-ips-lcd-touchscreen-800x480-spi-ft810-p-333.
 ** https://www.xbox.com/en-US/accessories/controllers/xbox-wireless-controller[Xbox controller];
 ** https://www.raspberrypi.com/products/raspberry-pi-400/[Keyboard];
 
+* *Optional Hardware:*
+**  Micro SD card https://www.aliexpress.com/item/1005005302035188.html?spm=a2g0o.order_list.order_list_main.205.45501802xbtOmK[reader];
+
 * *Pins/buttons mapping:*
 ** Nordic Semiconductor
 https://www.nordicsemi.com/Products/Low-power-short-range-wireless/nRF5340[nRF5340]
@@ -961,6 +991,31 @@ dev kit:
 | SPI/FT810 Display
 | PD_N
 | P0.26
+
+| SPI/SD card
+| 3.3V
+| VDD
+
+| SPI/SD card
+| GND
+| GND
+
+| SPI/SD card
+| SS or CS
+| P1.12
+
+| SPI/SD card
+| DI, MOSI
+| P1.13 on P5 connector
+
+| SPI/SD card
+| DO or MISO
+| P1.14 on P5 connector
+
+| SPI/SD card
+| SCK or CLK
+| P1.15 on P5 connector
+
 |===
 
 ** https://www.xbox.com/en-US/accessories/controllers/xbox-wireless-controller[Xbox controller]:
@@ -1004,16 +1059,7 @@ dev kit:
 | Show menu;
 |===
 
-
-* *Setup:*
-** https://www.xbox.com/en-US/accessories/controllers/xbox-wireless-controller[Xbox controller]:
-. Hold the pairing button on the front of the controller, until the light starts
-blinking quickly.
-. Restart the board running the `zephyrdoom` project.
-. Wait for *5-10* seconds.
-. Hold the pairing button again, until the light stops blinking and stays on.
-
-* Keyboard:
+** Keyboard:
 +
 [cols="1,1" options="header, autowidth"]
 |===
@@ -1072,6 +1118,143 @@ blinking quickly.
 | Select weapons;
 |===
 
+* *Setup:*
+** https://www.xbox.com/en-US/accessories/controllers/xbox-wireless-controller[Xbox controller]:
+. Hold the pairing button on the front of the controller, until the light starts
+blinking quickly.
+. Restart the board running the `zephyrdoom` project.
+. Wait for *5-10* seconds.
+. Hold the pairing button again, until the light stops blinking and stays on.
+
+=== MVP6
+
+* *Goals:*
+** Add sound.
+
+* *Features:*
+** Sound effects.
+
+* *Required Hardware:*
+** Nordic Semiconductor
+https://www.nordicsemi.com/Products/Low-power-short-range-wireless/nRF5340[nRF5340]
+dev kit;
+** 4.3" FT810
+https://www.hotmcu.com/43-graphical-ips-lcd-touchscreen-800x480-spi-ft810-p-333.html[SPI IPS display];
+** External https://www.aliexpress.com/item/1005007477490325.html?spm=a2g0o.order_list.order_list_main.172.16071802jqGhmR[DAC] connected via I2S;
+
+* *Pins/buttons mapping:*
+** Nordic Semiconductor
+https://www.nordicsemi.com/Products/Low-power-short-range-wireless/nRF5340[nRF5340]
+dev kit:
++
+[cols="1,1,1" options="header, autowidth"]
+|===
+^| Peripheral
+^| Function
+^| nRF5340 Pin
+
+| Buttons
+| Button 1
+| P0.23
+
+| Buttons
+| Button 2
+| P0.24
+
+| Buttons
+| Button 3
+| P0.8
+
+| Buttons
+| Button 4
+| P0.9
+
+| LEDs
+| LED 1
+| P0.28
+
+| LEDs
+| LED 2
+| P0.29
+
+| LEDs
+| LED 3
+| P0.30
+
+| LEDs
+| LED 4
+| P0.31
+
+| QSPI Memory
+| SCK
+| P0.17
+
+| QSPI Memory
+| CSN
+| P0.18
+
+| QSPI Memory
+| IO0
+| P0.13
+
+| QSPI Memory
+| IO1
+| P0.14
+
+| QSPI Memory
+| IO2
+| P0.15
+
+| QSPI Memory
+| IO3
+| P0.16
+
+| SPI/FT810 Display
+| SCK
+| P0.06
+
+| SPI/FT810 Display
+| MISO
+| P0.05
+
+| SPI/FT810 Display
+| MOSI
+| P0.25
+
+| SPI/FT810 Display
+| CS_N
+| P0.07
+
+| SPI/FT810 Display
+| PD_N
+| P0.26
+
+| SPI/SD card
+| 3.3V
+| VDD
+
+| SPI/SD card
+| GND
+| GND
+
+| SPI/SD card
+| SS or CS
+| P1.12
+
+| SPI/SD card
+| DI, MOSI
+| P1.13 on P5 connector
+
+| SPI/SD card
+| DO or MISO
+| P1.14 on P5 connector
+
+| SPI/SD card
+| SCK or CLK
+| P1.15 on P5 connector
+
+|===
+
 == Release Notes
 
 === Fixed Bugs
@@ -1108,6 +1291,10 @@ used in original https://github.com/NordicPlayground/nrf-doom[nrf-doom] project.
 
 * N/A
 
+==== MVP6
+
+* N/A
+
 === Known Limitations
 
 ==== MVP1
@@ -1131,5 +1318,9 @@ eliminate drift. Calibration procedure could help to address this issue.
 * N/A
 
 ==== MVP5
+
+* ~10s delay when switching from Xbox controller to BLE keyboard control.
+
+==== MVP6
 
 * N/A
