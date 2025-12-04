@@ -1,0 +1,86 @@
+description: FTDI/Bridgetek FT800/FT81x Embedded Video Engine
+
+compatible: "ftdi,ft800"
+
+include: spi-device.yaml
+
+properties:
+  reset_gpios:
+    type: phandle-array
+    required: true
+    description: Power down (reset) GPIO
+
+  hsize:
+    type: int
+    required: true
+    description: Active width of LCD display
+
+  vsize:
+    type: int
+    required: true
+    description: Active height of LCD display
+
+  hcycle:
+    type: int
+    required: true
+    description: Total number of clocks per line
+
+  hoffset:
+    type: int
+    required: true
+    description: Start of active line
+
+  hsync0:
+    type: int
+    required: true
+    description: Start of horizontal sync pulse
+
+  hsync1:
+    type: int
+    required: true
+    description: End of horizontal sync pulse
+
+  vcycle:
+    type: int
+    required: true
+    description: Total number of lines per screen
+
+  voffset:
+    type: int
+    required: true
+    description: Start of active screen
+
+  vsync0:
+    type: int
+    required: true
+    description: Start of vertical sync pulse
+
+  vsync1:
+    type: int
+    required: true
+    description: End of vertical sync pulse
+
+  swizzle:
+    type: int
+    required: true
+    description: Define RGB output pins
+
+  pclk_pol:
+    type: int
+    required: true
+    description: Define active edge of PCLK
+
+  pclk:
+    type: int
+    required: true
+    description: Pixel Clock divider
+
+  pwm_duty:
+    type: int
+    required: true
+    description: Backlight PWM duty cycle
+
+  rotate:
+    type: int
+    required: true
+    description: Screen rotation (0=normal, 1=inverted)

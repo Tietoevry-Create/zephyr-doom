@@ -14,7 +14,7 @@
 //
 // DESCRIPTION:
 //      Miscellaneous.
-//    
+//
 
 
 #ifndef __M_MISC__
@@ -50,4 +50,3 @@ int M_snprintf(char *buf, size_t buf_len, const char *s, ...);
 char *M_OEMToUTF8(const char *ansi);
 
 #endif
-

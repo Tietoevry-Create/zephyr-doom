@@ -13,7 +13,7 @@
 // GNU General Public License for more details.
 //
 // DESCRIPTION:
-//	The not so system specific sound interface.
+//  The not so system specific sound interface.
 //
 
 
@@ -32,7 +32,7 @@
 void S_Init(int sfxVolume, int musicVolume);
 
 
-// Shut down sound 
+// Shut down sound
 
 void S_Shutdown(void);
 
@@ -86,4 +86,3 @@ void S_SetSfxVolume(int volume);
 extern const int snd_channels;
 
 #endif
-

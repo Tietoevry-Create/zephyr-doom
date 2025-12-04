@@ -51,9 +51,9 @@
 #endif
 
 #ifdef MAX98357
-#define I2S_PIN_SD NRF_GPIO_PIN_MAP(0, 10);
-#define I2S_PIN_GAIN NRF_GPIO_PIN_MAP(0, 9);
-#define I2S_PIN_DIN NRF_GPIO_PIN_MAP(1, 0);
-#define I2S_PIN_BCK NRF_GPIO_PIN_MAP(0, 24);   // BCLK
-#define I2S_PIN_LRCK NRF_GPIO_PIN_MAP(0, 22);  // LRC
+#define I2S_PIN_SD      NRF_GPIO_PIN_MAP(0, 10);
+#define I2S_PIN_GAIN    NRF_GPIO_PIN_MAP(0, 9);
+#define I2S_PIN_DIN      NRF_GPIO_PIN_MAP(1, 0);
+#define I2S_PIN_BCK      NRF_GPIO_PIN_MAP(0, 24); // BCLK
+#define I2S_PIN_LRCK     NRF_GPIO_PIN_MAP(0, 22); // LRC
 #endif

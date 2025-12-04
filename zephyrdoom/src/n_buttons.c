@@ -74,7 +74,7 @@ int N_ButtonStateRaw(int id)
     return 0;
 }
 
-void N_ReadButtons() 
+void N_ReadButtons()
 {
     static event_t event;
 

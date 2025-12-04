@@ -93,19 +93,19 @@ boolean M_WriteFile(char *name, void *source, int length)
     printf("NRFD-TODO M_WriteFile\n"); return false;
 /*
     FILE *handle;
-    int	count;
-	
+    int count;
+
     handle = fopen(name, "wb");
 
     if (handle == NULL)
-	return false;
+    return false;
 
     count = fwrite(source, 1, length, handle);
     fclose(handle);
-	
+
     if (count < length)
-	return false;
-		
+    return false;
+
     return true;
     */
 }
@@ -120,25 +120,25 @@ int M_ReadFile(char *name, byte **buffer)
     printf("NRFD-TODO M_ReadFile\n"); return 0;
     /*
     FILE *handle;
-    int	count, length;
+    int count, length;
     byte *buf;
-	
+
     handle = fopen(name, "rb");
     if (handle == NULL)
-	I_Error ("Couldn't read file %s", name);
+    I_Error ("Couldn't read file %s", name);
 
     // find the size of the file by seeking to the end and
     // reading the current position
 
     length = M_FileLength(handle);
-    
+
     buf = Z_Malloc (length, PU_STATIC, NULL);
     count = fread(buf, 1, length, handle);
     fclose (handle);
-	
+
     if (count < length)
-	I_Error ("Couldn't read file %s", name);
-		
+    I_Error ("Couldn't read file %s", name);
+
     *buffer = buf;
     return length;
     */
@@ -178,7 +178,7 @@ void M_ExtractFileBase(char *path, char *dest)
     // back up until a \ or the start
     while (src != path && *(src - 1) != DIR_SEPARATOR)
     {
-	src--;
+    src--;
     }
 
     filename = src;
@@ -200,7 +200,7 @@ void M_ExtractFileBase(char *path, char *dest)
             break;
         }
 
-	dest[length++] = toupper((int)*src++);
+    dest[length++] = toupper((int)*src++);
     }
 }
 
@@ -286,7 +286,7 @@ char *M_StringDuplicate(const char *orig)
     //result = strdup(orig);
     result = N_malloc(strlen(orig)+1);
     if (result) strcpy(result, orig);
-    
+
     if (result == NULL)
     {
         I_Error("Failed to duplicate string (length %i)\n",
@@ -499,5 +499,3 @@ int M_snprintf(char *buf, size_t buf_len, const char *s, ...)
     va_end(args);
     return result;
 }
-
-

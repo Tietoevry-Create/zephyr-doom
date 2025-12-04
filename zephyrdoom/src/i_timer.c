@@ -94,4 +94,3 @@ void I_InitTimer(void)
     // NOTE: If timer is changed, update HU_Ticker (or make global variable)
     NRF_DOOM_TIMER->TASKS_START = 1;
 }
-

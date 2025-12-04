@@ -45,7 +45,7 @@ plat_t*         activeplats[MAXPLATS];
 void T_PlatRaise(plat_t* plat)
 {
     result_e    res;
-        
+
     switch(plat->status)
     {
       case up:
@@ -53,15 +53,15 @@ void T_PlatRaise(plat_t* plat)
                           plat->speed,
                           plat->high,
                           plat->crush,0,1);
-                                        
+
         if (plat->type == raiseAndChange
             || plat->type == raiseToNearestAndChange)
         {
             if (!(leveltime&7))
                 S_StartSound(SectorSoundOrg(plat->sector), sfx_stnmov);
         }
-        
-                                
+
+
         if (res == crushed && (!plat->crush))
         {
             plat->count = plat->wait;
@@ -82,19 +82,19 @@ void T_PlatRaise(plat_t* plat)
                   case downWaitUpStay:
                     P_RemoveActivePlat(plat);
                     break;
-                    
+
                   case raiseAndChange:
                   case raiseToNearestAndChange:
                     P_RemoveActivePlat(plat);
                     break;
-                    
+
                   default:
                     break;
                 }
             }
         }
         break;
-        
+
       case      down:
         res = T_MovePlane(plat->sector,plat->speed,plat->low,false,0,-1);
 
@@ -105,7 +105,7 @@ void T_PlatRaise(plat_t* plat)
             S_StartSound(SectorSoundOrg(plat->sector),sfx_pstop);
         }
         break;
-        
+
       case      waiting:
         if (!--plat->count)
         {
@@ -136,41 +136,41 @@ EV_DoPlat
     int         rtn;
     sector_t*   sec;
     short       line_tag = LineTag(line);
-        
+
     secnum = -1;
     rtn = 0;
 
-    
+
     //  Activate all <type> plats that are in_stasis
     switch(type)
     {
       case perpetualRaise:
         P_ActivateInStasis(line_tag);
         break;
-        
+
       default:
         break;
     }
-        
+
     while ((secnum = P_FindSectorFromLineTag(line,secnum)) >= 0)
     {
         sec = &sectors[secnum];
 
         if (sec->specialdata)
             continue;
-        
+
         // Find lowest & highest floors around sector
         rtn = 1;
         plat = Z_Malloc( sizeof(*plat), PU_LEVSPEC, 0);
         P_AddThinker(&plat->thinker);
-                
+
         plat->type = type;
         plat->sector = sec;
         plat->sector->specialdata = plat;
         plat->thinker.function.acp1 = (actionf_p1) T_PlatRaise;
         plat->crush = false;
         plat->tag = line_tag;
-        
+
         switch(type)
         {
           case raiseToNearestAndChange:
@@ -180,11 +180,11 @@ EV_DoPlat
             plat->wait = 0;
             plat->status = up;
             // NO MORE DAMAGE, IF APPLICABLE
-            sec->special = 0;           
+            sec->special = 0;
 
             S_StartSound(SectorSoundOrg(sec),sfx_stnmov);
             break;
-            
+
           case raiseAndChange:
             plat->speed = PLATSPEED/2;
             sec->floorpic = SideSector(LineSide(line,0))->floorpic;
@@ -194,7 +194,7 @@ EV_DoPlat
 
             S_StartSound(SectorSoundOrg(sec),sfx_stnmov);
             break;
-            
+
           case downWaitUpStay:
             plat->speed = PLATSPEED * 4;
             plat->low = P_FindLowestFloorSurrounding(sec);
@@ -207,7 +207,7 @@ EV_DoPlat
             plat->status = down;
             S_StartSound(SectorSoundOrg(sec),sfx_pstart);
             break;
-            
+
           case blazeDWUS:
             plat->speed = PLATSPEED * 8;
             plat->low = P_FindLowestFloorSurrounding(sec);
@@ -220,7 +220,7 @@ EV_DoPlat
             plat->status = down;
             S_StartSound(SectorSoundOrg(sec),sfx_pstart);
             break;
-            
+
           case perpetualRaise:
             plat->speed = PLATSPEED;
             plat->low = P_FindLowestFloorSurrounding(sec);
@@ -249,7 +249,7 @@ EV_DoPlat
 void P_ActivateInStasis(int tag)
 {
     int         i;
-        
+
     for (i = 0;i < MAXPLATS;i++)
         if (activeplats[i]
             && (activeplats[i])->tag == tag
@@ -280,7 +280,7 @@ void EV_StopPlat(line_t* line)
 void P_AddActivePlat(plat_t* plat)
 {
     int         i;
-    
+
     for (i = 0;i < MAXPLATS;i++)
         if (activeplats[i] == NULL)
         {
@@ -299,7 +299,7 @@ void P_RemoveActivePlat(plat_t* plat)
             (activeplats[i])->sector->specialdata = NULL;
             P_RemoveThinker(&(activeplats[i])->thinker);
             activeplats[i] = NULL;
-            
+
             return;
         }
     I_Error ("P_RemoveActivePlat: can't find plat!");

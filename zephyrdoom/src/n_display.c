@@ -97,7 +97,7 @@ void N_display_power_reset() {
   k_msleep(50);
 }
 
-void N_display_spi_setup(int txdMaxCnt, volatile uint8_t * txdPtr, 
+void N_display_spi_setup(int txdMaxCnt, volatile uint8_t * txdPtr,
                        int rxdMaxCnt, volatile uint8_t * rxdPtr) {
 
   NRF_DISPLAY_SPIM->TXD.MAXCNT = txdMaxCnt;
@@ -108,7 +108,7 @@ void N_display_spi_setup(int txdMaxCnt, volatile uint8_t * txdPtr,
 
 void N_display_spi_transfer_finish() {
   if (display_spi_tip) {
-    while (NRF_DISPLAY_SPIM->EVENTS_END == 0) { 
+    while (NRF_DISPLAY_SPIM->EVENTS_END == 0) {
     }
     NRF_DISPLAY_SPIM->EVENTS_END = 0;
     display_spi_tip = 0;
@@ -124,7 +124,7 @@ void N_display_spi_transfer_start() {
 void N_display_spi_transfer_data() {
   NRF_DISPLAY_SPIM->EVENTS_END = 0;
   NRF_DISPLAY_SPIM->TASKS_START = 1;
-  while (NRF_DISPLAY_SPIM->EVENTS_END == 0) { 
+  while (NRF_DISPLAY_SPIM->EVENTS_END == 0) {
   }
   NRF_DISPLAY_SPIM->EVENTS_END = 0;
 }
@@ -230,7 +230,7 @@ void N_display_spi_wr(uint32_t addr, int dataSize, uint8_t *data) {
 // void N_display_spi_transfer_data_async() {
 //   NRF_DISPLAY_SPIM->EVENTS_END = 0;
 //   NRF_DISPLAY_SPIM->TASKS_START = 1;
-//   while (NRF_DISPLAY_SPIM->EVENTS_END == 0) { 
+//   while (NRF_DISPLAY_SPIM->EVENTS_END == 0) {
 //   }
 // }
 
@@ -280,15 +280,15 @@ void N_display_wakeup() {
   N_display_spi_cmd(0x00, 0x00);
 }
 
-void N_display_init() 
+void N_display_init()
 {
 
   N_display_spi_init();
 
   N_display_power_reset();
-    
+
   N_display_wakeup();
-  
+
   k_msleep(80);
 
   N_display_spi_cmd(FT810_CMD_CLKEXT, 0x00);
@@ -310,7 +310,7 @@ void N_display_init()
   N_display_spi_wr16(FT810_REG_VSYNC1,   3   ); // End of vertical sync pulse
   N_display_spi_wr8 (FT810_REG_SWIZZLE,  0   ); // Define RGB output pins
   N_display_spi_wr8 (FT810_REG_PCLK_POL, 1   ); // Define active edge of PCLK
-  
+
   uint8_t disGpio = N_display_spi_rd8(FT810_REG_GPIO);
   N_display_spi_wr8(FT810_REG_GPIO, disGpio | 0x80);
 
@@ -330,7 +330,7 @@ uint32_t N_display_ram_alloc(size_t size)
 }
 
 void N_display_dlswap_frame() {
-  N_display_spi_wr32(FT810_REG_DLSWAP, FT810_DLSWAP_FRAME);  
+  N_display_spi_wr32(FT810_REG_DLSWAP, FT810_DLSWAP_FRAME);
 }
 
 uint32_t display_dli = 0;
