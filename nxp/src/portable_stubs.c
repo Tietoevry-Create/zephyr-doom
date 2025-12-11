@@ -20,24 +20,6 @@ void N_ReadButtons(void) {}
 int N_rjoy_init(void) { return 0; }
 void N_rjoy_read(void) {}
 
-/* Display replacements */
-void N_display_spi_init(void) {}
-void N_display_power_reset(void) {}
-void N_display_spi_transfer_finish(void) {}
-void N_display_spi_cmd(unsigned char b1, unsigned char b2) {}
-void N_display_spi_wr8(unsigned int addr, unsigned char data) {}
-void N_display_spi_wr16(unsigned int addr, unsigned short data) {}
-void N_display_spi_wr32(unsigned int addr, unsigned int data) {}
-void N_display_spi_wr(unsigned int addr, int dataSize, unsigned char* data) {}
-unsigned char N_display_spi_rd8(unsigned int addr) { return 0; }
-void N_display_init(void) {}
-void N_display_wakeup(void) {}
-unsigned int N_display_ram_alloc(size_t size) { return 0; }
-void N_display_dlswap_frame(void) {}
-void dl_start(void) {}
-void dl(unsigned int cmd) {}
-void dl_end(void) {}
-
 /* Audio / I2S */
 void N_I2S_init(void) {}
 

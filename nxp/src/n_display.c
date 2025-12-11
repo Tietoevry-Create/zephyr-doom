@@ -89,7 +89,7 @@ void N_display_gpiote_clear() { /* No-op in Zephyr SPI path */ }
 
 void N_display_spi_init() {
     /* Use SPI4 directly */
-    spi_dev = DEVICE_DT_GET(DT_NODELABEL(spi4));
+    spi_dev = DEVICE_DT_GET(DT_ALIAS(spi4));
     if (!device_is_ready(spi_dev)) {
         printk("SPI device not ready\n");
     }

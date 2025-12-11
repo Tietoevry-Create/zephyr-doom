@@ -12,7 +12,7 @@ target_sources(app PRIVATE
                 # src/n_fs.c
                 # src/n_mem.c
                 # src/n_buttons.c
-                # src/n_display.c
+                src/n_display.c
                 # src/n_rjoy.c
                 # src/n_i2s.c
                 # src/n_i2s_sound.c

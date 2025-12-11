@@ -1,0 +1,14 @@
+&flexcomm1 {
+	status = "okay";
+};
+
+&arduino_spi {
+	/delete-property/ dmas;
+	/delete-property/ dma-names;
+};
+
+/ {
+	aliases {
+		spi4 = &arduino_spi;
+	};
+};
