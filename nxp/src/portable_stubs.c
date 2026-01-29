@@ -2,6 +2,7 @@
  * Portable stubs for Nordic-specific functions removed in the minimal NXP
  * build. Provide no-op or simplified implementations so the Doom core links.
  */
+#include <stdlib.h>
 #include <zephyr/device.h>
 #include <zephyr/devicetree.h>
 #include <zephyr/kernel.h>
@@ -83,7 +84,7 @@ int N_ButtonState(int idx) { return 0; }
 /* QSPI / Memory stubs */
 #define EXT_FLASH_BASE 0x80000000
 
-void* N_malloc(size_t size) { return k_malloc(size); }
+void* N_malloc(size_t size) { return malloc(size); }
 void N_qspi_reserve_blocks(int blocks) {}
 void* N_qspi_data_pointer(int offset) {
     return (void*)(EXT_FLASH_BASE + offset);
