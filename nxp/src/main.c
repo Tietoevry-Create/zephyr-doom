@@ -15,6 +15,12 @@
 // #include <zephyr/sd/sd.h>
 #include <zephyr/storage/disk_access.h>
 
+#include <zephyr/debug/cpu_load.h>
+
+#include <zephyr/sys/printk.h>
+
+extern uint32_t SystemCoreClock;
+
 LOG_MODULE_REGISTER(doom_main, CONFIG_DOOM_MAIN_LOG_LEVEL);
 
 /* Bluetooth control disabled in portable core build */
@@ -185,6 +191,9 @@ int sd_card_list_files(char const* const path, char* buf, size_t* buf_size) {
 
 int main(void) {
     LOG_INF("BOARD STARTING %s", CONFIG_BOARD);
+
+    printk("CPU clock: %u Hz\n", SystemCoreClock);
+
 
     /* Minimal portable initialization */
     N_ButtonsInit();

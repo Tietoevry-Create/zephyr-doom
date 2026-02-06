@@ -31,6 +31,20 @@
 
 #include <stdbool.h>
 #include <stdio.h>
+#if defined(__has_include)
+#if __has_include(<zephyr/cache.h>)
+#include <zephyr/cache.h>
+#define HAVE_SYS_CACHE_FLUSH 1
+#elif __has_include(<zephyr/sys/cache.h>)
+#include <zephyr/sys/cache.h>
+#define HAVE_SYS_CACHE_FLUSH 1
+#else
+#define HAVE_SYS_CACHE_FLUSH 0
+#endif
+#else
+#include <zephyr/cache.h>
+#define HAVE_SYS_CACHE_FLUSH 1
+#endif
 #include <zephyr/device.h>
 #include <zephyr/drivers/gpio.h>
 #include <zephyr/drivers/spi.h>
@@ -39,21 +53,31 @@
 #include "FT810.h"
 #include "board_config.h"
 
-static const struct device *spi_dev;
+static const struct device* spi_dev;
 static struct spi_config spi_cfg;
-static const struct device *gpio0_dev;
+static const struct device* gpio0_dev;
 
 /* Async framebuffer transfer support */
 static struct k_thread display_spi_thread;
 static K_THREAD_STACK_DEFINE(display_spi_stack, 1024);
 static struct k_sem display_spi_start_sem;
 static struct k_sem display_spi_done_sem;
-static volatile const uint8_t *display_async_data_ptr;
+static volatile const uint8_t* display_async_data_ptr;
 static volatile size_t display_async_data_len;
-static uint8_t display_addr_buf[3];
+static volatile uint32_t display_async_addr;
 static volatile int display_spi_tip;
 
-static void display_spi_thread_fn(void *p1, void *p2, void *p3) {
+static inline void display_spi_flush_tx_cache(const void* buf, size_t len) {
+#if HAVE_SYS_CACHE_FLUSH
+    /* Required when SPI driver uses DMA (EDMA reads RAM, not D-cache). */
+    sys_cache_data_flush_range((void*)buf, len);
+#else
+    ARG_UNUSED(buf);
+    ARG_UNUSED(len);
+#endif
+}
+
+static void display_spi_thread_fn(void* p1, void* p2, void* p3) {
     ARG_UNUSED(p1);
     ARG_UNUSED(p2);
     ARG_UNUSED(p3);
@@ -61,22 +85,46 @@ static void display_spi_thread_fn(void *p1, void *p2, void *p3) {
     for (;;) {
         k_sem_take(&display_spi_start_sem, K_FOREVER);
 
+        const uint8_t* data_ptr = (const uint8_t*)display_async_data_ptr;
+        size_t data_len = (size_t)display_async_data_len;
+        uint32_t addr = (uint32_t)display_async_addr;
+
         /* CS low */
         gpio_pin_set(gpio0_dev, DISPLAY_PIN_CS_N, 0);
 
-        struct spi_buf bufs[2];
-        bufs[0].buf = (void *)display_addr_buf;
-        bufs[0].len = sizeof(display_addr_buf);
-        bufs[1].buf = (void *)display_async_data_ptr;
-        bufs[1].len = (size_t)display_async_data_len;
-        const struct spi_buf_set tx = {.buffers = bufs, .count = 2};
+        /*
+         * With DMA enabled, some SPI driver/DMA combinations have a maximum
+         * transfer length. Chunk the transfer to ensure the whole framebuffer
+         * is written (fixes “bottom half missing”).
+         */
+        while (data_len > 0) {
+            size_t chunk_len = data_len;
+            if (chunk_len > 16384) {
+                chunk_len = 16384;
+            }
 
-        (void)spi_write(spi_dev, &spi_cfg, &tx);
+            uint8_t* addrBytes = (uint8_t*)&addr;
+            uint8_t hdr[3];
+            hdr[0] = addrBytes[2] | 0x80;
+            hdr[1] = addrBytes[1];
+            hdr[2] = addrBytes[0];
+
+            struct spi_buf bufs[2];
+            bufs[0].buf = (void*)hdr;
+            bufs[0].len = sizeof(hdr);
+            bufs[1].buf = (void*)data_ptr;
+            bufs[1].len = chunk_len;
+            const struct spi_buf_set tx = {.buffers = bufs, .count = 2};
+
+            (void)spi_write(spi_dev, &spi_cfg, &tx);
+
+            addr += (uint32_t)chunk_len;
+            data_ptr += chunk_len;
+            data_len -= chunk_len;
+        }
 
         /* CS high */
         gpio_pin_set(gpio0_dev, DISPLAY_PIN_CS_N, 1);
-
-        display_spi_tip = 0;
         k_sem_give(&display_spi_done_sem);
     }
 }
@@ -128,8 +176,8 @@ void N_display_power_reset() {
     k_msleep(50);
 }
 
-void N_display_spi_setup(int txdMaxCnt, volatile uint8_t *txdPtr, int rxdMaxCnt,
-                         volatile uint8_t *rxdPtr) {
+void N_display_spi_setup(int txdMaxCnt, volatile uint8_t* txdPtr, int rxdMaxCnt,
+                         volatile uint8_t* rxdPtr) {
     /* No-op with Zephyr SPI path; handled in transfer functions */
 }
 
@@ -175,7 +223,7 @@ void N_display_spi_cmd(uint8_t b1, uint8_t b2) {
 }
 
 void N_display_spi_wr8(uint32_t addr, uint8_t data) {
-    uint8_t *addrBytes = (uint8_t *)&addr;
+    uint8_t* addrBytes = (uint8_t*)&addr;
     uint8_t buf[4];
     buf[0] = addrBytes[2] | 0x80;
     buf[1] = addrBytes[1];
@@ -189,8 +237,8 @@ void N_display_spi_wr8(uint32_t addr, uint8_t data) {
 }
 
 void N_display_spi_wr16(uint32_t addr, uint16_t data) {
-    uint8_t *addrBytes = (uint8_t *)&addr;
-    uint8_t *dataBytes = (uint8_t *)&data;
+    uint8_t* addrBytes = (uint8_t*)&addr;
+    uint8_t* dataBytes = (uint8_t*)&data;
     uint8_t buf[5];
     buf[0] = addrBytes[2] | 0x80;
     buf[1] = addrBytes[1];
@@ -205,8 +253,8 @@ void N_display_spi_wr16(uint32_t addr, uint16_t data) {
 }
 
 void N_display_spi_wr32(uint32_t addr, uint32_t data) {
-    uint8_t *addrBytes = (uint8_t *)&addr;
-    uint8_t *dataBytes = (uint8_t *)&data;
+    uint8_t* addrBytes = (uint8_t*)&addr;
+    uint8_t* dataBytes = (uint8_t*)&data;
     uint8_t buf[7];
     buf[0] = addrBytes[2] | 0x80;
     buf[1] = addrBytes[1];
@@ -222,8 +270,8 @@ void N_display_spi_wr32(uint32_t addr, uint32_t data) {
     gpio_pin_set(gpio0_dev, DISPLAY_PIN_CS_N, 1);
 }
 
-void N_display_spi_wr(uint32_t addr, int dataSize, uint8_t *data) {
-    uint8_t *addrBytes = (uint8_t *)&addr;
+void N_display_spi_wr(uint32_t addr, int dataSize, uint8_t* data) {
+    uint8_t* addrBytes = (uint8_t*)&addr;
     uint8_t addr_buf[3];
     addr_buf[0] = addrBytes[2] | 0x80;
     addr_buf[1] = addrBytes[1];
@@ -232,9 +280,8 @@ void N_display_spi_wr(uint32_t addr, int dataSize, uint8_t *data) {
     if (dataSize >= 2048) {
         /* Ensure previous transfer finished before starting a new one */
         N_display_spi_transfer_finish();
-        display_addr_buf[0] = addr_buf[0];
-        display_addr_buf[1] = addr_buf[1];
-        display_addr_buf[2] = addr_buf[2];
+        display_spi_flush_tx_cache(data, (size_t)dataSize);
+        display_async_addr = addr;
         display_async_data_ptr = data;
         display_async_data_len = (size_t)dataSize;
         display_spi_tip = 1;
@@ -242,19 +289,43 @@ void N_display_spi_wr(uint32_t addr, int dataSize, uint8_t *data) {
         return;
     }
 
-    /* Small transfers remain synchronous */
-    struct spi_buf bufs[2] = {
-        {.buf = addr_buf, .len = sizeof(addr_buf)},
-        {.buf = data, .len = (size_t)dataSize},
-    };
-    const struct spi_buf_set tx = {.buffers = bufs, .count = 2};
+    /* Small transfers remain synchronous (still chunked for safety) */
+    display_spi_flush_tx_cache(data, (size_t)dataSize);
     gpio_pin_set(gpio0_dev, DISPLAY_PIN_CS_N, 0);
-    (void)spi_write(spi_dev, &spi_cfg, &tx);
+
+    const uint8_t* data_ptr = (const uint8_t*)data;
+    size_t data_len = (size_t)dataSize;
+    uint32_t cur_addr = addr;
+
+    while (data_len > 0) {
+        size_t chunk_len = data_len;
+        if (chunk_len > 16384) {
+            chunk_len = 16384;
+        }
+
+        uint8_t* addrBytes2 = (uint8_t*)&cur_addr;
+        uint8_t hdr[3];
+        hdr[0] = addrBytes2[2] | 0x80;
+        hdr[1] = addrBytes2[1];
+        hdr[2] = addrBytes2[0];
+
+        struct spi_buf bufs[2] = {
+            {.buf = hdr, .len = sizeof(hdr)},
+            {.buf = (void*)data_ptr, .len = chunk_len},
+        };
+        const struct spi_buf_set tx = {.buffers = bufs, .count = 2};
+        (void)spi_write(spi_dev, &spi_cfg, &tx);
+
+        cur_addr += (uint32_t)chunk_len;
+        data_ptr += chunk_len;
+        data_len -= chunk_len;
+    }
+
     gpio_pin_set(gpio0_dev, DISPLAY_PIN_CS_N, 1);
 }
 
 uint8_t N_display_spi_rd8(uint32_t addr) {
-    uint8_t *addrBytes = (uint8_t *)&addr;
+    uint8_t* addrBytes = (uint8_t*)&addr;
     uint8_t hdr[4];
     uint8_t data = 0xFF;
     hdr[0] = addrBytes[2];

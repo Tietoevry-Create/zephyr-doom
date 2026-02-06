@@ -2,10 +2,10 @@
 	status = "okay";
 };
 
-&arduino_spi {
-	/delete-property/ dmas;
-	/delete-property/ dma-names;
-};
+// &arduino_spi {
+// 	/delete-property/ dmas;
+// 	/delete-property/ dma-names;
+// };
 
 / {
 	aliases {
