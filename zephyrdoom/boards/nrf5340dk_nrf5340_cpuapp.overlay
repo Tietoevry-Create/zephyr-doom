@@ -24,7 +24,7 @@
 };
 
 &clock {
-    hfclkaudio-frequency = <11289600>;
+    hfclkaudio-frequency = <11113200>;
 };
 
 &spi4 {
