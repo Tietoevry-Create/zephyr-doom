@@ -83,13 +83,29 @@ int N_ButtonState(int idx) { return 0; }
 
 /* QSPI / Memory stubs */
 #define EXT_FLASH_BASE 0x80000000
+#define N_QSPI_BLOCK_SIZE (64 * 1024)
 
-void* N_malloc(size_t size) { return malloc(size); }
-void N_qspi_reserve_blocks(int blocks) {}
-void* N_qspi_data_pointer(int offset) {
-    return (void*)(EXT_FLASH_BASE + offset);
+static size_t qspi_next_loc;
+
+void *N_malloc(size_t size) { return malloc(size); }
+
+void N_qspi_reserve_blocks(size_t block_count)
+{
+    qspi_next_loc += block_count * N_QSPI_BLOCK_SIZE;
 }
-void N_qspi_write_block(int offset, void* data) {}
-void N_qspi_read(int offset, void* data, int size) {}
-int N_qspi_alloc_block(void) { return 0; }
-void N_qspi_erase_block(int offset) {}
+
+size_t N_qspi_alloc_block(void)
+{
+    size_t loc = qspi_next_loc;
+    qspi_next_loc += N_QSPI_BLOCK_SIZE;
+    return loc;
+}
+
+void *N_qspi_data_pointer(size_t loc)
+{
+    return (void *)(EXT_FLASH_BASE + loc);
+}
+
+void N_qspi_write_block(size_t loc, void *buffer, size_t size) { ARG_UNUSED(loc); ARG_UNUSED(buffer); ARG_UNUSED(size); }
+void N_qspi_read(size_t loc, void *buffer, size_t size) { ARG_UNUSED(loc); ARG_UNUSED(buffer); ARG_UNUSED(size); }
+void N_qspi_erase_block(size_t loc) { ARG_UNUSED(loc); }
