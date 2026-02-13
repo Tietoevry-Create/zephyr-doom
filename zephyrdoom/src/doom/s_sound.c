@@ -16,7 +16,6 @@
 //
 
 #include <stdio.h>
-#include <stdlib.h>
 
 #include "i_sound.h"
 #include "i_system.h"
@@ -283,9 +282,6 @@ void S_StopSound(mobj_t *origin)
 {
     int cnum;
 
-
-    // printf("NRFD-TODO: S_StopSound\n");
-
     for (cnum=0 ; cnum<snd_channels ; cnum++)
     {
         if (channels[cnum].sfxinfo && channels[cnum].origin == origin)
@@ -305,8 +301,6 @@ static int S_GetChannel(mobj_t *origin, sfxinfo_t *sfxinfo)
 {
     // channel number to use
     int                cnum;
-
-    // printf("S_GetChannel\n");
 
     channel_t*        c;
 
@@ -373,8 +367,6 @@ static int S_AdjustSoundParams(mobj_t *listener, mobj_t *source,
     fixed_t        adx;
     fixed_t        ady;
     angle_t        angle;
-
-    // printf("S_AdjustSoundParams\n");
 
     // calculate the distance to sound origin
     //  and clip it if necessary

@@ -15,35 +15,12 @@
 // DESCRIPTION:  none
 //
 
-#include <stdio.h>
 #include <stdlib.h>
 
 #include "doom_config.h"
 #include "doomtype.h"
 
-// #include "gusconf.h"
 #include "i_sound.h"
-#include "i_video.h"
-#include "m_argv.h"
-#include "m_config.h"
-
-// Sound sample rate to use for digital output (Hz)
-
-int snd_samplerate = 44100;
-
-// Maximum number of bytes to dedicate to allocated sound effects.
-// (Default: 64MB)
-
-int snd_cachesize = 64 * 1024 * 1024;
-
-// Config variable that controls the sound buffer size.
-// We default to 28ms (1000 / 35fps = 1 buffer per tic).
-
-int snd_maxslicetime_ms = 28;
-
-// External command to invoke to play back music.
-
-char *snd_musiccmd = "";
 
 // Whether to vary the pitch of sound effects
 // Each game will set the default differently
@@ -56,26 +33,6 @@ static sound_module_t *sound_module;
 static music_module_t *music_module;
 
 int snd_musicdevice = SNDDEVICE_SB;
-int snd_sfxdevice = SNDDEVICE_SB;
-
-// Sound modules
-/* NRFD-TODO?
-extern void I_InitTimidityConfig(void);
-extern sound_module_t sound_sdl_module;
-extern sound_module_t sound_pcsound_module;
-extern music_module_t music_sdl_module;
-extern music_module_t music_opl_module;
-
-// For OPL module:
-
-extern opl_driver_ver_t opl_drv_ver;
-extern int opl_io_port;
-
-// For native music module:
-
-extern char *music_pack_path;
-extern char *timidity_cfg_path;
-*/
 
 extern sound_module_t sound_i2s_module;
 
@@ -91,10 +48,7 @@ static int snd_mport = 0;
 // Compiled-in sound modules:
 
 static sound_module_t *sound_modules[] = {
-    // NRFD-TODO?
     &sound_i2s_module,
-    // &sound_sdl_module,
-    //&sound_pcsound_module,
     NULL,
 };
 
@@ -129,18 +83,6 @@ static void InitSfxModule(boolean use_sfx_prefix) {
 
     sound_module = NULL;
 
-    /* NRFD-Exclude
-    for (i=0; sound_modules[i] != NULL; ++i)
-    {
-        // Is the sfx device in the list of devices supported by
-        // this module?
-
-        if (SndDeviceInList(snd_sfxdevice,
-                            sound_modules[i]->sound_devices,
-                            sound_modules[i]->num_sound_devices))
-        {
-            // Initialize the module
-    */
     if (1) {  // NRFD-TODO: Setting?
         i = 0;
         if (sound_modules[i]->Init(use_sfx_prefix)) {
@@ -148,10 +90,6 @@ static void InitSfxModule(boolean use_sfx_prefix) {
             return;
         }
     }
-    /*
-        }
-    }
-    */
 }
 
 // Initialize music according to snd_musicdevice.
