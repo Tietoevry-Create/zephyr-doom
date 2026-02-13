@@ -43,7 +43,7 @@ static int16_t zeros[BUFFER_SIZE];
 K_MEM_SLAB_DEFINE(tx_mem_slab, BUFFER_SIZE_BYTES, 4, 4);
 
 #define AUDIO_STACK_SIZE 2048
-#define AUDIO_PRIO 0
+#define AUDIO_PRIO -1
 K_THREAD_STACK_DEFINE(audio_stack, AUDIO_STACK_SIZE);
 static struct k_thread audio_thread;
 
