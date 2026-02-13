@@ -54,7 +54,7 @@ mapping (see `zephyrdoom/boards/nrf5340dk_nrf5340_cpuapp.overlay`).
 * Doom SFX are mixed in software and sent as 16-bit signed stereo over I2S.
 * Output sample rate is 11025 Hz (matching Doom SFX assets).
 * Audio uses Zephyr's I2S API with a mixer thread feeding a TX feeder thread;
-	underruns are handled by writing silence and performing stop/drop restart.
+    underruns are handled by writing silence and performing stop/drop restart.
 * Music is disabled.
 
 == Parameters
@@ -72,7 +72,7 @@ mapping (see `zephyrdoom/boards/nrf5340dk_nrf5340_cpuapp.overlay`).
 * Mixing pipeline
 ** Up to 16 channels.
 ** For each output frame: read 8-bit sample, convert to signed by subtracting
-	 128, apply left/right gains (volume + separation), and accumulate.
+     128, apply left/right gains (volume + separation), and accumulate.
 ** Pitch parameter is ignored (no pitch shifting).
 
 * Clipping/normalization
@@ -98,9 +98,9 @@ mapping (see `zephyrdoom/boards/nrf5340dk_nrf5340_cpuapp.overlay`).
 
 * Threads
 ** Mixer thread in `zephyrdoom/src/n_i2s_sound.c` (priority `0`) generates mixed
-	 blocks via `N_I2S_next_buffer()`.
+     blocks via `N_I2S_next_buffer()`.
 ** I2S feeder thread in `zephyrdoom/src/n_i2s.c` (priority `-1`) pushes blocks
-	 to the driver using `i2s_buf_write()`.
+     to the driver using `i2s_buf_write()`.
 
 * Underrun and recovery
 ** If no mixed block is available, the feeder writes a zeroed block (silence).
@@ -110,6 +110,6 @@ mapping (see `zephyrdoom/boards/nrf5340dk_nrf5340_cpuapp.overlay`).
 
 * `zephyrdoom/src/i_sound.c` selects the I2S sound module.
 * `zephyrdoom/src/n_i2s_sound.c` implements Doom's `sound_module_t` hooks and
-	owns the mixer thread.
+    owns the mixer thread.
 * `zephyrdoom/src/n_i2s.c` provides the `N_I2S_*` buffer API and owns the I2S TX
-	feeder thread.
+    feeder thread.
