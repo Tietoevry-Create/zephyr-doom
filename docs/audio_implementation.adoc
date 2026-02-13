@@ -1,0 +1,115 @@
+:email: <marek.licko@tietoevry.com>
+:description: Description of the Zephyr-Doom audio implementation
+:sectlinks:
+:sectnums:
+:toc:
+:toc-title: Content
+:toclevels: 2
+:source-highlighter: highlightjs
+
+= Zephyr Doom - Audio
+
+== Version Notice
+
+This documentation describes the current Zephyr I2S sound implementation in this
+repository and assumes an external I2S DAC / I2S amplifier.
+
+Reference implementation: link:https://github.com/NordicPlayground/nrf-doom[Nordic nrf-doom].
+
+== I2S Audio Pin Mapping
+
+The `nrf5340dk_nrf5340_cpuapp` overlay configures `i2s0` using the following pin
+mapping (see `zephyrdoom/boards/nrf5340dk_nrf5340_cpuapp.overlay`).
+
+[cols="1,1,1" options="header, autowidth"]
+|===
+^| Peripheral
+^| Function
+^| nRF5340 Pin
+
+| I2S
+| 3.3V
+| VDD
+
+| I2S
+| GND
+| GND
+
+| I2S
+| SCK (BCLK)
+| P1.08
+
+| I2S
+| LRCK (WS)
+| P1.06
+
+| I2S
+| SDOUT
+| P1.07
+
+|===
+
+== Summary
+
+* Doom SFX are mixed in software and sent as 16-bit signed stereo over I2S.
+* Output sample rate is 11025 Hz (matching Doom SFX assets).
+* Audio uses Zephyr's I2S API with a mixer thread feeding a TX feeder thread;
+	underruns are handled by writing silence and performing stop/drop restart.
+* Music is disabled.
+
+== Parameters
+
+* Sample rate
+** 11025 Hz (configured in `zephyrdoom/src/n_i2s.c` via `SAMPLE_RATE`).
+
+* PCM format
+** This port: 16-bit signed, stereo, interleaved L/R.
+** Older repo: 16-bit signed, stereo, interleaved L/R.
+
+* Source assets
+** Doom SFX are 8-bit unsigned mono at 11025 Hz; no resampling is performed.
+
+* Mixing pipeline
+** Up to 16 channels.
+** For each output frame: read 8-bit sample, convert to signed by subtracting
+	 128, apply left/right gains (volume + separation), and accumulate.
+** Pitch parameter is ignored (no pitch shifting).
+
+* Clipping/normalization
+** No explicit limiter; accumulation may overflow in 16-bit range.
+
+* Music
+** Disabled/not supported.
+
+== Clocking and I2S
+
+* Device tree
+** `i2s0` is enabled with `clock-source = "ACLK"`.
+** Audio clock is configured via `&clock hfclkaudio-frequency = <11113200>`.
+
+* Runtime I2S configuration (TX)
+** `word_size = 16`, `channels = 2`, `format = I2S_FMT_DATA_FORMAT_I2S`.
+** `frame_clk_freq = 11025`.
+
+== Buffering and runtime behavior
+
+* Buffering
+** Ring of 5 blocks × 512 `int16_t` samples per block (stereo interleaved).
+
+* Threads
+** Mixer thread in `zephyrdoom/src/n_i2s_sound.c` (priority `0`) generates mixed
+	 blocks via `N_I2S_next_buffer()`.
+** I2S feeder thread in `zephyrdoom/src/n_i2s.c` (priority `-1`) pushes blocks
+	 to the driver using `i2s_buf_write()`.
+
+* Underrun and recovery
+** If no mixed block is available, the feeder writes a zeroed block (silence).
+** On write errors, recovery is attempted: STOP → DROP → prime with silence → START.
+
+== Integration points
+
+* `zephyrdoom/src/i_sound.c` selects the I2S sound module.
+* `zephyrdoom/src/n_i2s_sound.c` implements Doom's `sound_module_t` hooks and
+	owns the mixer thread.
+* `zephyrdoom/src/n_i2s.c` provides the `N_I2S_*` buffer API and owns the I2S TX
+	feeder thread.
