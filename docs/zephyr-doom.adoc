@@ -106,7 +106,19 @@ on RPi 400).
 | Pure Zephyr port
 | In progress
 | Modify the code to make it compatible with any Zephyr device that meets the
-resource requirements by removing NRFX/NCS elements. Validate on new SoC.
+resource requirements by removing NRFX/NCS elements. Validate on Nordic Semiconductor dev kit.
+
+| Port to MCU from different manufacturer
+| In progress
+| Port code to NXP dev kit.
+
+| Simulation on PC
+| Open
+| Native Posix target.
+
+| Upgrade to Zephyr 4.X
+| Open
+| N/A
 
 | Game save and load
 | Open
@@ -116,15 +128,11 @@ resource requirements by removing NRFX/NCS elements. Validate on new SoC.
 | Open
 | N/A
 
-| Static analysis
+| Music
 | Open
 | N/A
 
-| Simulation on PC
-| Open
-| Native Posix target.
-
-| Gamepad calibration
+| Static analysis
 | Open
 | N/A
 
@@ -132,9 +140,6 @@ resource requirements by removing NRFX/NCS elements. Validate on new SoC.
 | Open
 | Use dedicated area of display to control movement and fire.
 
-| Music
-| Open
-| N/A
 |===
 
 == Getting Started
@@ -326,7 +331,7 @@ https://www.hotmcu.com/43-graphical-ips-lcd-touchscreen-800x480-spi-ft810-p-333.
 ^| ❌
 ^| ❌
 ^| ❌
-^| ❌
+^| ✅
 ^| ✅
 
 |===
@@ -345,14 +350,6 @@ https://www.hotmcu.com/43-graphical-ips-lcd-touchscreen-800x480-spi-ft810-p-333.
 Select `zephyrdoom` folder;*
 * *Visual Studio Code -> nRF Connect extension -> Applications ->
 Add build configuration -> Select board target `nrf5340dk_nrf5340_cpuapp` ->
-Build Configuration;*
-
-==== Gamepad
-
-* *Visual Studio Code -> nRF Connect extension -> Add Folder as Application ->
-Select `gamepad/microbit` folder;*
-* *Visual Studio Code -> nRF Connect extension -> Applications ->
-Add build configuration -> Select board target `bbc_microbit_v2` ->
 Build Configuration;*
 
 === Flash
@@ -378,23 +375,6 @@ Select `zephyrdoom`;*
 . Flash the game.
 +
 *Visual Studio Code -> nRF Connect extension -> Actions -> Flash;*
-
-==== Gamepad
-
-. Connect https://microbit.org/new-microbit/[micro:bit v2].
-
-. Select gamepad app.
-+
-*Visual Studio Code -> nRF Connect extension -> Applications ->
-Select microbit;*
-
-. Copy file `gamepad/microbit/build/zephyr/zephyr.hex` to `micro:bit` (acting as
-a removable USB device).
-
-==== Monitor
-
-. *Visual Studio Code -> nRF Connect extension -> Connected Devices -> VCOM1 ->
-Connect to Serial Port;*
 
 == MVPs
 
@@ -885,13 +865,14 @@ dev kit:
 
 * *Goals:*
 ** Add option to connect BLE gamepad (Xbox wireless controller) and ideally BLE
-keyboard (built on RPi 400).
-** This step will enable full game control (all the available options).
+keyboard (built on RPi 400). This step will enable full game control (all the available options).
+** Add option to copy custom game data (WAD file) from SD card.
 
 * *Features:*
 ** Using BLE gamepad.
 ** Using BLE keyboard, which enables full-fledged game control per original
 manual (including cheats).
+** Option to copy custom game data (WAD file) from SD card to external flash (during startup). For more info see https://github.com/Tietoevry-Create/zephyr-doom/blob/master/docs/game-data.adoc[game data readme].
 
 * *Required Hardware:*
 ** Nordic Semiconductor
@@ -1129,7 +1110,7 @@ blinking quickly.
 === MVP6
 
 * *Goals:*
-** Add sound.
+** Add support for original sound effects.
 
 * *Features:*
 ** Sound effects.
@@ -1252,6 +1233,26 @@ dev kit:
 | SPI/SD card
 | SCK or CLK
 | P1.15 on P5 connector
+
+| I2S/DAC
+| 3.3V
+| VDD
+
+| I2S/DAC
+| GND
+| GND
+
+| I2S/DAC
+| SCK (BCLK)
+| P1.08
+
+| I2S/DAC
+| LRCK (WS)
+| P1.06
+
+| I2S/DAC
+| SDOUT
+| P1.07
 
 |===
 
