@@ -155,8 +155,6 @@ static int N_I2S_GetSfxLumpNum(sfxinfo_t *sfx) {
 static void N_I2S_UpdateSoundParams(int handle, int vol, int sep) {
     int left, right;
 
-    // printf("N_I2S_UpdateSoundParams\n");
-
     if (!sound_initialized || handle < 0 || handle >= NUM_CHANNELS) {
         return;
     }
@@ -175,12 +173,9 @@ static void N_I2S_UpdateSoundParams(int handle, int vol, int sep) {
 
     channels[handle].left_vol = left;
     channels[handle].right_vol = right;
-
-    // printf("N_I2S_UpdateSoundParams: %d %d\n", left, right);
 }
 
 static void ClearSoundOnChannel(int channel) {
-    // printf("Clear channel %0d\n", channel);
     channels[channel].ptr = NULL;
     channels[channel].len = 0;
     channels[channel].pos = 0;
@@ -203,11 +198,6 @@ static void ClearSoundOnChannel(int channel) {
 
 static int N_I2S_StartSound(sfxinfo_t *sfxinfo, int channel, int vol, int sep,
                             int pitch) {
-    // allocated_sound_t *snd;
-
-    // printf("N_I2S_StartSound %.9s %d %d %d %d\n", sfxinfo->name, channel,
-    // vol, sep, pitch);
-
     if (!sound_initialized || channel < 0 || channel >= NUM_CHANNELS) {
         return -1;
     }
@@ -243,8 +233,6 @@ static boolean N_I2S_SoundIsPlaying(int handle) {
     if (!sound_initialized || handle < 0 || handle >= NUM_CHANNELS) {
         return false;
     }
-
-    // printf("N_I2S_SoundIsPlaying\n");
 
     return (channels[handle].ptr != NULL);
 }

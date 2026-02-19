@@ -348,8 +348,6 @@ static int S_GetChannel(mobj_t *origin, sfxinfo_t *sfxinfo)
     c->sfxinfo = sfxinfo;
     c->origin = origin;
 
-    // printf("   %d\n", cnum);
-
     return cnum;
 }
 
@@ -453,8 +451,6 @@ void S_StartSound(void *origin_p, int sfx_id)
     int pitch;
     int cnum;
     int volume;
-
-    // printf("S_StartSound\n");
 
     origin = (mobj_t *) origin_p;
     volume = snd_SfxVolume;
@@ -590,8 +586,6 @@ void S_UpdateSounds(mobj_t *listener)
     sfxinfo_t*        sfx;
     channel_t*        c;
 
-    // TODO: Fix this function
-    // printf("NRFD-TODO: S_UpdateSounds\n");
     I_UpdateSound();
 
     for (cnum=0; cnum<snd_channels; cnum++)
