@@ -1,97 +1,188 @@
-.. zephyr:code-sample:: blinky
-   :name: Blinky
-   :relevant-api: gpio_interface
+NXP FRDM-MCXN947 port (vs. NRF5340 reference)
+============================================
 
-   Blink an LED forever using the GPIO API.
+This folder contains the Zephyr application used to run **Doom** on the
+**NXP FRDM-MCXN947** (MCXN947, Cortex-M33).
 
-Overview
-********
+It is a port of the NRF5340 reference application found under ``zephyrdoom/``.
+The goal of this port is to keep the Doom core as close as possible to the
+reference, while swapping out the Nordic-specific hardware pieces.
 
-The Blinky sample blinks an LED forever using the :ref:`GPIO API <gpio_api>`.
+Where to look
+-------------
 
-The source code shows how to:
+- Reference (NRF5340): ``zephyrdoom/``
+- This port (NXP): ``nxp/``
 
-#. Get a pin specification from the :ref:`devicetree <dt-guide>` as a
-   :c:struct:`gpio_dt_spec`
-#. Configure the GPIO pin as an output
-#. Toggle the pin forever
+Key differences from the NRF5340 build
+-------------------------------------
 
-See :zephyr:code-sample:`pwm-blinky` for a similar sample that uses the PWM API instead.
+**Hardware/driver layer**
 
-.. _blinky-sample-requirements:
+- Nordic-specific modules (QSPI/XIP, buttons, joystick, I2S, etc.) are not used
+   directly on NXP.
+- The NXP build currently links a **minimal portable hardware layer** in
+   ``nxp/src/portable_stubs.c`` and a Zephyr-based FT810 display driver in
+   ``nxp/src/n_display.c``.
+- ``nxp/CMakeLists.txt`` intentionally does **not** compile several Nordic
+   modules (for example ``n_qspi.c``, ``n_buttons.c``, ``n_mem.c``), and provides
+   replacements via ``portable_stubs.c``.
 
-Requirements
-************
+**Memory model**
 
-Your board must:
+- The NXP board has multiple SRAM banks. The port adjusts linker-visible SRAM
+   to use more RAM than the default single-bank configuration.
+- ``nxp/prj.conf`` sets ``CONFIG_SRAM_SIZE=416`` (KiB) for the application.
+- ``nxp/boards/frdm_mcxn947_mcxn947_cpu0.overlay`` disables ``&sramg`` and
+   ``&sramh`` so they don’t conflict with treating SRAM as one contiguous region.
 
-#. Have an LED connected via a GPIO pin (these are called "User LEDs" on many of
-   Zephyr's :ref:`boards`).
-#. Have the LED configured using the ``led0`` devicetree alias.
+**Display path (FT810 over SPI)**
 
-Building and Running
-********************
+- The display path is Zephyr SPI-based, targeting **32 MHz** and using **DMA**.
+- DMA requires cache-coherency handling on MCXN947, so the port flushes D-cache
+   ranges before DMA reads and chunks large transfers to avoid controller/DMA
+   transfer-length limits.
 
-Build and flash Blinky as follows, changing ``reel_board`` for your board:
+**Storage / WAD / texture composites**
 
-.. zephyr-app-commands::
-   :zephyr-app: samples/basic/blinky
-   :board: reel_board
-   :goals: build flash
-   :compact:
+- The codebase expects an external-flash ("QSPI") region for two things:
 
-After flashing, the LED starts to blink and messages with the current LED state
-are printed on the console. If a runtime error occurs, the sample exits without
-printing to the console.
+  1. The **IWAD** (game data file), loaded at flash offset 0.
+  2. **Composite wall textures**, generated at startup and stored in flash
+     immediately after the WAD.
 
-Build errors
-************
+- On the NRF5340 reference the Nordic ``nrfx_qspi`` driver provides
+  erase/write/read plus an XIP mapping at ``0x12000000``.  The WAD is
+  transferred from an SD card to flash on first boot, and composite textures
+  are written once (triggered by holding a button).  Both persist across
+  reboots because flash is non-volatile.
 
-You will see a build error at the source code line defining the ``struct
-gpio_dt_spec led`` variable if you try to build Blinky for an unsupported
-board.
+- On this NXP port:
 
-On GCC-based toolchains, the error looks like this:
+  - The WAD is **pre-loaded to external flash from a host PC** (no SD card).
+    The ``doom1.wad`` binary is converted to Intel HEX with
+    ``--change-addresses 0x80000000`` and flashed with ``pyocd``::
 
-.. code-block:: none
+        arm-zephyr-eabi-objcopy -I binary -O ihex \
+            --change-addresses 0x80000000 \
+            gamedata/doom1.wad gamedata/qspi_nxp_80.hex
 
-   error: '__device_dts_ord_DT_N_ALIAS_led_P_gpios_IDX_0_PH_ORD' undeclared here (not in a function)
+        pyocd flash -t MCXN947VDF gamedata/qspi_nxp_80.hex
 
-Adding board support
-********************
+  - Flash erase/write/read are implemented in ``nxp/src/portable_stubs.c``
+    using Zephyr's standard ``<zephyr/drivers/flash.h>`` API against the
+    board's W25Q64 FlexSPI NOR device (DT node ``w25q64jvssiq``).
 
-To add support for your board, add something like this to your devicetree:
+  - ``N_qspi_data_pointer()`` returns ``EXT_FLASH_BASE + offset``
+    (``0x80000000``), giving direct XIP read access to flash contents.
 
-.. code-block:: DTS
+**Wall textures — composite generation**
 
-   / {
-   	aliases {
-   		led0 = &myled0;
-   	};
+Wall rendering uses *composite textures*: at init time, each wall texture is
+assembled from its constituent patches and stored contiguously so the renderer
+can read columns directly.  This is a separate step from loading the WAD.
 
-   	leds {
-   		compatible = "gpio-leds";
-   		myled0: led_0 {
-   			gpios = <&gpio0 13 GPIO_ACTIVE_LOW>;
-                };
-   	};
-   };
+The flow is controlled by the ``generate_to_flash`` flag in
+``nxp/src/doom/r_data.c`` (function ``R_GenerateInit``):
 
-The above sets your board's ``led0`` alias to use pin 13 on GPIO controller
-``gpio0``. The pin flags :c:macro:`GPIO_ACTIVE_HIGH` mean the LED is on when
-the pin is set to its high state, and off when the pin is in its low state.
+- When **``true``**: ``R_GenerateComposite_N()`` composites each wall texture
+  into a temporary RAM buffer and then writes it to external flash via
+  ``N_qspi_write()``.  This is slow (many flash erase + write cycles) but
+  only needs to happen **once** — the data persists in non-volatile flash.
 
-Tips:
+- When **``false``** (default): the flash write step is skipped.  The code
+  assumes composites are already present in flash from a previous
+  ``generate_to_flash = true`` boot.
 
-- See :dtcompatible:`gpio-leds` for more information on defining GPIO-based LEDs
-  in devicetree.
+**If wall textures look wrong** (solid brown / pink artefacts), set
+``generate_to_flash = true``, rebuild, flash, and boot once.  After the
+composites are generated, set it back to ``false`` to restore normal boot
+speed.
 
-- If you're not sure what to do, check the devicetrees for supported boards which
-  use the same SoC as your target. See :ref:`get-devicetree-outputs` for details.
+On the NRF5340 reference this toggle was originally wired to a button press;
+on this NXP port it is a compile-time flag.
 
-- See :zephyr_file:`include/zephyr/dt-bindings/gpio/gpio.h` for the flags you can use
-  in devicetree.
+Controls (minimal)
+------------------
 
-- If the LED is built in to your board hardware, the alias should be defined in
-  your :ref:`BOARD.dts file <devicetree-in-out-files>`. Otherwise, you can
-  define one in a :ref:`devicetree overlay <set-devicetree-overlays>`.
+This port supports **2 on-board buttons** as a minimal control scheme:
+
+- **SW3** (DT alias ``sw1``):
+   - hold: ``KEY_UPARROW`` (move forward / menu up)
+   - long-press (~600 ms): ``KEY_ESCAPE`` (open menu / back)
+
+- **SW2** (DT alias ``sw0``):
+   - short press: ``KEY_ENTER`` (menu select) + ``KEY_RCTRL`` (fire)
+   - long-press (~600 ms): ``' '`` (use/open doors)
+
+Implementation details:
+
+- GPIO polling + debounce + long-press logic lives in ``nxp/src/portable_stubs.c``.
+- The on-board button nodes are enabled in
+   ``nxp/boards/frdm_mcxn947_mcxn947_cpu0.overlay``.
+
+Build and flash
+---------------
+
+Build from the repository root:
+
+.. code-block:: sh
+
+    west build -b frdm_mcxn947_mcxn947_cpu0 -p auto nxp
+
+Or from inside the ``nxp`` folder:
+
+.. code-block:: sh
+
+    west build -b frdm_mcxn947_mcxn947_cpu0 -p auto .
+
+Flashing depends on your environment (MCU-Link, LinkServer, etc.). Use your
+existing workflow for the board; this README focuses on what changed in the
+application.
+
+Summary of changes on this branch
+---------------------------------
+
+The commit history on ``feature/Markek1/nxp_port`` shows the rough progression:
+
+- **Initial NXP application import** ("Basic core Doom")
+   - Created the ``nxp/`` Zephyr app, largely mirroring the reference Doom core.
+- **Display bring-up** ("Display working")
+   - Added/modified ``nxp/src/n_display.c`` and board overlay to get FT810 output.
+- **Crash fixes (memory/alloc)** ("Fix crash on allocation", "Fix crash")
+   - Adjusted ``nxp/prj.conf`` and stubs to stabilize startup and runtime.
+- **Performance improvements** ("30FPS now", CPU usage investigation)
+   - Switched toward DMA-backed SPI transfers; reduced overhead; reached
+      ~34 FPS (near the 35 Hz Doom tic ceiling).
+
+What we changed in this chat session (high level)
+-------------------------------------------------
+
+- **Allocator correctness**: fixed heap corruption caused by mixing different
+   allocators by making ``N_malloc`` use libc ``malloc()`` to match ``free()``.
+- **SRAM usage**: ensured the NXP build can use more SRAM (``CONFIG_SRAM_SIZE``
+   and SRAM bank handling in the overlay).
+- **SPI DMA correctness**: fixed partial-frame issues by:
+   - flushing D-cache for DMA reads
+   - chunking large transfers
+   - ensuring async transfer completion/in-progress handling is correct
+- **QSPI stub behavior**: implemented correct 64 KiB block reservation/allocation
+   bookkeeping so “allocated” regions don’t all overlap at offset 0.
+- **Basic buttons**: implemented SW2/SW3 polling + mapping (see "Controls").
+- **Wall textures (composite generation)**: replaced no-op QSPI stubs with real
+   Zephyr flash API calls (``flash_erase``, ``flash_write``, ``flash_read``)
+   against the on-board W25Q64 FlexSPI NOR flash.  Set ``generate_to_flash =
+   true`` for one boot to populate the composite texture region in flash.
+   Wall textures now render correctly.
+
+Current limitations / known issues
+----------------------------------
+
+- ``generate_to_flash`` is a compile-time flag.  After re-flashing the WAD
+   or erasing external flash you must do one build+boot with
+   ``generate_to_flash = true`` to regenerate composites, then set it back to
+   ``false``.
+- Audio is not implemented (I2S stubs are no-ops).
+- Bluetooth / gamepad input is not implemented (stub only).
+- Only two on-board buttons are mapped; no joystick / analog input.
+

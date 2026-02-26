@@ -24,3 +24,11 @@
 &sramh {
 	status = "disabled";
 };
+
+&user_button_2 {
+	status = "okay";
+};
+
+&user_button_3 {
+	status = "okay";
+};

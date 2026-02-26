@@ -9,3 +9,7 @@
 .cache/
 
 debug/
+bootloader/
+modules/
+tools/
+zephyr/
