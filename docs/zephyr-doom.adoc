@@ -100,17 +100,17 @@ on RPi 400).
 | Build the code for target platforms in GitHub actions.
 
 | Sound
-| In progress
+| Done
 | Add support for game sounds (I2S peripheral for interfacing with external DAC)
+
+| Port to MCU from different manufacturer
+| In progress
+| Port code to NXP dev kit.
 
 | Pure Zephyr port
 | In progress
 | Modify the code to make it compatible with any Zephyr device that meets the
 resource requirements by removing NRFX/NCS elements. Validate on Nordic Semiconductor dev kit.
-
-| Port to MCU from different manufacturer
-| In progress
-| Port code to NXP dev kit.
 
 | Simulation on PC
 | Open
@@ -187,6 +187,11 @@ https://www.hotmcu.com/43-graphical-ips-lcd-touchscreen-800x480-spi-ft810-p-333.
 | https://www.raspberrypi.com/products/raspberry-pi-400/[Keyboard]
 | RPi 400
 | N/A
+
+| https://www.nxp.com/design/design-center/development-boards-and-designs/FRDM-MCXN947[FRDM-MCXN947]
+dev kit
+| N/A
+| N/A
 |===
 
 === SW Configuration Index
@@ -198,11 +203,11 @@ https://www.hotmcu.com/43-graphical-ips-lcd-touchscreen-800x480-spi-ft810-p-333.
 ^| Comment
 
 | Windows 11 Enterprise
-| 10.0.22631
+| 10.0.26200
 | N/A
 
 | Visual Studio Code
-| 1.98.2
+| 1.109.4
 | N/A
 
 | nRF Connect SDK
@@ -210,7 +215,7 @@ https://www.hotmcu.com/43-graphical-ips-lcd-touchscreen-800x480-spi-ft810-p-333.
 | N/A
 
 | nRF Connect for Visual Studio Code
-| 2025.1.127
+| 2026.1.1327
 | Can be downloaded using the *Toolchain Manager* found in
 *nRF Connect for Desktop*. Alternatively, it can be downloaded directly from
 inside Visual Studio Code.
