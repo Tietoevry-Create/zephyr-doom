@@ -102,6 +102,8 @@ int main(void) {
 
     N_ButtonsInit();
 
+    N_I2S_init();
+
     M_ArgvInit();
 
     int err = bluetooth_control_init();
