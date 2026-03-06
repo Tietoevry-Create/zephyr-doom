@@ -16,7 +16,7 @@
 #include <zephyr/sys/atomic.h>
 #include <zephyr/sys/printk.h>
 
-#define SAMPLE_RATE 10870
+#define SAMPLE_RATE 11025
 #define SAMPLE_BIT_WIDTH 16
 #define NUM_CHANNELS 2
 #define BYTES_PER_SAMPLE 2
@@ -39,11 +39,11 @@ static int queuedBuffer;
 static int16_t zeros[BUFFER_SIZE];
 
 /* Zephyr I2S device + TX slab for the driver's internal queue */
-#define I2S_DEV DT_NODELABEL(i2s0)
+#define I2S_DEV DT_ALIAS(i2s_tx)
 K_MEM_SLAB_DEFINE(tx_mem_slab, BUFFER_SIZE_BYTES, 4, 4);
 
 #define AUDIO_STACK_SIZE 2048
-#define AUDIO_PRIO 0
+#define AUDIO_PRIO -1
 K_THREAD_STACK_DEFINE(audio_stack, AUDIO_STACK_SIZE);
 static struct k_thread audio_thread;
 
@@ -76,6 +76,19 @@ static int i2s_write_block(void *payload) {
     return r;
 }
 
+/*
+ * Workaround for NXP SAI: SAI_TxReset() (called inside i2s_configure /
+ * recovery) clears MCR, which disables MCLK output.  Re-enable it after
+ * every (re-)configure so the external DAC has a clock.
+ */
+static inline void sai_fixup_mclk(void)
+{
+#if DT_NODE_HAS_STATUS(DT_NODELABEL(sai0), okay)
+    volatile uint32_t *mcr = (volatile uint32_t *)(0x50106000 + 0x100);
+    *mcr |= (1u << 30); /* MCR.MOE = 1 */
+#endif
+}
+
 static void audio_feeder(void *a, void *b, void *c) {
     struct i2s_config cfg;
     int idx;
@@ -100,6 +113,7 @@ static void audio_feeder(void *a, void *b, void *c) {
         printk("i2s_configure failed\n");
         return;
     }
+    sai_fixup_mclk();
 
     /* Prefill with silence to prime the queue */
     (void)i2s_write_block(zeros);
@@ -127,6 +141,8 @@ static void audio_feeder(void *a, void *b, void *c) {
             printk("audio: write=%d, recovering\n", r);
             (void)i2s_trigger(i2s_dev, I2S_DIR_TX, I2S_TRIGGER_STOP);
             (void)i2s_trigger(i2s_dev, I2S_DIR_TX, I2S_TRIGGER_DROP);
+            (void)i2s_configure(i2s_dev, I2S_DIR_TX, &cfg);
+            sai_fixup_mclk();
             (void)i2s_write_block(zeros);
             (void)i2s_write_block(zeros);
             (void)i2s_trigger(i2s_dev, I2S_DIR_TX, I2S_TRIGGER_START);

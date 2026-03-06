@@ -4,12 +4,16 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+#ifdef CONFIG_FAT_FILESYSTEM_ELM
 #include <ff.h>
+#endif
 #include <string.h>
 #include <zephyr/device.h>
 #include <zephyr/devicetree.h>
 #include <zephyr/drivers/gpio.h>
+#ifdef CONFIG_FAT_FILESYSTEM_ELM
 #include <zephyr/fs/fs.h>
+#endif
 #include <zephyr/kernel.h>
 #include <zephyr/logging/log.h>
 // #include <zephyr/sd/sd.h>
@@ -38,6 +42,7 @@ void D_DoomMain(void);
 /* LED access not used in minimal build */
 
 #define SD_ROOT_PATH "/SD:/"
+#ifdef CONFIG_FAT_FILESYSTEM_ELM
 /* Maximum length for path support by Windows file system */
 #define PATH_MAX_LEN 260
 #define K_SEM_OPER_TIMEOUT_MS 500
@@ -188,6 +193,9 @@ int sd_card_list_files(char const* const path, char* buf, size_t* buf_size) {
     k_sem_give(&m_sem_sd_oper_ongoing);
     return 0;
 }
+#else
+void clock_initialization() { /* No-op for portable build */ }
+#endif /* CONFIG_FAT_FILESYSTEM_ELM */
 
 int main(void) {
     LOG_INF("BOARD STARTING %s", CONFIG_BOARD);

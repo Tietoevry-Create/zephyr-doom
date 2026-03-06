@@ -14,8 +14,8 @@ target_sources(app PRIVATE
                 # src/n_buttons.c
                 src/n_display.c
                 # src/n_rjoy.c
-                # src/n_i2s.c
-                # src/n_i2s_sound.c
+                src/n_i2s.c
+                src/n_i2s_sound.c
                 src/portable_stubs.c
                 src/deh_main.c
                 src/deh_str.c
@@ -45,7 +45,7 @@ target_sources(app PRIVATE
                 src/v_video.c
                 src/w_checksum.c
                 src/w_file.c
-                src/w_file_fatfs.c
+                # src/w_file_fatfs.c  # disabled: usdhc0 shares pins with SAI0
                 src/w_main.c
                 src/w_wad.c
                 src/z_native.c

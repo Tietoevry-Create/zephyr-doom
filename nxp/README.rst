@@ -43,6 +43,41 @@ Key differences from the NRF5340 build
    ranges before DMA reads and chunks large transfers to avoid controller/DMA
    transfer-length limits.
 
+**Audio path (SAI0 / I2S)**
+
+- Audio on NXP now uses Zephyr's **I2S/SAI** driver with a small Doom-specific
+   mixer layer.
+- The NXP implementation was based on the working NXP version of
+   ``i2s_test2`` / ``zephyr_i2s_pcm5102``.  It keeps the same board setup,
+   the same SAI0 pin routing, and the same basic Zephyr I2S configuration.
+- The Doom-side audio code comes from the newer **NRF5340** implementation in
+   ``zephyrdoom/``: the feeder thread in ``n_i2s.c`` and the mixer thread in
+   ``n_i2s_sound.c`` were reused and then adapted for NXP.
+- The most important NXP-specific detail is the **MCLK workaround** from the
+   test project.  On this board, a call to ``i2s_configure()`` resets part of
+   the SAI block and clears the register bit that enables the master clock
+   output to the DAC.  If that bit is not set again, the PCM5102 board no
+   longer gets a valid clock and sound stops.
+- Because of that, the NXP code explicitly sets the SAI ``MCR.MOE`` bit again
+   after every ``i2s_configure()`` call, including the normal startup path and
+   the audio recovery path.
+- The main difference from the NRF5340 version is that NXP uses **SAI0** and
+   the MCUX I2S driver, while the NRF5340 version uses Nordic I2S hardware.
+   On NXP we also had to choose separate **EDMA channels** for audio so it does
+   not conflict with the display SPI DMA.
+- The sample rate is the same as the master branch: **11025 Hz**.
+
+**Audio pin mapping**
+
+The PCM5102/5101/5100 DAC wiring is the same as in ``i2s_test2``:
+
+- **BCK**  -> ``SAI0 TX_BCLK``  (board pin ``PIO2_6``)
+- **LCK**  -> ``SAI0 TX_FS``    (board pin ``PIO2_7``)
+- **DIN**  -> ``SAI0 TXD0``     (board pin ``PIO2_2``)
+- **VCC**  -> 3.3V
+- **GND**  -> GND
+- **SCK**  -> not connected
+
 **Storage / WAD / texture composites**
 
 - The codebase expects an external-flash ("QSPI") region for two things:
@@ -182,7 +217,8 @@ Current limitations / known issues
    or erasing external flash you must do one build+boot with
    ``generate_to_flash = true`` to regenerate composites, then set it back to
    ``false``.
-- Audio is not implemented (I2S stubs are no-ops).
+- Audio now works, but the NXP display path still shows occasional
+   ``spi_lpspi`` DMA warnings during FT810 control/register accesses.
 - Bluetooth / gamepad input is not implemented (stub only).
 - Only two on-board buttons are mapped; no joystick / analog input.
 

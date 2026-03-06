@@ -33,6 +33,12 @@
 //  * POSSIBILITY OF SUCH DAMAGE.
 //  */
 
+#ifndef N_FS_H
+#define N_FS_H
+
+#include <stddef.h>
+
+#ifdef CONFIG_FAT_FILESYSTEM_ELM
 #include "ff.h"
 
 typedef FIL* N_FILE;
@@ -47,4 +53,14 @@ size_t N_fs_read(FIL *fstream, unsigned int offset, void *buffer, size_t
 buffer_len);
 
 int N_fs_file_exists(char *path);
+#else
+/* No filesystem support — WAD is in external flash */
+typedef void* N_FILE;
+static inline void N_fs_init(void) {}
+static inline void N_fs_shutdown(void) {}
+static inline int N_fs_file_exists(char *path) { return 0; }
+static inline size_t N_fs_read(void *f, unsigned int offset, void *buffer, size_t len) { return 0; }
+#endif
+
+#endif /* N_FS_H */
 long N_fs_file_size(char *path);

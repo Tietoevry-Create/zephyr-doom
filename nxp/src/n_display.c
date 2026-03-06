@@ -62,6 +62,7 @@ static struct k_thread display_spi_thread;
 static K_THREAD_STACK_DEFINE(display_spi_stack, 1024);
 static struct k_sem display_spi_start_sem;
 static struct k_sem display_spi_done_sem;
+static struct k_mutex display_spi_bus_mutex;
 static volatile const uint8_t* display_async_data_ptr;
 static volatile size_t display_async_data_len;
 static volatile uint32_t display_async_addr;
@@ -88,6 +89,8 @@ static void display_spi_thread_fn(void* p1, void* p2, void* p3) {
         const uint8_t* data_ptr = (const uint8_t*)display_async_data_ptr;
         size_t data_len = (size_t)display_async_data_len;
         uint32_t addr = (uint32_t)display_async_addr;
+
+        k_mutex_lock(&display_spi_bus_mutex, K_FOREVER);
 
         /* CS low */
         gpio_pin_set(gpio0_dev, DISPLAY_PIN_CS_N, 0);
@@ -125,6 +128,7 @@ static void display_spi_thread_fn(void* p1, void* p2, void* p3) {
 
         /* CS high */
         gpio_pin_set(gpio0_dev, DISPLAY_PIN_CS_N, 1);
+        k_mutex_unlock(&display_spi_bus_mutex);
         k_sem_give(&display_spi_done_sem);
     }
 }
@@ -162,6 +166,7 @@ void N_display_spi_init() {
     /* Async SPI worker */
     k_sem_init(&display_spi_start_sem, 0, 1);
     k_sem_init(&display_spi_done_sem, 0, 1);
+    k_mutex_init(&display_spi_bus_mutex);
     display_spi_tip = 0;
     k_thread_create(&display_spi_thread, display_spi_stack,
                     K_THREAD_STACK_SIZEOF(display_spi_stack),
@@ -186,6 +191,10 @@ void N_display_spi_transfer_finish() {
         k_sem_take(&display_spi_done_sem, K_FOREVER);
         display_spi_tip = 0;
     }
+}
+
+static inline void display_spi_wait_idle(void) {
+    N_display_spi_transfer_finish();
 }
 
 void N_display_spi_transfer_start() {
@@ -217,9 +226,12 @@ void N_display_spi_cmd(uint8_t b1, uint8_t b2) {
     buf[2] = 0x00;
     struct spi_buf txb = {.buf = buf, .len = sizeof(buf)};
     const struct spi_buf_set tx = {.buffers = &txb, .count = 1};
+    display_spi_wait_idle();
+    k_mutex_lock(&display_spi_bus_mutex, K_FOREVER);
     gpio_pin_set(gpio0_dev, DISPLAY_PIN_CS_N, 0);
     (void)spi_write(spi_dev, &spi_cfg, &tx);
     gpio_pin_set(gpio0_dev, DISPLAY_PIN_CS_N, 1);
+    k_mutex_unlock(&display_spi_bus_mutex);
 }
 
 void N_display_spi_wr8(uint32_t addr, uint8_t data) {
@@ -231,9 +243,12 @@ void N_display_spi_wr8(uint32_t addr, uint8_t data) {
     buf[3] = data;
     struct spi_buf txb = {.buf = buf, .len = sizeof(buf)};
     const struct spi_buf_set tx = {.buffers = &txb, .count = 1};
+    display_spi_wait_idle();
+    k_mutex_lock(&display_spi_bus_mutex, K_FOREVER);
     gpio_pin_set(gpio0_dev, DISPLAY_PIN_CS_N, 0);
     (void)spi_write(spi_dev, &spi_cfg, &tx);
     gpio_pin_set(gpio0_dev, DISPLAY_PIN_CS_N, 1);
+    k_mutex_unlock(&display_spi_bus_mutex);
 }
 
 void N_display_spi_wr16(uint32_t addr, uint16_t data) {
@@ -247,9 +262,12 @@ void N_display_spi_wr16(uint32_t addr, uint16_t data) {
     buf[4] = dataBytes[1];
     struct spi_buf txb = {.buf = buf, .len = sizeof(buf)};
     const struct spi_buf_set tx = {.buffers = &txb, .count = 1};
+    display_spi_wait_idle();
+    k_mutex_lock(&display_spi_bus_mutex, K_FOREVER);
     gpio_pin_set(gpio0_dev, DISPLAY_PIN_CS_N, 0);
     (void)spi_write(spi_dev, &spi_cfg, &tx);
     gpio_pin_set(gpio0_dev, DISPLAY_PIN_CS_N, 1);
+    k_mutex_unlock(&display_spi_bus_mutex);
 }
 
 void N_display_spi_wr32(uint32_t addr, uint32_t data) {
@@ -265,9 +283,12 @@ void N_display_spi_wr32(uint32_t addr, uint32_t data) {
     buf[6] = dataBytes[3];
     struct spi_buf txb = {.buf = buf, .len = sizeof(buf)};
     const struct spi_buf_set tx = {.buffers = &txb, .count = 1};
+    display_spi_wait_idle();
+    k_mutex_lock(&display_spi_bus_mutex, K_FOREVER);
     gpio_pin_set(gpio0_dev, DISPLAY_PIN_CS_N, 0);
     (void)spi_write(spi_dev, &spi_cfg, &tx);
     gpio_pin_set(gpio0_dev, DISPLAY_PIN_CS_N, 1);
+    k_mutex_unlock(&display_spi_bus_mutex);
 }
 
 void N_display_spi_wr(uint32_t addr, int dataSize, uint8_t* data) {
@@ -291,6 +312,8 @@ void N_display_spi_wr(uint32_t addr, int dataSize, uint8_t* data) {
 
     /* Small transfers remain synchronous (still chunked for safety) */
     display_spi_flush_tx_cache(data, (size_t)dataSize);
+    display_spi_wait_idle();
+    k_mutex_lock(&display_spi_bus_mutex, K_FOREVER);
     gpio_pin_set(gpio0_dev, DISPLAY_PIN_CS_N, 0);
 
     const uint8_t* data_ptr = (const uint8_t*)data;
@@ -322,6 +345,7 @@ void N_display_spi_wr(uint32_t addr, int dataSize, uint8_t* data) {
     }
 
     gpio_pin_set(gpio0_dev, DISPLAY_PIN_CS_N, 1);
+    k_mutex_unlock(&display_spi_bus_mutex);
 }
 
 uint8_t N_display_spi_rd8(uint32_t addr) {
@@ -336,10 +360,13 @@ uint8_t N_display_spi_rd8(uint32_t addr) {
     const struct spi_buf_set tx = {.buffers = &tx_buf, .count = 1};
     struct spi_buf rx_buf = {.buf = &data, .len = 1};
     const struct spi_buf_set rx = {.buffers = &rx_buf, .count = 1};
+    display_spi_wait_idle();
+    k_mutex_lock(&display_spi_bus_mutex, K_FOREVER);
     gpio_pin_set(gpio0_dev, DISPLAY_PIN_CS_N, 0);
     (void)spi_write(spi_dev, &spi_cfg, &tx);
     (void)spi_read(spi_dev, &spi_cfg, &rx);
     gpio_pin_set(gpio0_dev, DISPLAY_PIN_CS_N, 1);
+    k_mutex_unlock(&display_spi_bus_mutex);
     return data;
 }
 
