@@ -1,0 +1,74 @@
+diff --git a/drivers/spi/spi_nxp_lpspi/spi_nxp_lpspi_dma.c b/drivers/spi/spi_nxp_lpspi/spi_nxp_lpspi_dma.c
+index c144a1e3b1f..6ff7f7e7a49 100644
+--- a/drivers/spi/spi_nxp_lpspi/spi_nxp_lpspi_dma.c
++++ b/drivers/spi/spi_nxp_lpspi/spi_nxp_lpspi_dma.c
+@@ -215,6 +215,17 @@ static void lpspi_dma_callback(const struct device *dev, void *arg, uint32_t cha
+ 	}
+ 
+ 	switch (dma_data->state) {
++	case LPSPI_TRANSFER_STATE_NULL:
++		/*
++		 * Spurious/late DMA callback when no SPI DMA transfer is active.
++		 *
++		 * This can happen if a DMA completion interrupt is serviced after the
++		 * SPI driver already reset its state (e.g. due to interrupt latency
++		 * from other DMA-heavy peripherals). Treat it as a stale callback.
++		 */
++		LOG_DBG("Ignoring stale DMA callback (state=%d, ch=%d)", dma_data->state, channel);
++		return;
++
+ 	case LPSPI_TRANSFER_STATE_ONGOING:
+ 		spi_context_update_tx(ctx, 1, tx->dma_blk_cfg.block_size);
+ 		spi_context_update_rx(ctx, 1, rx->dma_blk_cfg.block_size);
+@@ -281,6 +292,11 @@ static void lpspi_dma_callback(const struct device *dev, void *arg, uint32_t cha
+ 		spi_context_cs_control(ctx, false);
+ 		break;
+ 
++	case LPSPI_TRANSFER_STATE_RX_TX_DONE:
++		/* Late callback after we already completed the transfer. */
++		LOG_DBG("Ignoring late DMA callback (state=%d, ch=%d)", dma_data->state, channel);
++		return;
++
+ 	default:
+ 		LOG_ERR("unknown spi stransfer state:%d", dma_data->state);
+ 		ret = -EIO;
+@@ -331,7 +347,15 @@ static int transceive_dma(const struct device *dev, const struct spi_config *spi
+ 
+ 	/* Set next dma size is invalid. */
+ 	dma_data->synchronize_dma_size = 0;
+-	dma_data->state = LPSPI_TRANSFER_STATE_NULL;
++	/*
++	 * Arm state before starting DMA channels.
++	 *
++	 * lpspi_dma_rxtx_load() starts the RX/TX DMA channels. On some platforms the
++	 * DMA callback can fire very quickly, so if we keep state as NULL here we
++	 * can get a callback with state==0 and treat it as an error, or (worse) miss
++	 * completion signaling and hit spi_context timeouts.
++	 */
++	dma_data->state = LPSPI_TRANSFER_STATE_ONGOING;
+ 
+ 	/* Load dma block */
+ 	ret = lpspi_dma_rxtx_load(dev);
+@@ -339,7 +363,6 @@ static int transceive_dma(const struct device *dev, const struct spi_config *spi
+ 		goto out;
+ 	}
+ 
+-	dma_data->state = LPSPI_TRANSFER_STATE_ONGOING;
+ 	/* Set CS line just before DMA transfer. */
+ 	spi_context_cs_control(ctx, true);
+ 	/* Enable DMA Requests */
+@@ -347,6 +370,14 @@ static int transceive_dma(const struct device *dev, const struct spi_config *spi
+ 
+ 	ret = spi_context_wait_for_completion(ctx);
+ 	if (ret) {
++		/*
++		 * Abort any in-flight DMA so we don't get late callbacks after timeout or
++		 * error (which can desynchronize state for the next transfer).
++		 */
++		base->DER &= ~(LPSPI_DER_TDDE_MASK | LPSPI_DER_RDDE_MASK);
++		(void)dma_stop(dma_data->dma_tx.dma_dev, dma_data->dma_tx.channel);
++		(void)dma_stop(dma_data->dma_rx.dma_dev, dma_data->dma_rx.channel);
++		dma_data->state = LPSPI_TRANSFER_STATE_RX_TX_DONE;
+ 		spi_context_cs_control(ctx, false);
+ 	}
+ out:
