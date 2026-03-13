@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <debug/cpu_load.h>
+#include <zephyr/debug/cpu_load.h>
 #include <ff.h>
 #include <hal/nrf_gpio.h>
 #include <nrfx_clock.h>
@@ -194,8 +194,6 @@ int sd_card_list_files(char const* const path, char* buf, size_t* buf_size) {
 
 int main(void) {
     LOG_INF("BOARD STARTING %s", CONFIG_BOARD);
-
-    cpu_load_init();
 
     clock_initialization();
 

@@ -32,7 +32,6 @@
 
 #include <stdio.h>
 
-#include "nrf.h"
 #include <hal/nrf_gpio.h>
 #include "board_config.h"
 

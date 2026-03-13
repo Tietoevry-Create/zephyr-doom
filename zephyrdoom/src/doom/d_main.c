@@ -58,7 +58,6 @@
 #include "net_client.h"
 #include "net_dedicated.h"
 #include "net_query.h"
-#include "nrf.h"
 #include "p_saveg.h"
 #include "p_setup.h"
 #include "r_local.h"

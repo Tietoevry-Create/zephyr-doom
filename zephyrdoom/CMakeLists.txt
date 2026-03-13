@@ -5,6 +5,20 @@ project(zephyr_doom)
 target_include_directories(app PRIVATE src/)
 target_include_directories(app PRIVATE src/config)
 
+# NCS/Zephyr 3.x no longer exposes some Nordic MDK headers (eg. compiler_abstraction.h)
+# via the default include paths for out-of-tree apps. Add nrfx + MDK explicitly.
+get_filename_component(NCS_TOPDIR "${ZEPHYR_BASE}/.." ABSOLUTE)
+set(NRFX_ROOT_DIR "${NCS_TOPDIR}/modules/hal/nordic/nrfx")
+set(NRFX_MDK_DIR "${NRFX_ROOT_DIR}/bsp/stable/mdk")
+
+if(EXISTS "${NRFX_ROOT_DIR}/nrfx.h")
+    target_include_directories(app PRIVATE "${NRFX_ROOT_DIR}")
+endif()
+
+if(EXISTS "${NRFX_MDK_DIR}/compiler_abstraction.h")
+    target_include_directories(app PRIVATE "${NRFX_MDK_DIR}")
+endif()
+
 target_sources(app PRIVATE
                 src/main.c
                 src/n_qspi.c

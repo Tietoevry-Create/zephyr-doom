@@ -30,14 +30,14 @@
  */
 
 
-#include <nrf.h>
-#include <nrf_delay.h>
+#include <nrfx.h>
+#include <zephyr/kernel.h>
 
 #include "hardfault.h"
 
 __WEAK void HardFault_process(HardFault_stack_t * p_stack)
 {
-    nrf_delay_ms(5000);
+    k_msleep(5000);
     // Restart the system by default
     NVIC_SystemReset();
 }
