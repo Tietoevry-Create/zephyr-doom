@@ -77,9 +77,7 @@ static int lsdir(const char* path) {
 }
 
 int main(void) {
-    LOG_INF("BOARD STARTING %s", CONFIG_BOARD);
-
-    cpu_load_init();
+    LOG_INF("BOARD STARTING %s", CONFIG_BOARD);    
 
     clock_initialization();
 
@@ -120,3 +118,4 @@ int main(void) {
 
     return 0;
 }
+

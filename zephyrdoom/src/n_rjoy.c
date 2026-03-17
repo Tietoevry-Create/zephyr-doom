@@ -33,7 +33,8 @@
 
 #include <stdio.h>
 
-#include "nrf.h"
+// #include "nrf.h"
+#include <bsp/stable/mdk/nrf.h>
 #include <hal/nrf_clock.h>
 // #include "nrf_delay.h"
 #include "board_config.h"

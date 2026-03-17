@@ -51,7 +51,8 @@ void P_InitThinkers (void)
 
 
 
-#include "compiler_abstraction.h"
+// #include "compiler_abstraction.h"
+#include <bsp/stable/mdk/compiler_abstraction.h>
 
 //
 // P_AddThinker

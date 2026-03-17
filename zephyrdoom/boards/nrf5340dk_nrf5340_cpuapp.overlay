@@ -43,6 +43,11 @@
         reg = <0>;
         status = "okay";
         spi-max-frequency = <4000000>;
-        mmc { compatible = "zephyr,sdmmc-disk"; status = "okay"; };
+        mmc { compatible = "zephyr,sdmmc-disk"; disk-name = "SD"; status = "okay"; };
     };
 };
+
+&mx25r64 {
+    sck-frequency = <32000000>;
+};
+

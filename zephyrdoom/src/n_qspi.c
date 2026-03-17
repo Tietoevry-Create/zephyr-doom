@@ -33,7 +33,8 @@
 
 #include <board_config.h>
 #include <hal/nrf_gpio.h>
-#include <nrf.h>
+// #include <nrf.h>
+#include <bsp/stable/mdk/nrf.h>
 #include <nrfx_qspi.h>
 #include <stdio.h>
 

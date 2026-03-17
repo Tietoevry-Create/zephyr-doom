@@ -33,7 +33,8 @@
 #include <stdio.h>
 
 #include "board_config.h"
-#include "nrf.h"
+// #include "nrf.h"
+#include <bsp/stable/mdk/nrf.h>
 #include <zephyr/kernel.h>
 #include <zephyr/drivers/gpio.h>
 
