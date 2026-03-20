@@ -1,0 +1,24 @@
+# Build outputs (west/cmake)
+/build*/
+/zephyr/
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+compile_commands.json
+build.ninja
+.ninja_deps
+.ninja_log
+
+# Sysbuild output (if used)
+/sysbuild/
+
+# IDE/editor
+.vscode/
+*.code-workspace
+
+# Python
+__pycache__/
+*.pyc
+
+# Misc
+.DS_Store
