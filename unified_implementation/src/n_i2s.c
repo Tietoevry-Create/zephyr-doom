@@ -8,6 +8,7 @@
 
 #include "n_i2s.h"
 
+#include <errno.h>
 #include <stdio.h>
 #include <string.h>
 #include <zephyr/device.h>
@@ -38,8 +39,13 @@ static buffer_state_t bufferStates[NUM_BUFFERS];
 static int queuedBuffer;
 static int16_t zeros[BUFFER_SIZE];
 
-/* Zephyr I2S device + TX slab for the driver's internal queue */
-#define I2S_DEV DT_NODELABEL(i2s0)
+/*
+ * Zephyr I2S device.
+ *
+ * Use a devicetree alias so each board can point audio TX at the right
+ * controller (nRF: i2s0, NXP: sai0).
+ */
+#define I2S_DEV DT_ALIAS(i2s_tx)
 K_MEM_SLAB_DEFINE(tx_mem_slab, BUFFER_SIZE_BYTES, 4, 4);
 
 #define AUDIO_STACK_SIZE 2048
@@ -47,8 +53,20 @@ K_MEM_SLAB_DEFINE(tx_mem_slab, BUFFER_SIZE_BYTES, 4, 4);
 K_THREAD_STACK_DEFINE(audio_stack, AUDIO_STACK_SIZE);
 static struct k_thread audio_thread;
 
-static const struct device *i2s_dev;
+static const struct device* i2s_dev;
 static atomic_t g_recoveries = ATOMIC_INIT(0);
+
+/*
+ * Workaround for NXP SAI: driver reset/reconfigure can disable MCLK output.
+ * Re-enable it after every (re-)configure so the external DAC keeps a clock.
+ */
+static inline void sai_fixup_mclk(void) {
+#if defined(CONFIG_BOARD_FRDM_MCXN947) || \
+    defined(CONFIG_BOARD_FRDM_MCXN947_MCXN947_CPU0)
+    volatile uint32_t* mcr = (volatile uint32_t*)(0x50106000 + 0x100);
+    *mcr |= (1u << 30); /* MCR.MOE = 1 */
+#endif
+}
 
 static void zero_buffer(int bufIdx) {
     int j;
@@ -65,7 +83,7 @@ static void clear_buffers(void) {
     }
 }
 
-static int i2s_write_block(void *payload) {
+static int i2s_write_block(void* payload) {
     int r;
     do {
         r = i2s_buf_write(i2s_dev, payload, BUFFER_SIZE_BYTES);
@@ -76,10 +94,10 @@ static int i2s_write_block(void *payload) {
     return r;
 }
 
-static void audio_feeder(void *a, void *b, void *c) {
+static void audio_feeder(void* a, void* b, void* c) {
     struct i2s_config cfg;
     int idx;
-    void *payload;
+    void* payload;
     int r;
 
     i2s_dev = DEVICE_DT_GET(I2S_DEV);
@@ -100,6 +118,7 @@ static void audio_feeder(void *a, void *b, void *c) {
         printk("i2s_configure failed\n");
         return;
     }
+    sai_fixup_mclk();
 
     /* Prefill with silence to prime the queue */
     (void)i2s_write_block(zeros);
@@ -127,6 +146,8 @@ static void audio_feeder(void *a, void *b, void *c) {
             printk("audio: write=%d, recovering\n", r);
             (void)i2s_trigger(i2s_dev, I2S_DIR_TX, I2S_TRIGGER_STOP);
             (void)i2s_trigger(i2s_dev, I2S_DIR_TX, I2S_TRIGGER_DROP);
+            (void)i2s_configure(i2s_dev, I2S_DIR_TX, &cfg);
+            sai_fixup_mclk();
             (void)i2s_write_block(zeros);
             (void)i2s_write_block(zeros);
             (void)i2s_trigger(i2s_dev, I2S_DIR_TX, I2S_TRIGGER_START);
@@ -149,7 +170,7 @@ void N_I2S_init(void) {
     i2s_started = false;
 }
 
-boolean N_I2S_next_buffer(int *buf_size, int16_t **buffer) {
+boolean N_I2S_next_buffer(int* buf_size, int16_t** buffer) {
     int next;
     next = (queuedBuffer + 1) % NUM_BUFFERS;
     if (bufferStates[next] == BUF_EMPTY) {

@@ -5,8 +5,8 @@
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
  *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
+ * 1. Redistributions of source code must retain the above copyright notice,
+ * this list of conditions and the following disclaimer.
  *
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
@@ -31,6 +31,8 @@
 
 // Nordic Propriatery gamepad/joycon
 
+#if defined(CONFIG_SOC_FAMILY_NORDIC_NRF)
+
 #include <stdio.h>
 
 // #include "nrf.h"
@@ -41,8 +43,8 @@
 
 #undef PACKED_STRUCT
 
-#include "doomkeys.h"
 #include "d_event.h"
+#include "doomkeys.h"
 #include "i_system.h"
 
 // State.
@@ -72,31 +74,28 @@ typedef struct {
 
 rjoy_radio_packet_t prev_joy_state;
 
-int N_rjoy_init() {
+int N_rjoy_init(void) {
     plyr = &players[consoleplayer];
-
     return 1;
 }
 
-
-void N_rjoy_read() {
-    volatile uint32_t *ipc_ptr = &NRF_IPC_S->GPMEM[0];
+void N_rjoy_read(void) {
+    volatile uint32_t* ipc_ptr = &NRF_IPC_S->GPMEM[0];
     uint32_t radio_packet = *ipc_ptr;
     rjoy_radio_packet_t new_joy_state;
-    uint32_t *tmp = (uint32_t*)(&new_joy_state);
+    uint32_t* tmp = (uint32_t*)(&new_joy_state);
     *tmp = radio_packet;
-    //printf("%d %d %d %d %lx\n", new_joy_state.counter, new_joy_state.buttons, new_joy_state.joyX, new_joy_state.joyY, *tmp);
+    // printf("%d %d %d %d %lx\n", new_joy_state.counter, new_joy_state.buttons,
+    // new_joy_state.joyX, new_joy_state.joyY, *tmp);
     if (new_joy_state.counter != prev_joy_state.counter) {
         // printf("N_rjoy_read: %d\n", new_joy_state.counter);
         event_t ev;
 
-        int joyX = new_joy_state.joyX-x_cen;
-        int joyY = new_joy_state.joyY-y_cen;
+        int joyX = new_joy_state.joyX - x_cen;
+        int joyY = new_joy_state.joyY - y_cen;
 
         if (-guard < joyX && joyX < guard) joyX = 0;
         if (-guard < joyY && joyY < guard) joyY = 0;
-
-        // printf("N_rjoy_read: %d %d\n", joyX, joyY);
 
         ev.type = ev_joystick;
         ev.data1 = new_joy_state.buttons;
@@ -116,6 +115,13 @@ void N_rjoy_read() {
     response.ammo = plyr->ammo[weaponinfo[plyr->readyweapon].ammo];
     response.armor = plyr->armorpoints;
 
-    volatile uint32_t *ipc_ptr_1 = &NRF_IPC_S->GPMEM[1];
+    volatile uint32_t* ipc_ptr_1 = &NRF_IPC_S->GPMEM[1];
     *ipc_ptr_1 = *(uint32_t*)&response;
 }
+
+#else
+
+int N_rjoy_init(void) { return 0; }
+void N_rjoy_read(void) {}
+
+#endif

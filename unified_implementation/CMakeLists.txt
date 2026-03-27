@@ -6,7 +6,13 @@ target_include_directories(app PRIVATE src/)
 target_include_directories(app PRIVATE src/config)
 
 set(DOOM_COMMON_SRCS
+                src/main.c
                 src/n_mem.c
+                src/n_i2s.c
+                src/n_i2s_sound.c
+                src/n_display.c
+                src/i_timer.c
+                src/n_rjoy.c
                 src/deh_main.c
                 src/deh_str.c
                 src/doom/deh_misc.h
@@ -91,27 +97,22 @@ set(DOOM_COMMON_SRCS
 if (CONFIG_BOARD_NRF5340DK_NRF5340_CPUAPP)
     target_sources(app PRIVATE
                     ${DOOM_COMMON_SRCS}
-                    src/main_nrf.c
-                    src/i_timer.c
                     src/n_qspi.c
                     src/n_fs.c
                     src/n_buttons.c
-                    src/n_display.c
-                    src/n_rjoy.c
-                    src/n_i2s.c
-                    src/n_i2s_sound.c
-                    src/bluetooth_control.c
     )
-elseif (CONFIG_BOARD_FRDM_MCXN947_MCXN947_CPU0)
+
+    # `src/bluetooth_control.c` uses NCS helper libraries (<bluetooth/scan.h>,
+    # <bluetooth/gatt_dm.h>, <dk_buttons_and_leds.h>). Build it only when
+    # `CONFIG_BT_SCAN` is available and enabled.
+    if (CONFIG_BT_SCAN)
+        target_sources(app PRIVATE src/bluetooth_control.c)
+    endif()
+elseif (CONFIG_BOARD_FRDM_MCXN947 OR CONFIG_BOARD_FRDM_MCXN947_MCXN947_CPU0)
     target_sources(app PRIVATE
                     ${DOOM_COMMON_SRCS}
-                    src/main_nxp.c
-                    src/platform/nxp/i_timer_zephyr.c
                     src/platform/nxp/n_qspi_zephyr_flash.c
                     src/platform/nxp/n_buttons_gpio.c
-                    src/platform/nxp/n_display_zephyr_spi.c
-                    src/platform/nxp/n_rjoy_stub.c
-                    src/platform/nxp/sound_stub.c
     )
 else()
     message(FATAL_ERROR "Unsupported board for unified_implementation: ${CONFIG_BOARD}")

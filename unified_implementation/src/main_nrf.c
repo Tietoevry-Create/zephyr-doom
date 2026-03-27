@@ -8,7 +8,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <debug/cpu_load.h>
 #include <ff.h>
 #include <hal/nrf_gpio.h>
 #include <nrfx_clock.h>
@@ -108,11 +107,13 @@ int main(void) {
 
     M_ArgvInit();
 
+#ifdef CONFIG_BT_SCAN
     int err = bluetooth_control_init();
     if (err) {
         LOG_ERR("Bluetooth control initialization failed.");
         return 0;
     }
+#endif
 
     D_DoomMain();
 

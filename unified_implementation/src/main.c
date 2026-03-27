@@ -1,26 +1,51 @@
 /*
- * Copyright (c) 2016 Intel Corporation
+ * Unified Zephyr main entrypoint.
  *
- * SPDX-License-Identifier: Apache-2.0
+ * - On boards that enable FATFS+disk access, mounts the disk and lists files.
+ * - On nRF5340, performs the known-good HFCLK/cache bring-up.
  */
 
-#include <debug/cpu_load.h>
-#include <ff.h>
-#include <hal/nrf_gpio.h>
-#include <nrfx_clock.h>
-#include <zephyr/device.h>
-#include <zephyr/devicetree.h>
-#include <zephyr/drivers/gpio.h>
-#include <zephyr/fs/fs.h>
 #include <zephyr/kernel.h>
 #include <zephyr/logging/log.h>
+
+#if defined(CONFIG_FILE_SYSTEM) && defined(CONFIG_DISK_ACCESS) && \
+    defined(CONFIG_FAT_FILESYSTEM_ELM)
+#include <ff.h>
+#include <zephyr/fs/fs.h>
 #include <zephyr/storage/disk_access.h>
+#endif
+
+#if defined(CONFIG_SOC_NRF5340_CPUAPP)
+#include <hal/nrf_cache.h>
+#include <hal/nrf_clock.h>
+#include <nrfx_clock.h>
+#endif
 
 #include "bluetooth_control.h"
+#include "n_i2s.h"
 
 LOG_MODULE_REGISTER(doom_main, CONFIG_DOOM_MAIN_LOG_LEVEL);
 
 int no_sdcard = 1;
+
+void D_DoomMain(void);
+void M_ArgvInit(void);
+void N_ButtonsInit(void);
+
+#if defined(CONFIG_SOC_NRF5340_CPUAPP)
+static void platform_clock_cache_init(void) {
+    nrfx_clock_hfclk_start();
+    nrf_clock_hfclk_div_set(NRF_CLOCK_S, NRF_CLOCK_HFCLK_DIV_1);
+    nrfx_clock_divider_set(NRF_CLOCK_DOMAIN_HFCLK192M, NRF_CLOCK_HFCLK_DIV_1);
+
+    NRF_CACHE_S->ENABLE = 1;
+}
+#else
+static void platform_clock_cache_init(void) {}
+#endif
+
+#if defined(CONFIG_FILE_SYSTEM) && defined(CONFIG_DISK_ACCESS) && \
+    defined(CONFIG_FAT_FILESYSTEM_ELM)
 #define DISK_DRIVE_NAME "SD"
 #define DISK_MOUNT_PT "/" DISK_DRIVE_NAME ":"
 
@@ -30,12 +55,6 @@ static struct fs_mount_t mp = {
     .fs_data = &fat_fs,
 };
 static const char* disk_mount_pt = DISK_MOUNT_PT;
-
-void clock_initialization() {
-    nrfx_clock_hfclk_start();
-    nrf_clock_hfclk_div_set(NRF_CLOCK_S, NRF_CLOCK_HFCLK_DIV_1);
-    nrfx_clock_divider_set(NRF_CLOCK_DOMAIN_HFCLK192M, NRF_CLOCK_HFCLK_DIV_1);
-}
 
 static int lsdir(const char* path) {
     int res;
@@ -76,46 +95,43 @@ static int lsdir(const char* path) {
     return res;
 }
 
-int main(void) {
-    LOG_INF("BOARD STARTING %s", CONFIG_BOARD);    
-
-    clock_initialization();
-
-    uint32_t hfclkctrl = NRF_CLOCK_S->HFCLKCTRL;
-    printf("HFCLK_S: %d\n", hfclkctrl);
-
-    NRF_CACHE_S->ENABLE = 1;
-
+static void try_mount_disk(void) {
     mp.mnt_point = disk_mount_pt;
 
     int res = fs_mount(&mp);
-
     if (res == FR_OK) {
         printk("Disk mounted.\n");
         no_sdcard = 0;
         lsdir(disk_mount_pt);
     } else {
-        printk("Error mounting disk.\n");
+        printk("Error mounting disk (%d).\n", res);
     }
+}
+#else
+static void try_mount_disk(void) { no_sdcard = 1; }
+#endif
+
+int main(void) {
+    LOG_INF("BOARD STARTING %s", CONFIG_BOARD);
+
+    platform_clock_cache_init();
+    try_mount_disk();
 
     N_ButtonsInit();
-
     N_I2S_init();
-
     M_ArgvInit();
 
+#ifdef CONFIG_BT_SCAN
     int err = bluetooth_control_init();
     if (err) {
         LOG_ERR("Bluetooth control initialization failed.");
         return 0;
     }
+#endif
 
     D_DoomMain();
 
-    while (true) {
-        __WFE();
+    for (;;) {
+        k_sleep(K_FOREVER);
     }
-
-    return 0;
 }
-
