@@ -8,7 +8,6 @@
 
 #include <stdbool.h>
 #include <stdint.h>
-
 #include <zephyr/devicetree.h>
 #include <zephyr/drivers/gpio.h>
 #include <zephyr/kernel.h>
@@ -57,7 +56,8 @@ static bool gpio_pressed(const struct gpio_dt_spec* gpio) {
     return v > 0;
 }
 
-#if defined(CONFIG_BOARD_FRDM_MCXN947) || defined(CONFIG_BOARD_FRDM_MCXN947_MCXN947_CPU0)
+#if defined(CONFIG_BOARD_FRDM_MCXN947) || \
+    defined(CONFIG_BOARD_FRDM_MCXN947_MCXN947_CPU0)
 
 /*
  * FRDM: 2-button UI with debounce and long-press actions.

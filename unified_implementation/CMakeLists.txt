@@ -110,7 +110,7 @@ if (CONFIG_BOARD_NRF5340DK_NRF5340_CPUAPP)
 elseif (CONFIG_BOARD_FRDM_MCXN947 OR CONFIG_BOARD_FRDM_MCXN947_MCXN947_CPU0)
     target_sources(app PRIVATE
                     ${DOOM_COMMON_SRCS}
-                    src/platform/nxp/n_qspi_zephyr_flash.c
+                    src/n_qspi.c
     )
 else()
     message(FATAL_ERROR "Unsupported board for unified_implementation: ${CONFIG_BOARD}")

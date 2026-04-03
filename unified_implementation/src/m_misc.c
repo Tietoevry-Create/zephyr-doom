@@ -17,7 +17,6 @@
 //      Miscellaneous.
 //
 
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -26,38 +25,30 @@
 #endif
 #include <ctype.h>
 #include <errno.h>
-
 #include <zephyr/sys/util.h>
 #if defined(CONFIG_FILE_SYSTEM)
 #include <zephyr/fs/fs.h>
 #endif
 
-#include "doomtype.h"
-
 #include "deh_str.h"
-
+#include "doomtype.h"
 #include "i_swap.h"
 #include "i_system.h"
 #include "i_video.h"
 #include "m_misc.h"
+#include "n_mem.h"
 #include "v_video.h"
 #include "w_wad.h"
-
-#include "n_mem.h"
 
 //
 // Create a directory
 //
 
-void M_MakeDirectory(char *path)
-{
-    printf("NRFD-TODO M_MakeDirectory\n");
-}
+void M_MakeDirectory(char* path) { printf("NRFD-TODO M_MakeDirectory\n"); }
 
 // Check if a file exists
 
-boolean M_FileExists(char *filename)
-{
+boolean M_FileExists(char* filename) {
 #if defined(CONFIG_FILE_SYSTEM)
     struct fs_dirent entry;
     int rc = fs_stat(filename, &entry);
@@ -71,8 +62,7 @@ boolean M_FileExists(char *filename)
 // Check if a file exists by probing for common case variation of its filename.
 // Returns a newly allocated string that the caller is responsible for freeing.
 
-char *M_FileCaseExists(char *path)
-{
+char* M_FileCaseExists(char* path) {
     // FatFs is case insensitive, so irrelevant for NRF-Doom
     if (!M_FileExists(path)) {
         return NULL;
@@ -84,8 +74,7 @@ char *M_FileCaseExists(char *path)
 // Determine the length of an open file.
 //
 
-long M_FileLength(FILE *handle)
-{
+long M_FileLength(FILE* handle) {
     //
     return 0;
 }
@@ -94,36 +83,35 @@ long M_FileLength(FILE *handle)
 // M_WriteFile
 //
 
-boolean M_WriteFile(char *name, void *source, int length)
-{
-    printf("NRFD-TODO M_WriteFile\n"); return false;
-/*
-    FILE *handle;
-    int count;
-
-    handle = fopen(name, "wb");
-
-    if (handle == NULL)
+boolean M_WriteFile(char* name, void* source, int length) {
+    printf("NRFD-TODO M_WriteFile\n");
     return false;
+    /*
+        FILE *handle;
+        int count;
 
-    count = fwrite(source, 1, length, handle);
-    fclose(handle);
+        handle = fopen(name, "wb");
 
-    if (count < length)
-    return false;
+        if (handle == NULL)
+        return false;
 
-    return true;
-    */
+        count = fwrite(source, 1, length, handle);
+        fclose(handle);
+
+        if (count < length)
+        return false;
+
+        return true;
+        */
 }
-
 
 //
 // M_ReadFile
 //
 
-int M_ReadFile(char *name, byte **buffer)
-{
-    printf("NRFD-TODO M_ReadFile\n"); return 0;
+int M_ReadFile(char* name, byte** buffer) {
+    printf("NRFD-TODO M_ReadFile\n");
+    return 0;
     /*
     FILE *handle;
     int count, length;
@@ -155,9 +143,8 @@ int M_ReadFile(char *name, byte **buffer)
 //
 // The returned value must be freed with Z_Free after use.
 
-char *M_TempFile(char *s)
-{
-    char *tempdir;
+char* M_TempFile(char* s) {
+    char* tempdir;
 
     printf("NRFD-TODO: M_Tempfile\n");
     tempdir = "/tmp";
@@ -165,26 +152,22 @@ char *M_TempFile(char *s)
     return M_StringJoin(tempdir, DIR_SEPARATOR_S, s, NULL);
 }
 
-boolean M_StrToInt(const char *str, int *result)
-{
-    return sscanf(str, " 0x%x", result) == 1
-        || sscanf(str, " 0X%x", result) == 1
-        || sscanf(str, " 0%o", result) == 1
-        || sscanf(str, " %d", result) == 1;
+boolean M_StrToInt(const char* str, int* result) {
+    return sscanf(str, " 0x%x", result) == 1 ||
+           sscanf(str, " 0X%x", result) == 1 ||
+           sscanf(str, " 0%o", result) == 1 || sscanf(str, " %d", result) == 1;
 }
 
-void M_ExtractFileBase(char *path, char *dest)
-{
-    char *src;
-    char *filename;
+void M_ExtractFileBase(char* path, char* dest) {
+    char* src;
+    char* filename;
     int length;
 
     src = path + strlen(path) - 1;
 
     // back up until a \ or the start
-    while (src != path && *(src - 1) != DIR_SEPARATOR)
-    {
-    src--;
+    while (src != path && *(src - 1) != DIR_SEPARATOR) {
+        src--;
     }
 
     filename = src;
@@ -197,16 +180,14 @@ void M_ExtractFileBase(char *path, char *dest)
     length = 0;
     memset(dest, 0, 8);
 
-    while (*src != '\0' && *src != '.')
-    {
-        if (length >= 8)
-        {
-            printf("Warning: Truncated '%s' lump name to '%.8s'.\n",
-                   filename, dest);
+    while (*src != '\0' && *src != '.') {
+        if (length >= 8) {
+            printf("Warning: Truncated '%s' lump name to '%.8s'.\n", filename,
+                   dest);
             break;
         }
 
-    dest[length++] = toupper((int)*src++);
+        dest[length++] = toupper((int)*src++);
     }
 }
 
@@ -218,12 +199,10 @@ void M_ExtractFileBase(char *path, char *dest)
 //
 //---------------------------------------------------------------------------
 
-void M_ForceUppercase(char *text)
-{
-    char *p;
+void M_ForceUppercase(char* text) {
+    char* p;
 
-    for (p = text; *p != '\0'; ++p)
-    {
+    for (p = text; *p != '\0'; ++p) {
         *p = toupper(*p);
     }
 }
@@ -236,12 +215,10 @@ void M_ForceUppercase(char *text)
 //
 //---------------------------------------------------------------------------
 
-void M_ForceLowercase(char *text)
-{
-    char *p;
+void M_ForceLowercase(char* text) {
+    char* p;
 
-    for (p = text; *p != '\0'; ++p)
-    {
+    for (p = text; *p != '\0'; ++p) {
         *p = tolower(*p);
     }
 }
@@ -252,8 +229,7 @@ void M_ForceLowercase(char *text)
 // Case-insensitive version of strstr()
 //
 
-char *M_StrCaseStr(char *haystack, char *needle)
-{
+char* M_StrCaseStr(char* haystack, char* needle) {
     unsigned int haystack_len;
     unsigned int needle_len;
     unsigned int len;
@@ -262,17 +238,14 @@ char *M_StrCaseStr(char *haystack, char *needle)
     haystack_len = strlen(haystack);
     needle_len = strlen(needle);
 
-    if (haystack_len < needle_len)
-    {
+    if (haystack_len < needle_len) {
         return NULL;
     }
 
     len = haystack_len - needle_len;
 
-    for (i = 0; i <= len; ++i)
-    {
-        if (!strncasecmp(haystack + i, needle, needle_len))
-        {
+    for (i = 0; i <= len; ++i) {
+        if (!strncasecmp(haystack + i, needle, needle_len)) {
             return haystack + i;
         }
     }
@@ -285,18 +258,15 @@ char *M_StrCaseStr(char *haystack, char *needle)
 // allocated.
 //
 
-char *M_StringDuplicate(const char *orig)
-{
-    char *result;
+char* M_StringDuplicate(const char* orig) {
+    char* result;
 
-    //result = strdup(orig);
-    result = N_malloc(strlen(orig)+1);
+    // result = strdup(orig);
+    result = N_malloc(strlen(orig) + 1);
     if (result) strcpy(result, orig);
 
-    if (result == NULL)
-    {
-        I_Error("Failed to duplicate string (length %i)\n",
-                strlen(orig));
+    if (result == NULL) {
+        I_Error("Failed to duplicate string (length %i)\n", strlen(orig));
     }
 
     return result;
@@ -306,11 +276,10 @@ char *M_StringDuplicate(const char *orig)
 // String replace function.
 //
 
-char *M_StringReplace(const char *haystack, const char *needle,
-                      const char *replacement)
-{
+char* M_StringReplace(const char* haystack, const char* needle,
+                      const char* replacement) {
     char *result, *dst;
-    const char *p;
+    const char* p;
     size_t needle_len = strlen(needle);
     size_t result_len, dst_len;
 
@@ -319,11 +288,9 @@ char *M_StringReplace(const char *haystack, const char *needle,
     result_len = strlen(haystack) + 1;
     p = haystack;
 
-    for (;;)
-    {
+    for (;;) {
         p = strstr(p, needle);
-        if (p == NULL)
-        {
+        if (p == NULL) {
             break;
         }
 
@@ -334,28 +301,25 @@ char *M_StringReplace(const char *haystack, const char *needle,
     // Construct new string.
 
     result = N_malloc(result_len);
-    if (result == NULL)
-    {
+    if (result == NULL) {
         I_Error("M_StringReplace: Failed to allocate new string");
         return NULL;
     }
 
-    dst = result; dst_len = result_len;
+    dst = result;
+    dst_len = result_len;
     p = haystack;
 
-    while (*p != '\0')
-    {
-        if (!strncmp(p, needle, needle_len))
-        {
+    while (*p != '\0') {
+        if (!strncmp(p, needle, needle_len)) {
             M_StringCopy(dst, replacement, dst_len);
             p += needle_len;
             dst += strlen(replacement);
             dst_len -= strlen(replacement);
-        }
-        else
-        {
+        } else {
             *dst = *p;
-            ++dst; --dst_len;
+            ++dst;
+            --dst_len;
             ++p;
         }
     }
@@ -368,17 +332,13 @@ char *M_StringReplace(const char *haystack, const char *needle,
 // Safe string copy function that works like OpenBSD's strlcpy().
 // Returns true if the string was not truncated.
 
-boolean M_StringCopy(char *dest, const char *src, size_t dest_size)
-{
+boolean M_StringCopy(char* dest, const char* src, size_t dest_size) {
     size_t len;
 
-    if (dest_size >= 1)
-    {
+    if (dest_size >= 1) {
         dest[dest_size - 1] = '\0';
         strncpy(dest, src, dest_size - 1);
-    }
-    else
-    {
+    } else {
         return false;
     }
 
@@ -389,13 +349,11 @@ boolean M_StringCopy(char *dest, const char *src, size_t dest_size)
 // Safe string concat function that works like OpenBSD's strlcat().
 // Returns true if string not truncated.
 
-boolean M_StringConcat(char *dest, const char *src, size_t dest_size)
-{
+boolean M_StringConcat(char* dest, const char* src, size_t dest_size) {
     size_t offset;
 
     offset = strlen(dest);
-    if (offset > dest_size)
-    {
+    if (offset > dest_size) {
         offset = dest_size;
     }
 
@@ -404,38 +362,33 @@ boolean M_StringConcat(char *dest, const char *src, size_t dest_size)
 
 // Returns true if 's' begins with the specified prefix.
 
-boolean M_StringStartsWith(const char *s, const char *prefix)
-{
-    return strlen(s) > strlen(prefix)
-        && strncmp(s, prefix, strlen(prefix)) == 0;
+boolean M_StringStartsWith(const char* s, const char* prefix) {
+    return strlen(s) > strlen(prefix) &&
+           strncmp(s, prefix, strlen(prefix)) == 0;
 }
 
 // Returns true if 's' ends with the specified suffix.
 
-boolean M_StringEndsWith(const char *s, const char *suffix)
-{
-    return strlen(s) >= strlen(suffix)
-        && strcmp(s + strlen(s) - strlen(suffix), suffix) == 0;
+boolean M_StringEndsWith(const char* s, const char* suffix) {
+    return strlen(s) >= strlen(suffix) &&
+           strcmp(s + strlen(s) - strlen(suffix), suffix) == 0;
 }
 
 // Return a newly-malloced string with all the strings given as arguments
 // concatenated together.
 
-char *M_StringJoin(const char *s, ...)
-{
-    char *result;
-    const char *v;
+char* M_StringJoin(const char* s, ...) {
+    char* result;
+    const char* v;
     va_list args;
     size_t result_len;
 
     result_len = strlen(s) + 1;
 
     va_start(args, s);
-    for (;;)
-    {
-        v = va_arg(args, const char *);
-        if (v == NULL)
-        {
+    for (;;) {
+        v = va_arg(args, const char*);
+        if (v == NULL) {
             break;
         }
 
@@ -445,8 +398,7 @@ char *M_StringJoin(const char *s, ...)
 
     result = N_malloc(result_len);
 
-    if (result == NULL)
-    {
+    if (result == NULL) {
         I_Error("M_StringJoin: Failed to allocate new string.");
         return NULL;
     }
@@ -454,11 +406,9 @@ char *M_StringJoin(const char *s, ...)
     M_StringCopy(result, s, result_len);
 
     va_start(args, s);
-    for (;;)
-    {
-        v = va_arg(args, const char *);
-        if (v == NULL)
-        {
+    for (;;) {
+        v = va_arg(args, const char*);
+        if (v == NULL) {
             break;
         }
 
@@ -470,12 +420,10 @@ char *M_StringJoin(const char *s, ...)
 }
 
 // Safe, portable vsnprintf().
-int M_vsnprintf(char *buf, size_t buf_len, const char *s, va_list args)
-{
+int M_vsnprintf(char* buf, size_t buf_len, const char* s, va_list args) {
     int result;
 
-    if (buf_len < 1)
-    {
+    if (buf_len < 1) {
         return 0;
     }
 
@@ -486,8 +434,7 @@ int M_vsnprintf(char *buf, size_t buf_len, const char *s, va_list args)
 
     // If truncated, change the final char in the buffer to a \0.
     // A negative result indicates a truncated buffer on Windows.
-    if (result < 0 || result >= buf_len)
-    {
+    if (result < 0 || result >= buf_len) {
         buf[buf_len - 1] = '\0';
         result = buf_len - 1;
     }
@@ -496,8 +443,7 @@ int M_vsnprintf(char *buf, size_t buf_len, const char *s, va_list args)
 }
 
 // Safe, portable snprintf().
-int M_snprintf(char *buf, size_t buf_len, const char *s, ...)
-{
+int M_snprintf(char* buf, size_t buf_len, const char* s, ...) {
     va_list args;
     int result;
     va_start(args, s);
