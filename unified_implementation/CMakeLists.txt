@@ -95,24 +95,19 @@ set(DOOM_COMMON_SRCS
                 src/doom/wi_stuff.c
 )
 
-if (CONFIG_BOARD_NRF5340DK_NRF5340_CPUAPP)
-    target_sources(app PRIVATE
-                    ${DOOM_COMMON_SRCS}
-                    src/n_qspi.c
-    )
+target_sources(app PRIVATE
+                ${DOOM_COMMON_SRCS}
+                src/n_qspi.c
+)
 
-    # `src/bluetooth_control.c` uses NCS helper libraries (<bluetooth/scan.h>,
-    # <bluetooth/gatt_dm.h>, <dk_buttons_and_leds.h>). Build it only when
-    # `CONFIG_BT_SCAN` is available and enabled.
-    if (CONFIG_BT_SCAN)
-        target_sources(app PRIVATE src/bluetooth_control.c)
-    endif()
-elseif (CONFIG_BOARD_FRDM_MCXN947 OR CONFIG_BOARD_FRDM_MCXN947_MCXN947_CPU0)
-    target_sources(app PRIVATE
-                    ${DOOM_COMMON_SRCS}
-                    src/n_qspi.c
-    )
-else()
+# `src/bluetooth_control.c` uses NCS helper libraries (<bluetooth/scan.h>,
+# <bluetooth/gatt_dm.h>, <dk_buttons_and_leds.h>). Build it only when
+# `CONFIG_BT_SCAN` is available and enabled.
+if (CONFIG_BT_SCAN)
+    target_sources(app PRIVATE src/bluetooth_control.c)
+endif()
+
+if (NOT (CONFIG_BOARD_NRF5340DK_NRF5340_CPUAPP OR CONFIG_BOARD_FRDM_MCXN947 OR CONFIG_BOARD_FRDM_MCXN947_MCXN947_CPU0))
     message(FATAL_ERROR "Unsupported board for unified_implementation: ${CONFIG_BOARD}")
 endif()
 
