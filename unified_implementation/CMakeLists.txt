@@ -11,6 +11,7 @@ set(DOOM_COMMON_SRCS
                 src/n_i2s.c
                 src/n_i2s_sound.c
                 src/n_display.c
+                src/n_buttons.c
                 src/i_timer.c
                 src/n_rjoy.c
                 src/deh_main.c
@@ -98,8 +99,6 @@ if (CONFIG_BOARD_NRF5340DK_NRF5340_CPUAPP)
     target_sources(app PRIVATE
                     ${DOOM_COMMON_SRCS}
                     src/n_qspi.c
-                    src/n_fs.c
-                    src/n_buttons.c
     )
 
     # `src/bluetooth_control.c` uses NCS helper libraries (<bluetooth/scan.h>,
@@ -112,7 +111,6 @@ elseif (CONFIG_BOARD_FRDM_MCXN947 OR CONFIG_BOARD_FRDM_MCXN947_MCXN947_CPU0)
     target_sources(app PRIVATE
                     ${DOOM_COMMON_SRCS}
                     src/platform/nxp/n_qspi_zephyr_flash.c
-                    src/platform/nxp/n_buttons_gpio.c
     )
 else()
     message(FATAL_ERROR "Unsupported board for unified_implementation: ${CONFIG_BOARD}")

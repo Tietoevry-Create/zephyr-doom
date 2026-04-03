@@ -56,7 +56,6 @@ typedef PACKED_STRUCT({
 #endif
 #include <zephyr/sys/util.h>
 
-#include "n_fs.h"
 #include "n_mem.h"
 #include "n_qspi.h"
 
@@ -85,7 +84,6 @@ filelump_t* filelumps;
 static lumpindex_t* lumphash = NULL;
 static lumpindex_t* lumpnext = NULL;
 
-N_FILE wad_file;
 int first_lump_pos;
 
 #if DT_HAS_ALIAS(led3)

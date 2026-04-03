@@ -24,9 +24,9 @@
 #include <strings.h>
 #endif
 
-#include "deh_str.h"
 #include "doomkeys.h"
 #include "d_iwad.h"
+#include "deh_str.h"
 #include "i_system.h"
 #include "m_argv.h"
 #include "m_config.h"
@@ -35,7 +35,6 @@
 #include "z_zone.h"
 
 #include "n_mem.h"
-#include "n_fs.h"
 
 static const iwad_t iwads[] =
 {

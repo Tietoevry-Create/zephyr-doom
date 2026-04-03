@@ -27,6 +27,11 @@
 #include <ctype.h>
 #include <errno.h>
 
+#include <zephyr/sys/util.h>
+#if defined(CONFIG_FILE_SYSTEM)
+#include <zephyr/fs/fs.h>
+#endif
+
 #include "doomtype.h"
 
 #include "deh_str.h"
@@ -37,10 +42,8 @@
 #include "m_misc.h"
 #include "v_video.h"
 #include "w_wad.h"
-#include "z_zone.h"
 
 #include "n_mem.h"
-#include "n_fs.h"
 
 //
 // Create a directory
@@ -55,11 +58,14 @@ void M_MakeDirectory(char *path)
 
 boolean M_FileExists(char *filename)
 {
-    // if (N_fs_file_exists(filename)) {
-    //     return true;
-    // } else {
-    //     return false;
-    // }
+#if defined(CONFIG_FILE_SYSTEM)
+    struct fs_dirent entry;
+    int rc = fs_stat(filename, &entry);
+    return rc == 0;
+#else
+    ARG_UNUSED(filename);
+    return false;
+#endif
 }
 
 // Check if a file exists by probing for common case variation of its filename.
