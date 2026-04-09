@@ -15,12 +15,12 @@
 // DESCRIPTION:  none
 //
 
+#include "i_sound.h"
+
 #include <stdlib.h>
 
 #include "doom_config.h"
 #include "doomtype.h"
-
-#include "i_sound.h"
 
 // Whether to vary the pitch of sound effects
 // Each game will set the default differently
@@ -29,12 +29,14 @@ int snd_pitchshift = -1;
 
 // Low-level sound and music modules we are using
 
-static sound_module_t *sound_module;
-static music_module_t *music_module;
+static sound_module_t* sound_module;
+static music_module_t* music_module;
 
 int snd_musicdevice = SNDDEVICE_SB;
 
+#if defined(CONFIG_FEATURE_DOOM_AUDIO)
 extern sound_module_t sound_i2s_module;
+#endif
 
 // DOS-specific options: These are unused but should be maintained
 // so that the config file can be shared between chocolate
@@ -47,14 +49,16 @@ static int snd_mport = 0;
 
 // Compiled-in sound modules:
 
-static sound_module_t *sound_modules[] = {
+static sound_module_t* sound_modules[] = {
+#if defined(CONFIG_FEATURE_DOOM_AUDIO)
     &sound_i2s_module,
+#endif
     NULL,
 };
 
 // Compiled-in music modules:
 
-static music_module_t *music_modules[] = {
+static music_module_t* music_modules[] = {
     // NRFD-TODO?
     //&music_sdl_module,
     //&music_opl_module,
@@ -63,7 +67,7 @@ static music_module_t *music_modules[] = {
 
 // Check if a sound device is in the given list of devices
 
-static boolean SndDeviceInList(snddevice_t device, snddevice_t *list, int len) {
+static boolean SndDeviceInList(snddevice_t device, snddevice_t* list, int len) {
     int i;
 
     for (i = 0; i < len; ++i) {
@@ -79,13 +83,12 @@ static boolean SndDeviceInList(snddevice_t device, snddevice_t *list, int len) {
 // in snd_sfxdevice.
 
 static void InitSfxModule(boolean use_sfx_prefix) {
-    int i;
-
     sound_module = NULL;
 
-    if (1) {  // NRFD-TODO: Setting?
-        i = 0;
-        if (sound_modules[i]->Init(use_sfx_prefix)) {
+    // Try each compiled-in backend in order.
+    for (int i = 0; sound_modules[i] != NULL; ++i) {
+        if (sound_modules[i]->Init != NULL &&
+            sound_modules[i]->Init(use_sfx_prefix)) {
             sound_module = sound_modules[i];
             return;
         }
@@ -185,7 +188,7 @@ void I_ShutdownSound(void) {
     }
 }
 
-int I_GetSfxLumpNum(sfxinfo_t *sfxinfo) {
+int I_GetSfxLumpNum(sfxinfo_t* sfxinfo) {
     if (sound_module != NULL) {
         return sound_module->GetSfxLumpNum(sfxinfo);
     } else {
@@ -203,7 +206,7 @@ void I_UpdateSound(void) {
     }
 }
 
-static void CheckVolumeSeparation(int *vol, int *sep) {
+static void CheckVolumeSeparation(int* vol, int* sep) {
     if (*sep < 0) {
         *sep = 0;
     } else if (*sep > 254) {
@@ -224,7 +227,7 @@ void I_UpdateSoundParams(int channel, int vol, int sep) {
     }
 }
 
-int I_StartSound(sfxinfo_t *sfxinfo, int channel, int vol, int sep, int pitch) {
+int I_StartSound(sfxinfo_t* sfxinfo, int channel, int vol, int sep, int pitch) {
     if (sound_module != NULL) {
         CheckVolumeSeparation(&vol, &sep);
         return sound_module->StartSound(sfxinfo, channel, vol, sep, pitch);
@@ -247,7 +250,7 @@ boolean I_SoundIsPlaying(int channel) {
     }
 }
 
-void I_PrecacheSounds(sfxinfo_t *sounds, int num_sounds) {
+void I_PrecacheSounds(sfxinfo_t* sounds, int num_sounds) {
     if (sound_module != NULL && sound_module->CacheSounds != NULL) {
         sound_module->CacheSounds(sounds, num_sounds);
     }
@@ -275,7 +278,7 @@ void I_ResumeSong(void) {
     }
 }
 
-void *I_RegisterSong(void *data, int len) {
+void* I_RegisterSong(void* data, int len) {
     if (music_module != NULL) {
         return music_module->RegisterSong(data, len);
     } else {
@@ -283,13 +286,13 @@ void *I_RegisterSong(void *data, int len) {
     }
 }
 
-void I_UnRegisterSong(void *handle) {
+void I_UnRegisterSong(void* handle) {
     if (music_module != NULL) {
         music_module->UnRegisterSong(handle);
     }
 }
 
-void I_PlaySong(void *handle, boolean looping) {
+void I_PlaySong(void* handle, boolean looping) {
     if (music_module != NULL) {
         music_module->PlaySong(handle, looping);
     }

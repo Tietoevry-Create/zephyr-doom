@@ -11,11 +11,11 @@ Zephyr-Doom has only been tested with shareware version of Doom 1.
 ======================= ================= ================================
  Game                    Status            Comment
 ======================= ================= ================================
-Doom 1 Shareware        OK                
+Doom 1 Shareware        OK
 ----------------------- ----------------- --------------------------------
-Doom 1 Full Version     Not Tested        
+Doom 1 Full Version     Not Tested
 ----------------------- ----------------- --------------------------------
-Doom 2                  Not Tested        
+Doom 2                  Not Tested
 ======================= ================= ================================
 
 .. _Chocolate Doom: https://www.chocolate-doom.org/wiki/index.php/Chocolate_Doom
@@ -94,7 +94,7 @@ HW Configuration Index
 3,5" ILI9486 `display`_        N/A              N/A
 ----------------------------- ----------------- --------------------------------
 2.8" ILI9341 `SPI display`_    N/A              N/A
------------------------------ ----------------- -------------------------------- 
+----------------------------- ----------------- --------------------------------
 4.3" FT810 `SPI IPS display`_  N/A              N/A
 ----------------------------- ----------------- --------------------------------
 `micro:bit v2`_                2.x              N/A
@@ -103,7 +103,7 @@ HW Configuration Index
 ----------------------------- ----------------- --------------------------------
 `Xbox controller`_             model 1914       N/A
 ----------------------------- ----------------- --------------------------------
-`keyboard`_                    RPi 400          N/A   
+`keyboard`_                    RPi 400          N/A
 ============================= ================= ================================
 
 
@@ -113,7 +113,7 @@ SW Configuration Index
 ======================= ================= ================================
  Item                    Version            Comment
 ======================= ================= ================================
-Windows 11 Enterprise    10.0.22631       N/A     
+Windows 11 Enterprise    10.0.22631       N/A
 ----------------------- ----------------- --------------------------------
 Visual Studio Code       1.98.2           N/A
 ----------------------- ----------------- --------------------------------
@@ -155,6 +155,20 @@ Prerequisites
 
 Build
 ~~~~~~~~~
+
+Feature configuration
+^^^^^^^^^
+
+Major subsystems can be enabled/disabled via app-level Kconfig feature flags.
+These flags are meant to be toggled from your application's ``prj.conf``.
+
+- Feature flags are named ``CONFIG_FEATURE_DOOM_*``.
+- Defaults are ``n`` (disabled), so enabling a subsystem is usually just uncommenting the corresponding ``...=y`` line in ``prj.conf``.
+- Convenience presets exist (also in ``Kconfig``) to enable a tested set of features per board.
+
+Some options are SDK-specific (for example, certain Nordic "NCS" Bluetooth scan
+knobs). Keep those commented out unless your Zephyr tree provides them.
+
 Game
 ^^^^^^^^^
 * VS Code -> nRF Connect extension -> Add Folder as Application -> select zephyrdoom folder.
@@ -166,11 +180,12 @@ Gamepad
 
 Flash
 ~~~~~~~~~
+
 Game
 ^^^^^^^^^
 #. Connect Nordic Semiconductor `nRF5340`_ dev kit.
 #. Flash data (contains WAD file) to external flash::
-   
+
      nrfjprog --family nrf53 --qspicustominit --program qspi.hex --verify
 #. Select game app.  VS Code -> nRF Connect extension -> APPLICATIONS -> Select zephyrdoom.
 #. Flash the game. VS Code -> nRF Connect extension -> ACTIONS -> Flash.
@@ -387,7 +402,7 @@ MVP4
 * Goal - Return back to 4.3" FT810 `SPI IPS display`_ used in original `nrf-doom`_ project.
 * Features:
  * Display supporting > 30FPS
- * Full screen 
+ * Full screen
 * Required Hardware
  * Nordic Semiconductor `nRF5340`_ dev kit
  * 4.3" FT810 `SPI IPS display`_
@@ -443,13 +458,13 @@ MVP5
 
 * Goal - Add option to connect BLE gamepad (Xbox wireless controller) and ideally BLE keyboard (built on RPi 400). This step will enable full game control (i.e. all the options).
 * Features:
- * If using BLE gamepad - TBD. 
- * If using BLE keayborad - full-fledged game control per original manual (inc. cheats). 
+ * If using BLE gamepad - TBD.
+ * If using BLE keayborad - full-fledged game control per original manual (inc. cheats).
 * Required Hardware
  * Nordic Semiconductor `nRF5340`_ dev kit
  * 4.3" FT810 `SPI IPS display`_
- * `xbox controller`_ 
- * `keyboard`_ 
+ * `xbox controller`_
+ * `keyboard`_
 * Pin mapping
 ======================= ================= ================================
 Peripheral              Function          nRF5340 Pin

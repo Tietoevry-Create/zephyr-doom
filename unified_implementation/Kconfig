@@ -1,12 +1,101 @@
 mainmenu "Zephyr Kernel Configuration"
 
-# source "${ZEPHYR_BASE}/share/sysbuild/Kconfig"
 source "Kconfig.zephyr"
 
 module = DOOM_MAIN
 module-str = doom_main
 source "subsys/logging/Kconfig.template.log_config"
 
-# Central UART seems to work even without this
-# config NRF_DEFAULT_BLUETOOTH
-# 	default y
+menu "Zephyr Doom features"
+
+config FEATURE_DOOM_AUDIO
+	bool "Audio (I2S mixer output)"
+	default n
+	select I2S
+	select I2S_MCUX_SAI if BOARD_FRDM_MCXN947 || BOARD_FRDM_MCXN947_MCXN947_CPU0
+	help
+	  Enable Doom audio output.
+
+config FEATURE_DOOM_BLE
+	bool "BLE input (HID clients via NCS helpers)"
+	default n
+	select BT
+	select BT_CENTRAL
+	select BT_SMP
+	select BT_GATT_CLIENT
+	select BT_SCAN
+	select DK_LIBRARY if SOC_NRF5340_CPUAPP
+	select BT_GATT_DM if SOC_NRF5340_CPUAPP
+	select BT_HOGP if SOC_NRF5340_CPUAPP
+	select BT_SCAN_FILTER_ENABLE if SOC_NRF5340_CPUAPP
+	help
+	  Enable BLE-based controllers.
+
+	  Note (nRF5340 + NCS): you may also need NCS-specific bt_scan tuning
+	  symbols (e.g. CONFIG_BT_SCAN_UUID_CNT). These symbols are not always
+	  available on non-NCS trees, so keep them commented unless building
+	  with nRF Connect SDK.
+
+config FEATURE_DOOM_SD
+	bool "SD card upload (copy WAD to external flash)"
+	default n
+	select DISK_DRIVERS
+	select FILE_SYSTEM
+	select DISK_ACCESS
+	select FAT_FILESYSTEM_ELM
+	help
+	  Enable mounting an SD card and uploading a WAD into external flash.
+	  Normal gameplay reads the WAD from external flash/XIP and does not
+	  require this feature.
+
+config FEATURE_DOOM_DISPLAY
+	bool "Display output (FT810 over SPI)"
+	default n
+	select SPI
+	select GPIO
+	help
+	  Enable FT810 display output. If disabled, Doom still renders internally
+	  but no frames are sent to the display controller.
+
+config FEATURE_DOOM_BUTTONS
+	bool "GPIO buttons"
+	default n
+	depends on GPIO
+	help
+	  Enable GPIO button input via devicetree aliases sw0..sw3.
+
+config FEATURE_DOOM_LEDS
+	bool "Status LEDs"
+	default n
+	depends on GPIO
+	help
+	  Enable optional LED indications.
+
+choice
+	prompt "Feature preset"
+	default FEATURE_DOOM_PRESET_CUSTOM
+	help
+	  Convenience presets that enable a set of features for some tested boards.
+
+config FEATURE_DOOM_PRESET_CUSTOM
+	bool "Custom (no preset)"
+
+config FEATURE_DOOM_PRESET_NRF5340DK_NRF5340_CPUAPP
+	bool "nrf5340dk_nrf5340_cpuapp"
+	select FEATURE_DOOM_DISPLAY
+	select FEATURE_DOOM_AUDIO
+	select FEATURE_DOOM_BUTTONS
+	select FEATURE_DOOM_LEDS
+	select FEATURE_DOOM_SD
+	select FEATURE_DOOM_BLE
+
+config FEATURE_DOOM_PRESET_FRDM_MCXN947_MCXN947_CPU0
+	bool "frdm_mcxn947_mcxn947_cpu0"
+	select FEATURE_DOOM_DISPLAY
+	select FEATURE_DOOM_AUDIO
+	select FEATURE_DOOM_BUTTONS
+	select FEATURE_DOOM_LEDS
+
+endchoice
+
+endmenu

@@ -8,9 +8,6 @@ target_include_directories(app PRIVATE src/config)
 set(DOOM_COMMON_SRCS
                 src/main.c
                 src/n_mem.c
-                src/n_i2s.c
-                src/n_i2s_sound.c
-                src/n_display.c
                 src/n_buttons.c
                 src/i_timer.c
                 src/n_rjoy.c
@@ -100,10 +97,20 @@ target_sources(app PRIVATE
                 src/n_qspi.c
 )
 
-# `src/bluetooth_control.c` uses NCS helper libraries (<bluetooth/scan.h>,
-# <bluetooth/gatt_dm.h>, <dk_buttons_and_leds.h>). Build it only when
-# `CONFIG_BT_SCAN` is available and enabled.
-if (CONFIG_BT_SCAN)
+if (CONFIG_FEATURE_DOOM_DISPLAY)
+    target_sources(app PRIVATE src/n_display.c)
+else()
+    target_sources(app PRIVATE src/n_display_stub.c)
+endif()
+
+if (CONFIG_FEATURE_DOOM_AUDIO)
+    target_sources(app PRIVATE
+                    src/n_i2s.c
+                    src/n_i2s_sound.c
+    )
+endif()
+
+if (CONFIG_FEATURE_DOOM_BLE)
     target_sources(app PRIVATE src/bluetooth_control.c)
 endif()
 

@@ -21,8 +21,12 @@
 #include <nrfx_clock.h>
 #endif
 
+#if defined(CONFIG_FEATURE_DOOM_BLE)
 #include "bluetooth_control.h"
+#endif
+#if defined(CONFIG_FEATURE_DOOM_AUDIO)
 #include "n_i2s.h"
+#endif
 
 LOG_MODULE_REGISTER(doom_main, CONFIG_DOOM_MAIN_LOG_LEVEL);
 
@@ -115,13 +119,20 @@ int main(void) {
     LOG_INF("BOARD STARTING %s", CONFIG_BOARD);
 
     platform_clock_cache_init();
+
+#if defined(CONFIG_FEATURE_DOOM_SD)
     try_mount_disk();
+#else
+    no_sdcard = 1;
+#endif
 
     N_ButtonsInit();
+#if defined(CONFIG_FEATURE_DOOM_AUDIO)
     N_I2S_init();
+#endif
     M_ArgvInit();
 
-#ifdef CONFIG_BT_SCAN
+#if defined(CONFIG_FEATURE_DOOM_BLE)
     int err = bluetooth_control_init();
     if (err) {
         LOG_ERR("Bluetooth control initialization failed.");

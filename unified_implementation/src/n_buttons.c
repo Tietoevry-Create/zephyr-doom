@@ -6,6 +6,17 @@
  * GPIOs are selected via Zephyr devicetree aliases sw0..sw3.
  */
 
+#if !defined(CONFIG_FEATURE_DOOM_BUTTONS)
+
+void N_ButtonsInit(void) {}
+void N_ReadButtons(void) {}
+int N_ButtonState(int idx) {
+    (void)idx;
+    return 0;
+}
+
+#else
+
 #include <stdbool.h>
 #include <stdint.h>
 #include <zephyr/devicetree.h>
@@ -240,3 +251,5 @@ int N_ButtonState(int num) {
 }
 
 #endif
+
+#endif /* CONFIG_FEATURE_DOOM_BUTTONS */

@@ -1,9 +1,30 @@
+#include <errno.h>
+#include <stddef.h>
+#include <string.h>
+#include <zephyr/kernel.h>
+#include <zephyr/sys/printk.h>
+
+// This Bluetooth controller implementation uses Nordic/NCS helper libraries
+// (bt_scan, gatt_dm, hogp, dk_buttons). Those are not available in all Zephyr
+// trees; when missing, build a stub instead of failing the build.
+#if defined(__has_include)
+#if __has_include(<bluetooth/gatt_dm.h>) && __has_include(<bluetooth/scan.h>) && \
+    __has_include(<bluetooth/services/hogp.h>) && \
+    __has_include(<dk_buttons_and_leds.h>)
+#define DOOM_BLE_HAS_NCS_HELPERS 1
+#else
+#define DOOM_BLE_HAS_NCS_HELPERS 0
+#endif
+#else
+#define DOOM_BLE_HAS_NCS_HELPERS 1
+#endif
+
+#if DOOM_BLE_HAS_NCS_HELPERS
+
 #include <bluetooth/gatt_dm.h>
 #include <bluetooth/scan.h>
 #include <bluetooth/services/hogp.h>
 #include <dk_buttons_and_leds.h>
-#include <errno.h>
-#include <stddef.h>
 #include <zephyr/bluetooth/bluetooth.h>
 #include <zephyr/bluetooth/conn.h>
 #include <zephyr/bluetooth/gatt.h>
@@ -11,16 +32,22 @@
 #include <zephyr/bluetooth/uuid.h>
 #include <zephyr/devicetree.h>
 #include <zephyr/drivers/gpio.h>
-#include <zephyr/kernel.h>
 #include <zephyr/settings/settings.h>
 #include <zephyr/sys/byteorder.h>
-#include <zephyr/sys/printk.h>
 #include <zephyr/types.h>
 
 #include "d_event.h"
 #include "doomkeys.h"
 #include "m_controls.h"
 
+#if defined(CONFIG_FEATURE_DOOM_LEDS) && DT_HAS_ALIAS(led0) && \
+    DT_HAS_ALIAS(led1)
+#define DOOM_BLE_STATUS_LEDS 1
+#else
+#define DOOM_BLE_STATUS_LEDS 0
+#endif
+
+#if DOOM_BLE_STATUS_LEDS
 #define BLINK_INTERVAL_MS 500
 #define LED1_NODE DT_ALIAS(led0)
 #define LED2_NODE DT_ALIAS(led1)
@@ -28,7 +55,9 @@
 static const struct gpio_dt_spec led1 = GPIO_DT_SPEC_GET(LED1_NODE, gpios);
 static const struct gpio_dt_spec led2 = GPIO_DT_SPEC_GET(LED2_NODE, gpios);
 
-static void blink_timer_handler(struct k_timer *timer_id) {
+static void blink_timer_handler(struct k_timer* timer_id) {
+    ARG_UNUSED(timer_id);
+
     if (gpio_is_ready_dt(&led1)) {
         gpio_pin_toggle_dt(&led1);
     }
@@ -38,6 +67,7 @@ static void blink_timer_handler(struct k_timer *timer_id) {
 }
 
 K_TIMER_DEFINE(blink_timer, blink_timer_handler, NULL);
+#endif
 
 typedef enum {
     DEVICE_TYPE_NONE,
@@ -45,15 +75,15 @@ typedef enum {
     DEVICE_TYPE_KEYBOARD,
 } connected_device_t;
 
-static struct bt_conn *default_conn;
-static struct bt_conn *auth_conn;
+static struct bt_conn* default_conn;
+static struct bt_conn* auth_conn;
 static struct bt_hogp hogp;
 static connected_device_t current_device_type = DEVICE_TYPE_NONE;
 
-static void hids_on_ready(struct k_work *work);
+static void hids_on_ready(struct k_work* work);
 static K_WORK_DEFINE(hids_ready_work, hids_on_ready);
 
-static void parse_xbox_report(const uint8_t *data, size_t len) {
+static void parse_xbox_report(const uint8_t* data, size_t len) {
     static bool prev_dpad_up, prev_dpad_down, prev_button_back,
         prev_button_start;
     static event_t prev_joystick_event;
@@ -130,7 +160,7 @@ static void parse_xbox_report(const uint8_t *data, size_t len) {
     prev_button_start = button_start;
 }
 
-static void parse_keyboard_report(const uint8_t *data, size_t len) {
+static void parse_keyboard_report(const uint8_t* data, size_t len) {
     typedef struct {
         uint8_t hid;
         int doom;
@@ -249,8 +279,8 @@ static void parse_keyboard_report(const uint8_t *data, size_t len) {
 }
 
 struct bt_gatt_dm {
-    struct bt_conn *conn;
-    void *context;
+    struct bt_conn* conn;
+    void* context;
     struct bt_gatt_discover_params discover_params;
     struct bt_gatt_dm_attr attrs[CONFIG_BT_GATT_DM_MAX_ATTRS];
     size_t cur_attr_id;
@@ -262,12 +292,12 @@ struct bt_gatt_dm {
     } svc_uuid;
     sys_slist_t chunk_list;
     size_t cur_chunk_len;
-    const struct bt_gatt_dm_cb *cb;
+    const struct bt_gatt_dm_cb* cb;
     bool search_svc_by_uuid;
 };
 
-static bool is_device_xbox(struct bt_gatt_dm *dm) {
-    const struct bt_uuid *xbox_uuid = BT_UUID_DECLARE_128(
+static bool is_device_xbox(struct bt_gatt_dm* dm) {
+    const struct bt_uuid* xbox_uuid = BT_UUID_DECLARE_128(
         BT_UUID_128_ENCODE(BT_UUID_HIDS_REPORT_VAL, 0, 0, 0, 0));
 
     for (int i = 0; dm->attrs[i].handle != 0; i++) {
@@ -281,7 +311,7 @@ static bool is_device_xbox(struct bt_gatt_dm *dm) {
     return false;
 }
 
-static void convert_xbox_uuids(struct bt_gatt_dm *dm) {
+static void convert_xbox_uuids(struct bt_gatt_dm* dm) {
     for (int i = 0; dm->attrs[i].handle != 0; i++) {
         if (dm->attrs[i].uuid->type != BT_UUID_TYPE_128) {
             continue;
@@ -315,9 +345,9 @@ static void convert_xbox_uuids(struct bt_gatt_dm *dm) {
     }
 }
 
-static uint8_t hogp_notify_cb(struct bt_hogp *hogp_ctx,
-                              struct bt_hogp_rep_info *rep, uint8_t err,
-                              const uint8_t *data) {
+static uint8_t hogp_notify_cb(struct bt_hogp* hogp_ctx,
+                              struct bt_hogp_rep_info* rep, uint8_t err,
+                              const uint8_t* data) {
     if (err || !data) {
         return BT_GATT_ITER_STOP;
     }
@@ -336,23 +366,29 @@ static uint8_t hogp_notify_cb(struct bt_hogp *hogp_ctx,
     return BT_GATT_ITER_CONTINUE;
 }
 
-static void discovery_completed_cb(struct bt_gatt_dm *dm, void *context) {
+static void discovery_completed_cb(struct bt_gatt_dm* dm, void* context) {
     printk("Discovery completed.\n");
 
+#if DOOM_BLE_STATUS_LEDS
     k_timer_stop(&blink_timer);
+#endif
     if (is_device_xbox(dm)) {
         printk("Device identified as: XBOX Controller\n");
         current_device_type = DEVICE_TYPE_XBOX;
         convert_xbox_uuids(dm);
 
+#if DOOM_BLE_STATUS_LEDS
         gpio_pin_set_dt(&led1, 1);
         gpio_pin_set_dt(&led2, 0);
+#endif
     } else {
         printk("Device identified as: Standard Keyboard\n");
         current_device_type = DEVICE_TYPE_KEYBOARD;
 
+#if DOOM_BLE_STATUS_LEDS
         gpio_pin_set_dt(&led1, 0);
         gpio_pin_set_dt(&led2, 1);
+#endif
     }
 
     int err = bt_hogp_handles_assign(dm, &hogp);
@@ -363,15 +399,21 @@ static void discovery_completed_cb(struct bt_gatt_dm *dm, void *context) {
     bt_gatt_dm_data_release(dm);
 }
 
-static void discovery_service_not_found_cb(struct bt_conn *conn,
-                                           void *context) {
+static void discovery_service_not_found_cb(struct bt_conn* conn,
+                                           void* context) {
     printk("HIDS service not found.\n");
-    k_timer_start(&blink_timer, K_MSEC(BLINK_INTERVAL_MS), K_MSEC(BLINK_INTERVAL_MS));
+#if DOOM_BLE_STATUS_LEDS
+    k_timer_start(&blink_timer, K_MSEC(BLINK_INTERVAL_MS),
+                  K_MSEC(BLINK_INTERVAL_MS));
+#endif
 }
 
-static void discovery_error_cb(struct bt_conn *conn, int err, void *context) {
+static void discovery_error_cb(struct bt_conn* conn, int err, void* context) {
     printk("Discovery failed, error: %d\n", err);
-    k_timer_start(&blink_timer, K_MSEC(BLINK_INTERVAL_MS), K_MSEC(BLINK_INTERVAL_MS));
+#if DOOM_BLE_STATUS_LEDS
+    k_timer_start(&blink_timer, K_MSEC(BLINK_INTERVAL_MS),
+                  K_MSEC(BLINK_INTERVAL_MS));
+#endif
 }
 
 static const struct bt_gatt_dm_cb discovery_callbacks = {
@@ -380,14 +422,14 @@ static const struct bt_gatt_dm_cb discovery_callbacks = {
     .error_found = discovery_error_cb,
 };
 
-static void gatt_discover(struct bt_conn *conn) {
+static void gatt_discover(struct bt_conn* conn) {
     int err = bt_gatt_dm_start(conn, BT_UUID_HIDS, &discovery_callbacks, NULL);
     if (err) {
         printk("Could not start discovery, error: %d\n", err);
     }
 }
 
-static void security_changed(struct bt_conn *conn, bt_security_t level,
+static void security_changed(struct bt_conn* conn, bt_security_t level,
                              enum bt_security_err err) {
     if (err) {
         printk("Security failed: level %u, err %d\n", level, err);
@@ -397,7 +439,7 @@ static void security_changed(struct bt_conn *conn, bt_security_t level,
     gatt_discover(conn);
 }
 
-static void connected(struct bt_conn *conn, uint8_t conn_err) {
+static void connected(struct bt_conn* conn, uint8_t conn_err) {
     if (conn_err) {
         printk("Connection failed (err %u)\n", conn_err);
         if (default_conn) {
@@ -417,7 +459,7 @@ static void connected(struct bt_conn *conn, uint8_t conn_err) {
     }
 }
 
-static void disconnected(struct bt_conn *conn, uint8_t reason) {
+static void disconnected(struct bt_conn* conn, uint8_t reason) {
     printk("Disconnected (reason 0x%02x)\n", reason);
     if (bt_hogp_assign_check(&hogp)) {
         bt_hogp_release(&hogp);
@@ -427,10 +469,12 @@ static void disconnected(struct bt_conn *conn, uint8_t reason) {
         default_conn = NULL;
         current_device_type = DEVICE_TYPE_NONE;
 
+#if DOOM_BLE_STATUS_LEDS
         gpio_pin_set_dt(&led1, 0);
         gpio_pin_set_dt(&led2, 0);
         k_timer_start(&blink_timer, K_MSEC(BLINK_INTERVAL_MS),
                       K_MSEC(BLINK_INTERVAL_MS));
+#endif
 
         bt_scan_start(BT_SCAN_TYPE_SCAN_ACTIVE);
     }
@@ -442,9 +486,9 @@ BT_CONN_CB_DEFINE(conn_callbacks) = {
     .security_changed = security_changed,
 };
 
-static void hids_on_ready(struct k_work *work) {
+static void hids_on_ready(struct k_work* work) {
     printk("HIDS is ready. Subscribing to reports...\n");
-    struct bt_hogp_rep_info *rep = NULL;
+    struct bt_hogp_rep_info* rep = NULL;
     while (NULL != (rep = bt_hogp_rep_next(&hogp, rep))) {
         if (bt_hogp_rep_type(rep) == BT_HIDS_REPORT_TYPE_INPUT) {
             int err = bt_hogp_rep_subscribe(&hogp, rep, hogp_notify_cb);
@@ -458,11 +502,11 @@ static void hids_on_ready(struct k_work *work) {
     }
 }
 
-static void hogp_ready_cb(struct bt_hogp *hogp_ctx) {
+static void hogp_ready_cb(struct bt_hogp* hogp_ctx) {
     k_work_submit(&hids_ready_work);
 }
 
-static void hogp_prep_fail_cb(struct bt_hogp *hogp_ctx, int err) {
+static void hogp_prep_fail_cb(struct bt_hogp* hogp_ctx, int err) {
     printk("ERROR: HIDS client preparation failed (%d)!\n", err);
 }
 
@@ -492,7 +536,7 @@ static void button_handler(uint32_t button_state, uint32_t has_changed) {
     }
 }
 
-static void auth_passkey_confirm(struct bt_conn *conn, unsigned int passkey) {
+static void auth_passkey_confirm(struct bt_conn* conn, unsigned int passkey) {
     char addr[BT_ADDR_LE_STR_LEN];
     bt_addr_le_to_str(bt_conn_get_dst(conn), addr, sizeof(addr));
     printk("Passkey for %s: %06u\n", addr, passkey);
@@ -500,7 +544,7 @@ static void auth_passkey_confirm(struct bt_conn *conn, unsigned int passkey) {
     auth_conn = bt_conn_ref(conn);
 }
 
-static void auth_cancel(struct bt_conn *conn) {
+static void auth_cancel(struct bt_conn* conn) {
     printk("Pairing cancelled.\n");
 }
 
@@ -513,22 +557,24 @@ int bluetooth_control_init(void) {
     int err;
     printk("Initializing Unified Bluetooth Controller\n");
 
+#if DOOM_BLE_STATUS_LEDS
     if (!gpio_is_ready_dt(&led1) || !gpio_is_ready_dt(&led2)) {
-        printk("Error: LED device(s) are not ready\n");
-        return -ENODEV;
+        printk("LEDs not ready; continuing without status LEDs\n");
+    } else {
+        err = gpio_pin_configure_dt(&led1, GPIO_OUTPUT_INACTIVE);
+        if (err) {
+            printk("Error %d: failed to configure LED1 pin\n", err);
+            return err;
+        }
+        err = gpio_pin_configure_dt(&led2, GPIO_OUTPUT_INACTIVE);
+        if (err) {
+            printk("Error %d: failed to configure LED2 pin\n", err);
+            return err;
+        }
+        k_timer_start(&blink_timer, K_MSEC(BLINK_INTERVAL_MS),
+                      K_MSEC(BLINK_INTERVAL_MS));
     }
-    err = gpio_pin_configure_dt(&led1, GPIO_OUTPUT_INACTIVE);
-    if (err) {
-        printk("Error %d: failed to configure LED1 pin\n", err);
-        return err;
-    }
-    err = gpio_pin_configure_dt(&led2, GPIO_OUTPUT_INACTIVE);
-    if (err) {
-        printk("Error %d: failed to configure LED2 pin\n", err);
-        return err;
-    }
-    k_timer_start(&blink_timer, K_MSEC(BLINK_INTERVAL_MS),
-                  K_MSEC(BLINK_INTERVAL_MS));
+#endif
 
     const struct bt_hogp_init_params hogp_init_params = {
         .ready_cb = hogp_ready_cb,
@@ -570,3 +616,14 @@ int bluetooth_control_init(void) {
     printk("Scanning successfully started\n");
     return 0;
 }
+
+#else
+
+int bluetooth_control_init(void) {
+    printk(
+        "Bluetooth controller not supported in this Zephyr tree "
+        "(missing NCS HOGP helper libraries).\n");
+    return -ENOTSUP;
+}
+
+#endif

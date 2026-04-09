@@ -106,7 +106,7 @@ static void wad_led_timer_expiry(struct k_timer* timer) {
 }
 
 static void wad_led_flash_start(void) {
-#if !DT_HAS_ALIAS(led3)
+#if !defined(CONFIG_FEATURE_DOOM_LEDS) || !DT_HAS_ALIAS(led3)
     return;
 #else
     if (!device_is_ready(wad_led3.port)) {
@@ -124,7 +124,7 @@ static void wad_led_flash_start(void) {
 }
 
 static void wad_led_flash_stop(void) {
-#if !DT_HAS_ALIAS(led3)
+#if !defined(CONFIG_FEATURE_DOOM_LEDS) || !DT_HAS_ALIAS(led3)
     return;
 #else
     if (!wad_led_init_done) {
@@ -174,7 +174,7 @@ wad_file_t* W_AddFile(char* filename) {
 
     printf("W_AddFile: Reading %s\n", filename);
 
-#if defined(CONFIG_FILE_SYSTEM)
+#if defined(CONFIG_FEATURE_DOOM_SD) && defined(CONFIG_FILE_SYSTEM)
     struct fs_file_t fs_file;
     fs_file_t_init(&fs_file);
 
@@ -188,7 +188,6 @@ wad_file_t* W_AddFile(char* filename) {
         printf("no_sdcard = 1 - skipping file open\n");
     }
 #else
-    printf("CONFIG_FILE_SYSTEM disabled - skipping file open\n");
     no_sdcard = 1;
 #endif
 
@@ -204,7 +203,7 @@ wad_file_t* W_AddFile(char* filename) {
             (file_size + N_QSPI_BLOCK_SIZE - 1) / N_QSPI_BLOCK_SIZE;
         N_qspi_reserve_blocks(num_blocks);
 
-#if defined(CONFIG_FILE_SYSTEM)
+#if defined(CONFIG_FEATURE_DOOM_SD) && defined(CONFIG_FILE_SYSTEM)
         if (!no_sdcard) {
             uint8_t* block_data = N_malloc(N_QSPI_BLOCK_SIZE);
             int block_loc = 0;
@@ -330,7 +329,7 @@ wad_file_t* W_AddFile(char* filename) {
                 }
             }
             N_free(block_data);
-#if defined(CONFIG_FILE_SYSTEM)
+#if defined(CONFIG_FEATURE_DOOM_SD) && defined(CONFIG_FILE_SYSTEM)
             fs_close(&fs_file);
 #endif
         }
