@@ -86,11 +86,16 @@ static lumpindex_t* lumpnext = NULL;
 
 int first_lump_pos;
 
-#if DT_HAS_ALIAS(led3)
-static const struct gpio_dt_spec wad_led3 =
-    GPIO_DT_SPEC_GET(DT_ALIAS(led3), gpios);
+#if defined(CONFIG_FEATURE_DOOM_SD) && defined(CONFIG_FILE_SYSTEM) &&          \
+    defined(CONFIG_FEATURE_DOOM_LEDS) && defined(CONFIG_SOC_NRF5340_CPUAPP) && \
+    DT_HAS_ALIAS(led1)
+#define WAD_LED_FLASH_ENABLED 1
+static const struct gpio_dt_spec wad_led =
+    GPIO_DT_SPEC_GET(DT_ALIAS(led1), gpios);
 static struct k_timer wad_led_timer;
 static bool wad_led_init_done;
+#else
+#define WAD_LED_FLASH_ENABLED 0
 #endif
 
 static bool wad_header_valid(const wadinfo_t* header) {
@@ -98,42 +103,37 @@ static bool wad_header_valid(const wadinfo_t* header) {
            !strncmp(header->identification, "PWAD", 4);
 }
 
+#if WAD_LED_FLASH_ENABLED
 static void wad_led_timer_expiry(struct k_timer* timer) {
     ARG_UNUSED(timer);
-#if DT_HAS_ALIAS(led3)
-    gpio_pin_toggle_dt(&wad_led3);
-#endif
+    gpio_pin_toggle_dt(&wad_led);
 }
 
 static void wad_led_flash_start(void) {
-#if !defined(CONFIG_FEATURE_DOOM_LEDS) || !DT_HAS_ALIAS(led3)
-    return;
-#else
-    if (!device_is_ready(wad_led3.port)) {
+    if (!device_is_ready(wad_led.port)) {
         return;
     }
     if (!wad_led_init_done) {
-        if (gpio_pin_configure_dt(&wad_led3, GPIO_OUTPUT_INACTIVE) != 0) {
+        if (gpio_pin_configure_dt(&wad_led, GPIO_OUTPUT_INACTIVE) != 0) {
             return;
         }
         k_timer_init(&wad_led_timer, wad_led_timer_expiry, NULL);
         wad_led_init_done = true;
     }
     k_timer_start(&wad_led_timer, K_NO_WAIT, K_MSEC(75));
-#endif
 }
 
 static void wad_led_flash_stop(void) {
-#if !defined(CONFIG_FEATURE_DOOM_LEDS) || !DT_HAS_ALIAS(led3)
-    return;
-#else
     if (!wad_led_init_done) {
         return;
     }
     k_timer_stop(&wad_led_timer);
-    gpio_pin_set_dt(&wad_led3, 0);
-#endif
+    gpio_pin_set_dt(&wad_led, 0);
 }
+#else
+static inline void wad_led_flash_start(void) {}
+static inline void wad_led_flash_stop(void) {}
+#endif
 
 unsigned int W_LumpNameHash(const char* s) {
     // This is the djb2 string hash function, modded to work on strings

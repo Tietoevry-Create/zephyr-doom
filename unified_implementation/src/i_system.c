@@ -15,34 +15,29 @@
 // DESCRIPTION:
 //
 
-
-
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-
 #include <stdarg.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 #include "doom_config.h"
 
-//NRFD-TODO: #include "deh_str.h"
+// NRFD-TODO: #include "deh_str.h"
+#include "doom_status_led.h"
 #include "doomtype.h"
-
+#include "i_joystick.h"
+#include "i_sound.h"
+#include "i_system.h"
+#include "i_timer.h"
+#include "i_video.h"
 #include "m_argv.h"
 #include "m_config.h"
 #include "m_misc.h"
-#include "i_joystick.h"
-#include "i_sound.h"
-#include "i_timer.h"
-#include "i_video.h"
-
-#include "i_system.h"
-
 #include "w_wad.h"
 #include "z_zone.h"
 
 #define DEFAULT_RAM 16 /* MiB */
-#define MIN_RAM     4  /* MiB */
+#define MIN_RAM 4      /* MiB */
 
 /* NRFD-EXCLUDE:
 typedef struct atexit_listentry_s atexit_listentry_t;
@@ -57,8 +52,7 @@ struct atexit_listentry_s
 static atexit_listentry_t *exit_funcs = NULL;
 */
 
-void I_AtExit(atexit_func_t func, boolean run_on_error)
-{
+void I_AtExit(atexit_func_t func, boolean run_on_error) {
     /*NRFD-EXCLUDE
     atexit_listentry_t *entry;
 
@@ -73,17 +67,15 @@ void I_AtExit(atexit_func_t func, boolean run_on_error)
 
 // Tactile feedback function, probably used for the Logitech Cyberman
 
-void I_Tactile(int on, int off, int total)
-{
-}
+void I_Tactile(int on, int off, int total) {}
 
 // Zone memory auto-allocation function that allocates the zone size
 // by trying progressively smaller zone sizes until one is found that
 // works.
 
-static byte *AutoAllocMemory(int *size, int default_ram, int min_ram)
-{
-    printf("TODO AutoAllocMemory\n"); return NULL;
+static byte* AutoAllocMemory(int* size, int default_ram, int min_ram) {
+    printf("TODO AutoAllocMemory\n");
+    return NULL;
     /* NRFD-TODO:
     byte *zonemem;
 
@@ -122,9 +114,9 @@ static byte *AutoAllocMemory(int *size, int default_ram, int min_ram)
     */
 }
 
-byte *I_ZoneBase (int *size)
-{
-    printf("TODO I_ZoneBase\n"); return NULL;
+byte* I_ZoneBase(int* size) {
+    printf("TODO I_ZoneBase\n");
+    return NULL;
     /* NRFD-TODO:
     byte *zonemem;
     int min_ram, default_ram;
@@ -158,39 +150,41 @@ byte *I_ZoneBase (int *size)
     */
 }
 
-void I_PrintBanner(char *msg)
-{
+void I_PrintBanner(char* msg) {
     int i;
     int spaces = 35 - (strlen(msg) / 2);
 
-    for (i=0; i<spaces; ++i)
-        putchar(' ');
+    for (i = 0; i < spaces; ++i) putchar(' ');
 
     puts(msg);
 }
 
-void I_PrintDivider(void)
-{
+void I_PrintDivider(void) {
     int i;
 
-    for (i=0; i<75; ++i)
-    {
+    for (i = 0; i < 75; ++i) {
         putchar('=');
     }
 
     putchar('\n');
 }
 
-void I_PrintStartupBanner(char *gamedescription)
-{
+void I_PrintStartupBanner(char* gamedescription) {
     I_PrintDivider();
     I_PrintBanner(gamedescription);
     I_PrintDivider();
 
-    printf(" " DOOM_PACKAGE_NAME " is free software, covered by the GNU General Public\n");
-    printf(" License.  There is NO warranty; not even for MERCHANTABILITY or FITNESS\n");
-    printf(" FOR A PARTICULAR PURPOSE. You are welcome to change and distribute\n");
-    printf(" copies under certain conditions. See the source for more information.\n");
+    printf(" " DOOM_PACKAGE_NAME
+           " is free software, covered by the GNU General Public\n");
+    printf(
+        " License.  There is NO warranty; not even for MERCHANTABILITY or "
+        "FITNESS\n");
+    printf(
+        " FOR A PARTICULAR PURPOSE. You are welcome to change and "
+        "distribute\n");
+    printf(
+        " copies under certain conditions. See the source for more "
+        "information.\n");
 
     I_PrintDivider();
 }
@@ -201,10 +195,7 @@ void I_PrintStartupBanner(char *gamedescription)
 // Returns true if stdout is a real console, false if it is a file
 //
 
-boolean I_ConsoleStdout(void)
-{
-    return true;
-}
+boolean I_ConsoleStdout(void) { return true; }
 
 //
 // I_Init
@@ -228,8 +219,7 @@ void I_BindVariables(void)
 // I_Quit
 //
 
-void I_Quit (void)
-{
+void I_Quit(void) {
     /* NRFD-EXCLUDE
     atexit_listentry_t *entry;
 
@@ -246,37 +236,33 @@ void I_Quit (void)
     exit(0);
 }
 
-
-
 //
 // I_Error
 //
 
 static boolean already_quitting = false;
 
-void I_Error (char *error, ...)
-{
-    //char msgbuf[512];
+void I_Error(char* error, ...) {
+    // char msgbuf[512];
     va_list argptr;
-    //atexit_listentry_t *entry;
-    //boolean exit_gui_popup;
+    // atexit_listentry_t *entry;
+    // boolean exit_gui_popup;
 
-    if (already_quitting)
-    {
+    if (already_quitting) {
         fprintf(stderr, "Warning: recursive call to I_Error detected.\n");
         exit(-1);
-    }
-    else
-    {
+    } else {
         already_quitting = true;
     }
 
     // Message first.
     va_start(argptr, error);
-    //fprintf(stderr, "\nError: ");
+    // fprintf(stderr, "\nError: ");
     vprintf(error, argptr);
     printf("\n\n");
     va_end(argptr);
+
+    doom_status_led_set(DOOM_STATUS_LED_CRASHED);
 
     /* NRFD-EXCLUDE
     // Write a copy of the message into buffer.
@@ -323,22 +309,19 @@ void I_Error (char *error, ...)
 // I_Realloc
 //
 
-void *I_Realloc(void *ptr, size_t size)
-{
-    void *new_ptr;
+void* I_Realloc(void* ptr, size_t size) {
+    void* new_ptr;
 
     new_ptr = realloc(ptr, size);
 
-    if (size != 0 && new_ptr == NULL)
-    {
-        I_Error ("I_Realloc: failed on reallocation of %i bytes", size);
+    if (size != 0 && new_ptr == NULL) {
+        I_Error("I_Realloc: failed on reallocation of %i bytes", size);
     }
 
     return new_ptr;
 }
 
-boolean I_GetMemoryValue(unsigned int offset, void *value, int size)
-{
+boolean I_GetMemoryValue(unsigned int offset, void* value, int size) {
     /* NRFD-EXCLUDE
     static boolean firsttime = true;
 

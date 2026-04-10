@@ -36,6 +36,7 @@
 
 / {
     aliases {
+        doom-status-led = &led0;
         spi4 = &spi4;
         i2s-tx = &i2s0;
     };

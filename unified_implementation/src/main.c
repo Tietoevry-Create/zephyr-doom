@@ -28,6 +28,8 @@
 #include "n_i2s.h"
 #endif
 
+#include "doom_status_led.h"
+
 LOG_MODULE_REGISTER(doom_main, CONFIG_DOOM_MAIN_LOG_LEVEL);
 
 int no_sdcard = 1;
@@ -118,6 +120,9 @@ static void try_mount_disk(void) { no_sdcard = 1; }
 int main(void) {
     LOG_INF("BOARD STARTING %s", CONFIG_BOARD);
 
+    doom_status_led_init();
+    doom_status_led_set(DOOM_STATUS_LED_LOADING);
+
     platform_clock_cache_init();
 
 #if defined(CONFIG_FEATURE_DOOM_SD)
@@ -136,6 +141,7 @@ int main(void) {
     int err = bluetooth_control_init();
     if (err) {
         LOG_ERR("Bluetooth control initialization failed.");
+        doom_status_led_set(DOOM_STATUS_LED_CRASHED);
         return 0;
     }
 #endif

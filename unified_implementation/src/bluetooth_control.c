@@ -40,8 +40,8 @@
 #include "doomkeys.h"
 #include "m_controls.h"
 
-#if defined(CONFIG_FEATURE_DOOM_LEDS) && DT_HAS_ALIAS(led0) && \
-    DT_HAS_ALIAS(led1)
+#if defined(CONFIG_FEATURE_DOOM_LEDS) && DT_HAS_ALIAS(led2) && \
+    DT_HAS_ALIAS(led3)
 #define DOOM_BLE_STATUS_LEDS 1
 #else
 #define DOOM_BLE_STATUS_LEDS 0
@@ -49,8 +49,8 @@
 
 #if DOOM_BLE_STATUS_LEDS
 #define BLINK_INTERVAL_MS 500
-#define LED1_NODE DT_ALIAS(led0)
-#define LED2_NODE DT_ALIAS(led1)
+#define LED1_NODE DT_ALIAS(led2)
+#define LED2_NODE DT_ALIAS(led3)
 
 static const struct gpio_dt_spec led1 = GPIO_DT_SPEC_GET(LED1_NODE, gpios);
 static const struct gpio_dt_spec led2 = GPIO_DT_SPEC_GET(LED2_NODE, gpios);

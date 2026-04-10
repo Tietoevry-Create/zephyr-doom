@@ -32,9 +32,7 @@ config FEATURE_DOOM_BLE
 	  Enable BLE-based controllers.
 
 	  Note (nRF5340 + NCS): you may also need NCS-specific bt_scan tuning
-	  symbols (e.g. CONFIG_BT_SCAN_UUID_CNT). These symbols are not always
-	  available on non-NCS trees, so keep them commented unless building
-	  with nRF Connect SDK.
+	  symbols (e.g. CONFIG_BT_SCAN_UUID_CNT).
 
 config FEATURE_DOOM_SD
 	bool "SD card upload (copy WAD to external flash)"

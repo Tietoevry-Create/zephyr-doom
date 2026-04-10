@@ -35,6 +35,7 @@
 #include "d_main.h"
 #include "deh_main.h"
 #include "doom_config.h"
+#include "doom_status_led.h"
 #include "doomdef.h"
 #include "doomstat.h"
 #include "dstrings.h"
@@ -310,6 +311,8 @@ void D_BindVariables(void) {
 void D_DoomLoop(void) {
     printf("D_DoomLoop\n");
     main_loop_started = true;
+
+    doom_status_led_set(DOOM_STATUS_LED_RUNNING);
 
     I_SetWindowTitle(gamedescription);
     I_GraphicsCheckCommandLine();

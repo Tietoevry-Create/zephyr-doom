@@ -7,6 +7,7 @@ target_include_directories(app PRIVATE src/config)
 
 set(DOOM_COMMON_SRCS
                 src/main.c
+                src/doom_status_led.c
                 src/n_mem.c
                 src/n_buttons.c
                 src/i_timer.c
