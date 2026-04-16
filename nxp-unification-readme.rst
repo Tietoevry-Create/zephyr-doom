@@ -159,6 +159,19 @@ Implementation details:
 Build and flash
 ---------------
 
+Feature configuration
+~~~~~~~~~~~~~~~~~~~~
+
+Major subsystems can be enabled/disabled via app-level Kconfig feature flags.
+These flags are meant to be toggled from your application's ``prj.conf``.
+
+- Feature flags are named ``CONFIG_FEATURE_DOOM_*``.
+- Defaults are ``n`` (disabled), so enabling a subsystem is usually just uncommenting the corresponding ``...=y`` line in ``prj.conf``.
+- Convenience presets exist (also in ``Kconfig``) to enable a tested set of features per board.
+
+Some options are SDK-specific (for example, certain Nordic "NCS" Bluetooth scan
+knobs). Keep those commented out unless your Zephyr tree provides them.
+
 Build from the repository root:
 
 .. code-block:: sh
