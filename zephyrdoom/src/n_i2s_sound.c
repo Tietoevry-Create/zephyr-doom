@@ -23,6 +23,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <zephyr/kernel.h>
+
 #include "deh_str.h"
 #include "doom_config.h"
 #include "doomtype.h"
@@ -40,6 +42,13 @@
 static boolean use_sfx_prefix;
 
 static boolean sound_initialized = false;
+
+#define MIXER_STACK_SIZE 2048
+#define MIXER_PRIO 0
+
+K_THREAD_STACK_DEFINE(mixer_stack, MIXER_STACK_SIZE);
+static struct k_thread mixer_thread;
+static boolean mixer_started = false;
 
 typedef struct __attribute__((packed)) mobj_s {
     byte *ptr;
@@ -146,8 +155,6 @@ static int N_I2S_GetSfxLumpNum(sfxinfo_t *sfx) {
 static void N_I2S_UpdateSoundParams(int handle, int vol, int sep) {
     int left, right;
 
-    // printf("N_I2S_UpdateSoundParams\n");
-
     if (!sound_initialized || handle < 0 || handle >= NUM_CHANNELS) {
         return;
     }
@@ -166,12 +173,9 @@ static void N_I2S_UpdateSoundParams(int handle, int vol, int sep) {
 
     channels[handle].left_vol = left;
     channels[handle].right_vol = right;
-
-    // printf("N_I2S_UpdateSoundParams: %d %d\n", left, right);
 }
 
 static void ClearSoundOnChannel(int channel) {
-    // printf("Clear channel %0d\n", channel);
     channels[channel].ptr = NULL;
     channels[channel].len = 0;
     channels[channel].pos = 0;
@@ -194,11 +198,6 @@ static void ClearSoundOnChannel(int channel) {
 
 static int N_I2S_StartSound(sfxinfo_t *sfxinfo, int channel, int vol, int sep,
                             int pitch) {
-    // allocated_sound_t *snd;
-
-    // printf("N_I2S_StartSound %.9s %d %d %d %d\n", sfxinfo->name, channel,
-    // vol, sep, pitch);
-
     if (!sound_initialized || channel < 0 || channel >= NUM_CHANNELS) {
         return -1;
     }
@@ -235,8 +234,6 @@ static boolean N_I2S_SoundIsPlaying(int handle) {
         return false;
     }
 
-    // printf("N_I2S_SoundIsPlaying\n");
-
     return (channels[handle].ptr != NULL);
 }
 
@@ -246,10 +243,42 @@ static boolean N_I2S_SoundIsPlaying(int handle) {
 
 static void N_I2S_UpdateSound(void) {
     // printf("N_I2S_UpdateSound\n");
+    if (!mixer_started) {
+        int16_t *buf;
+        int buf_len;
+        while (N_I2S_next_buffer(&buf_len, &buf)) {
+            for (int i = 0; i < buf_len / 2; i++) {
+                int16_t sample_l = 0;
+                int16_t sample_r = 0;
+                for (int j = 0; j < NUM_CHANNELS; j++) {
+                    channel_data_t ch = channels[j];
+                    if (ch.ptr != NULL) {
+                        int16_t sample = ch.ptr[ch.pos] - 128;
+                        channels[j].pos++;
+                        if (channels[j].pos >= ch.len) {
+                            ClearSoundOnChannel(j);
+                        }
+                        sample_l += sample * ch.left_vol;
+                        sample_r += sample * ch.right_vol;
+                    }
+                }
+                buf[i * 2] = sample_l;
+                buf[i * 2 + 1] = sample_r;
+            }
+        }
+        N_I2S_process();
+    }
+}
 
+static void N_I2S_ShutdownSound(void) {}
+
+static bool MixSoundOnce(void) {
+    bool did_work = false;
     int16_t *buf;
     int buf_len;
+
     while (N_I2S_next_buffer(&buf_len, &buf)) {
+        did_work = true;
         for (int i = 0; i < buf_len / 2; i++) {
             int16_t sample_l = 0;
             int16_t sample_r = 0;
@@ -270,10 +299,30 @@ static void N_I2S_UpdateSound(void) {
         }
     }
 
-    N_I2S_process();
+    return did_work;
 }
 
-static void N_I2S_ShutdownSound(void) {}
+static void MixerThread(void *a, void *b, void *c) {
+    ARG_UNUSED(a);
+    ARG_UNUSED(b);
+    ARG_UNUSED(c);
+
+    for (;;) {
+        if (!sound_initialized) {
+            k_sleep(K_MSEC(10));
+            continue;
+        }
+
+        bool did_work = MixSoundOnce();
+        N_I2S_process();
+
+        if (!did_work) {
+            k_sleep(K_MSEC(1));
+        } else {
+            k_yield();
+        }
+    }
+}
 
 static boolean N_I2S_InitSound(boolean _use_sfx_prefix) {
     use_sfx_prefix = _use_sfx_prefix;
@@ -285,6 +334,13 @@ static boolean N_I2S_InitSound(boolean _use_sfx_prefix) {
     }
 
     sound_initialized = true;
+
+    if (!mixer_started) {
+        k_thread_create(&mixer_thread, mixer_stack,
+                        K_THREAD_STACK_SIZEOF(mixer_stack), MixerThread, NULL,
+                        NULL, NULL, MIXER_PRIO, 0, K_NO_WAIT);
+        mixer_started = true;
+    }
 
     return true;
 }

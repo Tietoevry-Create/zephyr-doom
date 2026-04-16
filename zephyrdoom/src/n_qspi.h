@@ -5,8 +5,8 @@
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
  *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
+ * 1. Redistributions of source code must retain the above copyright notice,
+ * this list of conditions and the following disclaimer.
  *
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
@@ -31,18 +31,21 @@
 
 #include <stdlib.h>
 
-#define N_QSPI_XIP_START_ADDR      0x12000000
-// #define N_QSPI_XIP_START_ADDR       0x10000000
+#if defined(CONFIG_BOARD_FRDM_MCXN947) || \
+    defined(CONFIG_BOARD_FRDM_MCXN947_MCXN947_CPU0)
+#define N_QSPI_XIP_START_ADDR 0x80000000
+#else
+#define N_QSPI_XIP_START_ADDR 0x12000000
+#endif
 
-#define N_QSPI_BLOCK_SIZE (64*1024)
+#define N_QSPI_BLOCK_SIZE (64 * 1024)
 
-
-void *N_qspi_data_pointer(size_t loc);
+void* N_qspi_data_pointer(size_t loc);
 void N_qspi_wait();
 void N_qspi_init();
-void N_qspi_erase_block(size_t loc) ;
-void N_qspi_write(size_t loc, void *buffer, size_t size) ;
-void N_qspi_write_block(size_t loc, void *buffer, size_t size);
-void N_qspi_read(size_t loc, void *buffer, size_t size) ;
+void N_qspi_erase_block(size_t loc);
+void N_qspi_write(size_t loc, void* buffer, size_t size);
+void N_qspi_write_block(size_t loc, void* buffer, size_t size);
+void N_qspi_read(size_t loc, void* buffer, size_t size);
 void N_qspi_reserve_blocks(size_t block_count);
 size_t N_qspi_alloc_block();

@@ -13,27 +13,29 @@
 // GNU General Public License for more details.
 //
 // DESCRIPTION:
-//	WAD I/O functions.
+//  WAD I/O functions.
 //
+
+#include "w_file.h"
 
 #include <stdio.h>
 
 #include "doom_config.h"
-
 #include "doomtype.h"
 #include "m_argv.h"
 
-#include "w_file.h"
-
 extern wad_file_class_t fatfs_wad_file;
 
-
-wad_file_t *W_OpenFile(char *path)
-{
-    wad_file_t *result;
+wad_file_t* W_OpenFile(char* path) {
+    wad_file_t* result;
     int i;
 
+#if defined(CONFIG_FAT_FILESYSTEM_ELM)
     return fatfs_wad_file.OpenFile(path);
+#else
+    (void)path;
+    return NULL;
+#endif
 
     // Try all classes in order until we find one that works
 
@@ -54,15 +56,12 @@ wad_file_t *W_OpenFile(char *path)
     */
 }
 
-void W_CloseFile(wad_file_t *wad)
-{
+void W_CloseFile(wad_file_t* wad) {
     // wad->file_class->CloseFile(wad);
 }
 
-size_t W_Read(wad_file_t *wad, unsigned int offset,
-              void *buffer, size_t buffer_len)
-{
+size_t W_Read(wad_file_t* wad, unsigned int offset, void* buffer,
+              size_t buffer_len) {
     return 0;
     // return wad->file_class->Read(wad, offset, buffer, buffer_len);
 }
-

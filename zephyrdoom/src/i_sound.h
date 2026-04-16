@@ -13,7 +13,7 @@
 // GNU General Public License for more details.
 //
 // DESCRIPTION:
-//	The not so system specific sound interface.
+//  The not so system specific sound interface.
 //
 
 
@@ -28,7 +28,7 @@
 //
 // SoundFX struct.
 //
-typedef struct sfxinfo_struct	sfxinfo_t;
+typedef struct sfxinfo_struct   sfxinfo_t;
 
 struct sfxinfo_struct
 {
@@ -60,7 +60,7 @@ struct sfxinfo_struct
     // lump number of sfx
     int lumpnum;
 
-    // Maximum number of channels that the sound can be played on 
+    // Maximum number of channels that the sound can be played on
     // (Heretic)
     int numchannels;
 
@@ -87,7 +87,7 @@ typedef struct
 
 } musicinfo_t;
 
-typedef enum 
+typedef enum
 {
     SNDDEVICE_NONE = 0,
     SNDDEVICE_PCSPEAKER = 1,
@@ -227,12 +227,7 @@ void I_PlaySong(void *handle, boolean looping);
 void I_StopSong(void);
 boolean I_MusicIsPlaying(void);
 
-extern int snd_sfxdevice;
 extern int snd_musicdevice;
-extern int snd_samplerate;
-extern int snd_cachesize;
-extern int snd_maxslicetime_ms;
-extern char *snd_musiccmd;
 extern int snd_pitchshift;
 
 void I_BindSoundVariables(void);
@@ -247,4 +242,3 @@ typedef enum {
 void I_SetOPLDriverVer(opl_driver_ver_t ver);
 
 #endif
-

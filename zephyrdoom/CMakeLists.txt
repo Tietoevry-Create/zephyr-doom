@@ -5,16 +5,13 @@ project(zephyr_doom)
 target_include_directories(app PRIVATE src/)
 target_include_directories(app PRIVATE src/config)
 
-target_sources(app PRIVATE
+set(DOOM_COMMON_SRCS
                 src/main.c
-                src/n_qspi.c
-                src/n_fs.c
+                src/doom_status_led.c
                 src/n_mem.c
                 src/n_buttons.c
-                src/n_display.c
+                src/i_timer.c
                 src/n_rjoy.c
-                src/n_i2s.c
-                src/n_i2s_sound.c
                 src/deh_main.c
                 src/deh_str.c
                 src/doom/deh_misc.h
@@ -23,7 +20,6 @@ target_sources(app PRIVATE
                 src/d_iwad.c
                 src/d_mode.c
                 src/d_loop.c
-                src/i_timer.c
                 src/i_system.c
                 src/i_input.c
                 src/i_video.c
@@ -47,6 +43,7 @@ target_sources(app PRIVATE
                 src/w_main.c
                 src/w_wad.c
                 src/z_native.c
+                src/sha1.c
                 src/doom/am_map.c
                 src/doom/doomstat.c
                 src/doom/d_main.c
@@ -94,7 +91,33 @@ target_sources(app PRIVATE
                 src/doom/statdump.c
                 src/doom/sounds.c
                 src/doom/wi_stuff.c
-                )
+)
+
+target_sources(app PRIVATE
+                ${DOOM_COMMON_SRCS}
+                src/n_qspi.c
+)
+
+if (CONFIG_FEATURE_DOOM_DISPLAY)
+    target_sources(app PRIVATE src/n_display.c)
+else()
+    target_sources(app PRIVATE src/n_display_stub.c)
+endif()
+
+if (CONFIG_FEATURE_DOOM_AUDIO)
+    target_sources(app PRIVATE
+                    src/n_i2s.c
+                    src/n_i2s_sound.c
+    )
+endif()
+
+if (CONFIG_FEATURE_DOOM_BLE)
+    target_sources(app PRIVATE src/bluetooth_control.c)
+endif()
+
+if (NOT (CONFIG_BOARD_NRF5340DK_NRF5340_CPUAPP OR CONFIG_BOARD_FRDM_MCXN947 OR CONFIG_BOARD_FRDM_MCXN947_MCXN947_CPU0))
+    message(FATAL_ERROR "Unsupported board for unified_implementation: ${CONFIG_BOARD}")
+endif()
 
 
 # set C version
