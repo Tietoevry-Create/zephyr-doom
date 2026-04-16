@@ -3,8 +3,8 @@
     defined(CONFIG_BOARD_FRDM_MCXN947_MCXN947_CPU0)
 
 /* NXP FRDM-MCXN947 Configuration */
-/* CS: P0_27 (Arduino D10) - Note: Also Green LED */
-#define DISPLAY_PIN_CS_N 27
+/* CS: P0_29 (Arduino D2) */
+#define DISPLAY_PIN_CS_N 29
 /* PD_N: P0_28 (Arduino D8) */
 #define DISPLAY_PIN_PD_N 28
 

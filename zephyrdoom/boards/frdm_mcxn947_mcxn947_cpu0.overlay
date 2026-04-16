@@ -1,3 +1,5 @@
+#include <nxp/mcx/MCXN947VDF-pinctrl.h>
+
 &flexcomm1 {
 	status = "okay";
 };
@@ -8,6 +10,7 @@
 
 / {
 	aliases {
+		doom-status-led = &green_led;
 		spi4 = &arduino_spi;
 		i2s-tx = &sai0;
 	};
@@ -56,4 +59,25 @@
 
 &user_button_3 {
 	status = "okay";
+};
+
+/* Keep LPSPI on the Arduino SPI pins (SCK/MOSI/MISO), but free P0_27 so it can
+ * be used as the green user LED.
+ * CS for the FT810 is driven manually as GPIO (DISPLAY_PIN_CS_N). */
+&pinctrl {
+	pinmux_flexcomm1_lpspi_no_cs: pinmux_flexcomm1_lpspi_no_cs {
+		group0 {
+			pinmux = <FC1_P0_PIO0_24>,
+					 <FC1_P1_PIO0_25>,
+					 <FC1_P2_PIO0_26>;
+			slew-rate = "fast";
+			drive-strength = "low";
+			input-enable;
+		};
+	};
+};
+
+&arduino_spi {
+	pinctrl-0 = <&pinmux_flexcomm1_lpspi_no_cs>;
+	pinctrl-names = "default";
 };
