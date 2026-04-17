@@ -103,6 +103,84 @@ static bool wad_header_valid(const wadinfo_t* header) {
            !strncmp(header->identification, "PWAD", 4);
 }
 
+static const struct device* wad_get_flash_device(void) {
+    const struct device* flash_dev = DEVICE_DT_GET(FLASH_NODE);
+    if (!device_is_ready(flash_dev)) {
+        LOG_ERR("Flash device %s is not ready", flash_dev->name);
+        return NULL;
+    }
+    return flash_dev;
+}
+
+static boolean wad_should_transfer_from_sd(void) {
+    /* Keep the existing button-triggered transfer behavior. */
+    boolean do_wad_transfer = false;
+
+    N_ReadButtons();
+    I_Sleep(1);
+    N_ReadButtons();
+
+    if (N_ButtonState(3)) {
+        do_wad_transfer = true;
+    }
+
+    return do_wad_transfer;
+}
+
+static void wad_reset_hash_tables(void) {
+    if (lumphash != NULL) {
+        Z_Free(lumphash);
+        lumphash = NULL;
+    }
+    if (lumpnext != NULL) {
+        Z_Free(lumpnext);
+        lumpnext = NULL;
+    }
+}
+
+static const uint8_t* wad_xip_base_ptr(void) {
+    return (const uint8_t*)N_qspi_data_pointer(0);
+}
+
+static void wad_parse_header_from_xip(const uint8_t* xip_ptr,
+                                      const char* filename,
+                                      wadinfo_t* header_out) {
+    wadinfo_t header;
+
+    /* Treat XIP view as read-only: copy to a local header first. */
+    memcpy(&header, xip_ptr, sizeof(header));
+
+    printf("Header: %x %x %x %x\n", header.identification[0],
+           header.identification[1], header.identification[2],
+           header.identification[3]);
+
+    if (strncmp(header.identification, "IWAD", 4)) {
+        /* Homebrew levels? */
+        if (strncmp(header.identification, "PWAD", 4)) {
+            I_Error("Wad file %s doesn't have IWAD or PWAD id\n", filename);
+        }
+    }
+
+    header.numlumps = LONG(header.numlumps);
+
+    /* Vanilla Doom doesn't like WADs with more than 4046 lumps */
+    if (!strncmp(header.identification, "PWAD", 4) && header.numlumps > 4046) {
+        I_Error(
+            "Error: Vanilla limit for lumps in a WAD is 4046, "
+            "PWAD %s has %d",
+            filename, header.numlumps);
+    }
+
+    header.infotableofs = LONG(header.infotableofs);
+
+    printf("WAD header_ptr\n");
+    printf("ID: %.4s\n", header.identification);
+    printf("Num lumps: %d\n", header.numlumps);
+    printf("Info table: %d\n", header.infotableofs);
+
+    *header_out = header;
+}
+
 #if WAD_LED_FLASH_ENABLED
 static void wad_led_timer_expiry(struct k_timer* timer) {
     ARG_UNUSED(timer);
@@ -150,23 +228,14 @@ unsigned int W_LumpNameHash(const char* s) {
 }
 
 wad_file_t* W_AddFile(char* filename) {
-    lumpindex_t i;
     wad_file_t* wad_file_data;
-    boolean do_wad_transfer = false;
-
-    const struct device* flash_dev = DEVICE_DT_GET(FLASH_NODE);
-    if (!device_is_ready(flash_dev)) {
-        LOG_ERR("Flash device %s is not ready", flash_dev->name);
+    const struct device* flash_dev = wad_get_flash_device();
+    boolean do_wad_transfer;
+    if (flash_dev == NULL) {
         return NULL;
     }
 
-    N_ReadButtons();
-    I_Sleep(1);
-    N_ReadButtons();
-
-    if (N_ButtonState(3)) {
-        do_wad_transfer = true;
-    }
+    do_wad_transfer = wad_should_transfer_from_sd();
 
     if (numlumps != 0) {
         I_Error("Only one wad file supported\n");
@@ -216,7 +285,7 @@ wad_file_t* W_AddFile(char* filename) {
                 wad_led_flash_start();
                 led_flash_started = true;
 
-                for (i = 0; i < num_blocks; i++) {
+                for (lumpindex_t i = 0; i < num_blocks; i++) {
                     printf("Copying block %d of %d\n", i, num_blocks);
                     int block_next = block_loc + N_QSPI_BLOCK_SIZE;
                     int block_size = block_next > file_size
@@ -228,12 +297,7 @@ wad_file_t* W_AddFile(char* filename) {
                     int bytes_read = fs_read(&fs_file, block_data, block_size);
                     if (bytes_read < 0) {
                         printf("Error reading file: %d\n", bytes_read);
-                        if (led_flash_started) {
-                            wad_led_flash_stop();
-                        }
-                        N_free(block_data);
-                        fs_close(&fs_file);
-                        return NULL;
+                        goto sd_upload_fail;
                     }
 
                     printf("First 40b of block: \n");
@@ -267,12 +331,7 @@ wad_file_t* W_AddFile(char* filename) {
                         flash_erase(flash_dev, flash_offset, N_QSPI_BLOCK_SIZE);
                     if (rc != 0) {
                         printf("Flash erase failed (err %d)\n", rc);
-                        if (led_flash_started) {
-                            wad_led_flash_stop();
-                        }
-                        N_free(block_data);
-                        fs_close(&fs_file);
-                        return NULL;
+                        goto sd_upload_fail;
                     }
 
                     // Write data to flash
@@ -280,12 +339,7 @@ wad_file_t* W_AddFile(char* filename) {
                                      block_size);
                     if (rc != 0) {
                         printf("Flash write failed (err %d)\n", rc);
-                        if (led_flash_started) {
-                            wad_led_flash_stop();
-                        }
-                        N_free(block_data);
-                        fs_close(&fs_file);
-                        return NULL;
+                        goto sd_upload_fail;
                     }
 
                     // Read back for verification
@@ -293,12 +347,7 @@ wad_file_t* W_AddFile(char* filename) {
                                     block_size);
                     if (rc != 0) {
                         printf("Flash read failed (err %d)\n", rc);
-                        if (led_flash_started) {
-                            wad_led_flash_stop();
-                        }
-                        N_free(block_data);
-                        fs_close(&fs_file);
-                        return NULL;
+                        goto sd_upload_fail;
                     }
 
                     printf("First 40b of block in flash: \n");
@@ -329,14 +378,24 @@ wad_file_t* W_AddFile(char* filename) {
                 }
             }
             N_free(block_data);
-#if defined(CONFIG_FEATURE_DOOM_SD) && defined(CONFIG_FILE_SYSTEM)
             fs_close(&fs_file);
-#endif
         }
+
+        goto sd_upload_done;
+
+    sd_upload_fail:
+        if (led_flash_started) {
+            wad_led_flash_stop();
+        }
+        N_free(block_data);
+        fs_close(&fs_file);
+        return NULL;
+
+    sd_upload_done:
 #endif /* CONFIG_FILE_SYSTEM */
 
         wadinfo_t existing_header = {0};
-        uint8_t* xip_ptr = (uint8_t*)N_qspi_data_pointer(0);
+        const uint8_t* xip_ptr = wad_xip_base_ptr();
         int header_rc =
             flash_read(flash_dev, 0, &existing_header, sizeof(existing_header));
         printf("Flash device: %s\n", flash_dev->name);
@@ -354,9 +413,9 @@ wad_file_t* W_AddFile(char* filename) {
                    xip_ptr[1], xip_ptr[2], xip_ptr[3]);
         }
 
-        // The WAD lives in the QSPI XIP mapping. Use that view for normal
-        // reads because flash_read() fails on this device path.
-        wadinfo_t* header_ptr = (wadinfo_t*)xip_ptr;
+        /* The WAD lives in the QSPI XIP mapping. Use that view for normal
+         * reads because flash_read() may fail on some device paths. */
+        wadinfo_t header;
 
         printf("Dumping flash data: \n");
         int pt = 0;
@@ -378,59 +437,25 @@ wad_file_t* W_AddFile(char* filename) {
             printf("\n\n");
         }
 
-        printf("Header: %x %x %x %x\n", header_ptr->identification[0],
-               header_ptr->identification[1], header_ptr->identification[2],
-               header_ptr->identification[3]);
-
-        if (strncmp(header_ptr->identification, "IWAD", 4)) {
-            // Homebrew levels?
-            if (strncmp(header_ptr->identification, "PWAD", 4)) {
-                I_Error("Wad file %s doesn't have IWAD or PWAD id\n", filename);
-            }
-        }
-
-        header_ptr->numlumps = LONG(header_ptr->numlumps);
-
-        // Vanilla Doom doesn't like WADs with more than 4046 lumps
-        if (!strncmp(header_ptr->identification, "PWAD", 4) &&
-            header_ptr->numlumps > 4046) {
-            I_Error(
-                "Error: Vanilla limit for lumps in a WAD is 4046, "
-                "PWAD %s has %d",
-                filename, header_ptr->numlumps);
-        }
-
-        header_ptr->infotableofs = LONG(header_ptr->infotableofs);
-
-        printf("WAD header_ptr\n");
-        printf("ID: %.4s\n", header_ptr->identification);
-        printf("Num lumps: %d\n", header_ptr->numlumps);
-        printf("Info table: %d\n", header_ptr->infotableofs);
+        wad_parse_header_from_xip(xip_ptr, filename, &header);
 
         if (numlumps != 0) {
             I_Error("NRFD-TODO: Multiple WADs not supported yet\n");
         }
 
-        if ((numlumps + header_ptr->numlumps) > MAX_NUMLUMPS) {
+        if ((numlumps + header.numlumps) > MAX_NUMLUMPS) {
             I_Error("W_AddFile: MAX_NUMLUMPS reached\n");
         }
 
-        first_lump_pos = header_ptr->infotableofs;
+        first_lump_pos = header.infotableofs;
         filelumps = (filelump_t*)N_qspi_data_pointer(first_lump_pos);
-        numlumps += header_ptr->numlumps;
+        numlumps += header.numlumps;
 
         wad_file_data->path = filename;
         wad_file_data->length = file_size;
     }
 
-    if (lumphash != NULL) {
-        Z_Free(lumphash);
-        lumphash = NULL;
-    }
-    if (lumpnext != NULL) {
-        Z_Free(lumpnext);
-        lumpnext = NULL;
-    }
+    wad_reset_hash_tables();
 
     return wad_file_data;
 }
