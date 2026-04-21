@@ -41,6 +41,7 @@ set(DOOM_COMMON_SRCS
                 src/w_file.c
                 src/w_file_fatfs.c
                 src/w_main.c
+                src/wad_sd.c
                 src/w_wad.c
                 src/z_native.c
                 src/sha1.c

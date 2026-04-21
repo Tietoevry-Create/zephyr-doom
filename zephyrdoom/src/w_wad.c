@@ -29,6 +29,7 @@
 #include "i_timer.h"
 #include "n_buttons.h"
 #include "w_wad.h"
+#include "wad_sd.h"
 #include "z_zone.h"
 
 typedef PACKED_STRUCT({
@@ -46,14 +47,8 @@ typedef PACKED_STRUCT({
 #include <zephyr/device.h>
 #include <zephyr/drivers/flash.h>
 #include <zephyr/drivers/gpio.h>
-#if defined(CONFIG_FILE_SYSTEM)
-#include <zephyr/fs/fs.h>
-#endif
 #include <zephyr/kernel.h>
 #include <zephyr/logging/log.h>
-#if defined(CONFIG_DISK_ACCESS)
-#include <zephyr/storage/disk_access.h>
-#endif
 #include <zephyr/sys/util.h>
 
 #include "n_mem.h"
@@ -71,9 +66,6 @@ LOG_MODULE_REGISTER(w_wad, LOG_LEVEL_INF);
 #else
 #error "Unsupported board: no supported external flash devicetree node found."
 #endif
-
-#define DISK_DRIVE_NAME "SD"
-#define DISK_MOUNT_PT "/" DISK_DRIVE_NAME ":"
 
 extern int no_sdcard;
 #define MAX_NUMLUMPS 1300
@@ -244,17 +236,10 @@ wad_file_t* W_AddFile(char* filename) {
     printf("W_AddFile: Reading %s\n", filename);
 
 #if defined(CONFIG_FEATURE_DOOM_SD) && defined(CONFIG_FILE_SYSTEM)
-    struct fs_file_t fs_file;
-    fs_file_t_init(&fs_file);
-
-    if (!no_sdcard) {
-        int rc = fs_open(&fs_file, filename, FS_O_READ);
-        if (rc != 0) {
-            printf(" couldn't open %s (err %d)\n", filename, rc);
-            return NULL;
-        }
-    } else {
-        printf("no_sdcard = 1 - skipping file open\n");
+    struct wad_sd_file sd_file;
+    wad_sd_init(&sd_file);
+    if (wad_sd_open_read(&sd_file, filename, &no_sdcard) != 0) {
+        return NULL;
     }
 #else
     no_sdcard = 1;
@@ -273,11 +258,13 @@ wad_file_t* W_AddFile(char* filename) {
         N_qspi_reserve_blocks(num_blocks);
 
 #if defined(CONFIG_FEATURE_DOOM_SD) && defined(CONFIG_FILE_SYSTEM)
-        if (!no_sdcard) {
-            uint8_t* block_data = N_malloc(N_QSPI_BLOCK_SIZE);
+        uint8_t* block_data = NULL;
+        boolean led_flash_started = false;
+
+        if (wad_sd_is_open(&sd_file)) {
+            block_data = N_malloc(N_QSPI_BLOCK_SIZE);
             int block_loc = 0;
             boolean data_mismatch = do_wad_transfer;
-            boolean led_flash_started = false;
 
             if (data_mismatch) {
                 printf("Uploading WAD data to QSPI flash memory..");
@@ -293,8 +280,9 @@ wad_file_t* W_AddFile(char* filename) {
                                          : N_QSPI_BLOCK_SIZE;
 
                     // Read from SD card
-                    fs_seek(&fs_file, block_loc, FS_SEEK_SET);
-                    int bytes_read = fs_read(&fs_file, block_data, block_size);
+                    (void)wad_sd_seek_set(&sd_file, block_loc);
+                    int bytes_read =
+                        wad_sd_read(&sd_file, block_data, block_size);
                     if (bytes_read < 0) {
                         printf("Error reading file: %d\n", bytes_read);
                         goto sd_upload_fail;
@@ -377,8 +365,6 @@ wad_file_t* W_AddFile(char* filename) {
                     wad_led_flash_stop();
                 }
             }
-            N_free(block_data);
-            fs_close(&fs_file);
         }
 
         goto sd_upload_done;
@@ -387,11 +373,17 @@ wad_file_t* W_AddFile(char* filename) {
         if (led_flash_started) {
             wad_led_flash_stop();
         }
-        N_free(block_data);
-        fs_close(&fs_file);
+        if (block_data != NULL) {
+            N_free(block_data);
+        }
+        wad_sd_close(&sd_file);
         return NULL;
 
     sd_upload_done:
+        if (block_data != NULL) {
+            N_free(block_data);
+        }
+        wad_sd_close(&sd_file);
 #endif /* CONFIG_FILE_SYSTEM */
 
         wadinfo_t existing_header = {0};
