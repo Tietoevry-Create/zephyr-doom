@@ -69,6 +69,16 @@ config FEATURE_DOOM_LEDS
 	help
 	  Enable optional LED indications.
 
+config FEATURE_DOOM_SHIELD
+	bool "Wired joystick shield (ADC + GPIO)"
+	default n
+	depends on GPIO
+	help
+	  Enable support for a wired joystick + button shield.
+
+	  The joystick axes are read via Zephyr ADC (devicetree io-channels), and
+	  the buttons are read via Zephyr GPIO (devicetree aliases).
+
 choice
 	prompt "Feature preset"
 	default FEATURE_DOOM_PRESET_CUSTOM
@@ -93,6 +103,7 @@ config FEATURE_DOOM_PRESET_FRDM_MCXN947_MCXN947_CPU0
 	select FEATURE_DOOM_AUDIO
 	select FEATURE_DOOM_BUTTONS
 	select FEATURE_DOOM_LEDS
+	select FEATURE_DOOM_SHIELD
 
 endchoice
 

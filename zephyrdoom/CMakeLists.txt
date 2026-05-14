@@ -12,6 +12,7 @@ set(DOOM_COMMON_SRCS
                 src/n_buttons.c
                 src/i_timer.c
                 src/n_rjoy.c
+                src/n_rjoy_shield.c
                 src/deh_main.c
                 src/deh_str.c
                 src/doom/deh_misc.h

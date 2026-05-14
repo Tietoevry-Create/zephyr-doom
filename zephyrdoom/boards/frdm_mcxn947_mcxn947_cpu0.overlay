@@ -1,4 +1,8 @@
 #include <nxp/mcx/MCXN947VDF-pinctrl.h>
+#include <zephyr/dt-bindings/adc/adc.h>
+#include <zephyr/dt-bindings/adc/mcux-lpadc.h>
+#include <zephyr/dt-bindings/gpio/arduino-header-r3.h>
+#include <zephyr/dt-bindings/gpio/gpio.h>
 
 &flexcomm1 {
 	status = "okay";
@@ -13,6 +17,88 @@
 		doom-status-led = &green_led;
 		spi4 = &arduino_spi;
 		i2s-tx = &sai0;
+		doom-joy = &doom_joy;
+		doom-shield-fire = &doom_shield_fire;
+		doom-shield-use = &doom_shield_use;
+		doom-shield-speed = &doom_shield_speed;
+		doom-shield-strafe = &doom_shield_strafe;
+		doom-shield-mapbtn = &doom_shield_map;
+		doom-shield-menu = &doom_shield_menu;
+	};
+
+	/*
+	 * Wired joystick/button shield configuration.
+	 *
+	 * Defaults match common "joystick shield" wiring:
+	 *  - Joystick: A0/A1 routed to LPADC0 channels (adjust if needed)
+	 *  - Buttons: D2..D7 (active-low with pull-ups)
+	 */
+	doom_joy: doom_joy {
+		compatible = "zephyrdoom,joy";
+		io-channels = <&lpadc0 0>, <&lpadc0 1>; /* X, Y */
+		invert-y;
+	};
+
+	doom_shield_keys: doom_shield_keys {
+		compatible = "gpio-keys";
+
+		doom_shield_strafe: shield_btn_strafe {
+			gpios = <&arduino_header ARDUINO_HEADER_R3_D2 (GPIO_PULL_UP | GPIO_ACTIVE_LOW)>;
+			label = "doom_shield_strafe";
+		};
+
+		doom_shield_fire: shield_btn_fire {
+			gpios = <&arduino_header ARDUINO_HEADER_R3_D3 (GPIO_PULL_UP | GPIO_ACTIVE_LOW)>;
+			label = "doom_shield_fire";
+		};
+
+		doom_shield_use: shield_btn_use {
+			gpios = <&arduino_header ARDUINO_HEADER_R3_D4 (GPIO_PULL_UP | GPIO_ACTIVE_LOW)>;
+			label = "doom_shield_use";
+		};
+
+		doom_shield_speed: shield_btn_speed {
+			gpios = <&arduino_header ARDUINO_HEADER_R3_D5 (GPIO_PULL_UP | GPIO_ACTIVE_LOW)>;
+			label = "doom_shield_speed";
+		};
+
+		doom_shield_map: shield_btn_map {
+			gpios = <&arduino_header ARDUINO_HEADER_R3_D6 (GPIO_PULL_UP | GPIO_ACTIVE_LOW)>;
+			label = "doom_shield_map";
+		};
+
+		doom_shield_menu: shield_btn_menu {
+			gpios = <&arduino_header ARDUINO_HEADER_R3_D7 (GPIO_PULL_UP | GPIO_ACTIVE_LOW)>;
+			label = "doom_shield_menu";
+		};
+	};
+};
+
+/*
+ * Configure LPADC channels for joystick axes.
+ * Arduino A0/A1 route to dedicated ADC0_A0/ADC0_B0 inputs.
+ */
+&lpadc0 {
+	#address-cells = <1>;
+	#size-cells = <0>;
+	voltage-ref = <2>;
+
+	channel@0 {
+		reg = <0>;
+		zephyr,resolution = <12>;
+		zephyr,gain = "ADC_GAIN_1";
+		zephyr,reference = "ADC_REF_EXTERNAL0";
+		zephyr,acquisition-time = <ADC_ACQ_TIME_DEFAULT>;
+		zephyr,input-positive = <MCUX_LPADC_CH0A>;
+	};
+
+	channel@1 {
+		reg = <1>;
+		zephyr,resolution = <12>;
+		zephyr,gain = "ADC_GAIN_1";
+		zephyr,reference = "ADC_REF_EXTERNAL0";
+		zephyr,acquisition-time = <ADC_ACQ_TIME_DEFAULT>;
+		zephyr,input-positive = <MCUX_LPADC_CH0B>;
 	};
 };
 
@@ -61,8 +147,8 @@
 	status = "okay";
 };
 
-/* Keep LPSPI on the Arduino SPI pins (SCK/MOSI/MISO), but free P0_27 so it can
- * be used as the green user LED.
+/* Keep LPSPI on the Arduino SPI pins (SCK/MOSI/MISO), and leave the CS pin
+ * under GPIO control (DISPLAY_PIN_CS_N).
  * CS for the FT810 is driven manually as GPIO (DISPLAY_PIN_CS_N). */
 &pinctrl {
 	pinmux_flexcomm1_lpspi_no_cs: pinmux_flexcomm1_lpspi_no_cs {
