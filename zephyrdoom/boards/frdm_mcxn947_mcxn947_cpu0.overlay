@@ -16,7 +16,7 @@
 	aliases {
 		doom-status-led = &green_led;
 		spi4 = &arduino_spi;
-		i2s-tx = &sai0;
+		i2s-tx = &sai1;
 		doom-joy = &doom_joy;
 		doom-shield-fire = &doom_shield_fire;
 		doom-shield-use = &doom_shield_use;
@@ -114,14 +114,19 @@
 	status = "disabled";
 };
 
-/* I2S audio via SAI0 → PCM5102 DAC.
- * SAI0 pins: TXD0=PIO2_2, TX_BCLK=PIO2_6, TX_FS=PIO2_7.
- * These pins conflict with sc_timer, flexpwm1_pwm0, and usdhc0.
- * Also move SAI0 onto dedicated EDMA channels so it does not collide with
+/* I2S audio via SAI1 -> PCM5102/MAX98357-style DAC/amp.
+ * SAI1 pins: TXD0=P2_8, TX_BCLK=P1_0, TX_FS=P1_1.
+ * Move SAI1 onto dedicated EDMA channels so it does not collide with
  * the display SPI DMA channels used by arduino_spi. */
 &sai0 {
+	status = "disabled";
+};
+
+&sai1 {
 	status = "okay";
-	dmas = <&edma0 6 99>, <&edma0 7 100>;
+	pinctrl-0 = <&pinmux_sai1_doom_audio>;
+	pinctrl-names = "default";
+	dmas = <&edma0 6 101>, <&edma0 7 102>;
 	dma-names = "rx", "tx";
 	nxp,rx-dma-channel = <6>;
 	nxp,tx-dma-channel = <7>;
@@ -151,6 +156,17 @@
  * under GPIO control (DISPLAY_PIN_CS_N).
  * CS for the FT810 is driven manually as GPIO (DISPLAY_PIN_CS_N). */
 &pinctrl {
+	pinmux_sai1_doom_audio: pinmux_sai1_doom_audio {
+		group0 {
+			pinmux = <SAI1_TX_BCLK_PIO1_0>,
+				 <SAI1_TX_FS_PIO1_1>,
+				 <SAI1_TXD0_PIO2_8>;
+			drive-strength = "high";
+			slew-rate = "fast";
+			input-enable;
+		};
+	};
+
 	pinmux_flexcomm1_lpspi_no_cs: pinmux_flexcomm1_lpspi_no_cs {
 		group0 {
 			pinmux = <FC1_P0_PIO0_24>,

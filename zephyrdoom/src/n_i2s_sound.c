@@ -22,7 +22,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
 #include <zephyr/kernel.h>
 
 #include "deh_str.h"
@@ -51,7 +50,7 @@ static struct k_thread mixer_thread;
 static boolean mixer_started = false;
 
 typedef struct __attribute__((packed)) mobj_s {
-    byte *ptr;
+    byte* ptr;
     uint16_t pos;
     uint16_t len;
     uint8_t left_vol;
@@ -60,12 +59,12 @@ typedef struct __attribute__((packed)) mobj_s {
 
 channel_data_t channels[NUM_CHANNELS];
 
-static boolean CacheSFX(sfxinfo_t *sfxinfo, int handle) {
+static boolean CacheSFX(sfxinfo_t* sfxinfo, int handle) {
     int lumpnum;
     unsigned int lumplen;
     int samplerate;
     unsigned int length;
-    byte *data;
+    byte* data;
 
     // need to load the sound
 
@@ -118,7 +117,7 @@ static boolean CacheSFX(sfxinfo_t *sfxinfo, int handle) {
     return true;
 }
 
-static void GetSfxLumpName(sfxinfo_t *sfx, char *buf, size_t buf_len) {
+static void GetSfxLumpName(sfxinfo_t* sfx, char* buf, size_t buf_len) {
     // Linked sfx lumps? Get the lump number for the sound linked to.
 
     if (sfx->link != NULL) {
@@ -135,7 +134,7 @@ static void GetSfxLumpName(sfxinfo_t *sfx, char *buf, size_t buf_len) {
     }
 }
 
-static void N_I2S_PrecacheSounds(sfxinfo_t *sounds, int num_sounds) {
+static void N_I2S_PrecacheSounds(sfxinfo_t* sounds, int num_sounds) {
     printf("NRFD-TODO: N_I2S_PrecacheSounds?\n");
 }
 
@@ -144,7 +143,7 @@ static void N_I2S_PrecacheSounds(sfxinfo_t *sounds, int num_sounds) {
 //  for a given SFX name.
 //
 
-static int N_I2S_GetSfxLumpNum(sfxinfo_t *sfx) {
+static int N_I2S_GetSfxLumpNum(sfxinfo_t* sfx) {
     char namebuf[9];
 
     GetSfxLumpName(sfx, namebuf, sizeof(namebuf));
@@ -196,7 +195,7 @@ static void ClearSoundOnChannel(int channel) {
 //  is set, but currently not used by mixing.
 //
 
-static int N_I2S_StartSound(sfxinfo_t *sfxinfo, int channel, int vol, int sep,
+static int N_I2S_StartSound(sfxinfo_t* sfxinfo, int channel, int vol, int sep,
                             int pitch) {
     if (!sound_initialized || channel < 0 || channel >= NUM_CHANNELS) {
         return -1;
@@ -244,7 +243,7 @@ static boolean N_I2S_SoundIsPlaying(int handle) {
 static void N_I2S_UpdateSound(void) {
     // printf("N_I2S_UpdateSound\n");
     if (!mixer_started) {
-        int16_t *buf;
+        int16_t* buf;
         int buf_len;
         while (N_I2S_next_buffer(&buf_len, &buf)) {
             for (int i = 0; i < buf_len / 2; i++) {
@@ -274,7 +273,7 @@ static void N_I2S_ShutdownSound(void) {}
 
 static bool MixSoundOnce(void) {
     bool did_work = false;
-    int16_t *buf;
+    int16_t* buf;
     int buf_len;
 
     while (N_I2S_next_buffer(&buf_len, &buf)) {
@@ -302,7 +301,7 @@ static bool MixSoundOnce(void) {
     return did_work;
 }
 
-static void MixerThread(void *a, void *b, void *c) {
+static void MixerThread(void* a, void* b, void* c) {
     ARG_UNUSED(a);
     ARG_UNUSED(b);
     ARG_UNUSED(c);

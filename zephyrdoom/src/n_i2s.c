@@ -12,6 +12,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <zephyr/device.h>
+#include <zephyr/devicetree.h>
 #include <zephyr/drivers/i2s.h>
 #include <zephyr/kernel.h>
 #include <zephyr/sys/atomic.h>
@@ -43,12 +44,12 @@ static int16_t zeros[BUFFER_SIZE];
  * Zephyr I2S device.
  *
  * Use a devicetree alias so each board can point audio TX at the right
- * controller (nRF: i2s0, NXP: sai0).
+ * controller (nRF: i2s0, NXP: sai0/sai1).
  */
 #define I2S_DEV DT_ALIAS(i2s_tx)
 K_MEM_SLAB_DEFINE(tx_mem_slab, BUFFER_SIZE_BYTES, 4, 4);
 
-#define AUDIO_STACK_SIZE 2048
+#define AUDIO_STACK_SIZE 4096
 #define AUDIO_PRIO -1
 K_THREAD_STACK_DEFINE(audio_stack, AUDIO_STACK_SIZE);
 static struct k_thread audio_thread;
@@ -63,7 +64,7 @@ static atomic_t g_recoveries = ATOMIC_INIT(0);
 static inline void sai_fixup_mclk(void) {
 #if defined(CONFIG_BOARD_FRDM_MCXN947) || \
     defined(CONFIG_BOARD_FRDM_MCXN947_MCXN947_CPU0)
-    volatile uint32_t* mcr = (volatile uint32_t*)(0x50106000 + 0x100);
+    volatile uint32_t* mcr = (volatile uint32_t*)(DT_REG_ADDR(I2S_DEV) + 0x100);
     *mcr |= (1u << 30); /* MCR.MOE = 1 */
 #endif
 }
