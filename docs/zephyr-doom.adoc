@@ -234,11 +234,11 @@ inside Visual Studio Code.
 | Hardware not supported.
 |===
 
-[cols="1,1,1,1,1,1,1,1" options="header, autowidth"]
+[cols="1,1,1,1,1,1,1,1,1" options="header, autowidth"]
 |===
 ^| Item
 ^| Version
-^| MPV1
+^| MVP1
 ^| MVP2
 ^| MVP3
 ^| MVP4
