@@ -75,9 +75,6 @@ static void display_spi_thread_fn(void* p1, void* p2, void* p3) {
 
         k_mutex_lock(&display_spi_bus_mutex, K_FOREVER);
 
-        /* CS low */
-        gpio_pin_set(gpio0_dev, DISPLAY_PIN_CS_N, 0);
-
         /* Chunk the transfer to avoid SPI/DMA length limitations. */
         while (data_len > 0) {
             size_t chunk_len = data_len;
@@ -98,15 +95,18 @@ static void display_spi_thread_fn(void* p1, void* p2, void* p3) {
             bufs[1].len = chunk_len;
             const struct spi_buf_set tx = {.buffers = bufs, .count = 2};
 
+            /* FT81x re-parses the 3-byte address header only on a CS toggle.
+             * Keep CS per chunk or the header bytes shear the pixel stream.
+             */
+            gpio_pin_set(gpio0_dev, DISPLAY_PIN_CS_N, 0);
             (void)spi_write(spi_dev, &spi_cfg, &tx);
+            gpio_pin_set(gpio0_dev, DISPLAY_PIN_CS_N, 1);
 
             addr += (uint32_t)chunk_len;
             data_ptr += chunk_len;
             data_len -= chunk_len;
         }
 
-        /* CS high */
-        gpio_pin_set(gpio0_dev, DISPLAY_PIN_CS_N, 1);
         k_mutex_unlock(&display_spi_bus_mutex);
         k_sem_give(&display_spi_done_sem);
     }
@@ -283,7 +283,6 @@ void N_display_spi_wr(uint32_t addr, int dataSize, uint8_t* data) {
     display_spi_flush_tx_cache(data, (size_t)dataSize);
     display_spi_wait_idle();
     k_mutex_lock(&display_spi_bus_mutex, K_FOREVER);
-    gpio_pin_set(gpio0_dev, DISPLAY_PIN_CS_N, 0);
 
     const uint8_t* data_ptr = (const uint8_t*)data;
     size_t data_len = (size_t)dataSize;
@@ -306,14 +305,18 @@ void N_display_spi_wr(uint32_t addr, int dataSize, uint8_t* data) {
             {.buf = (void*)data_ptr, .len = chunk_len},
         };
         const struct spi_buf_set tx = {.buffers = bufs, .count = 2};
+
+        /* Toggle CS per chunk so FT81x re-parses the address header.
+         * Otherwise hdr bytes are treated as pixel data (shear).
+         */
+        gpio_pin_set(gpio0_dev, DISPLAY_PIN_CS_N, 0);
         (void)spi_write(spi_dev, &spi_cfg, &tx);
+        gpio_pin_set(gpio0_dev, DISPLAY_PIN_CS_N, 1);
 
         cur_addr += (uint32_t)chunk_len;
         data_ptr += chunk_len;
         data_len -= chunk_len;
     }
-
-    gpio_pin_set(gpio0_dev, DISPLAY_PIN_CS_N, 1);
     k_mutex_unlock(&display_spi_bus_mutex);
 }
 
