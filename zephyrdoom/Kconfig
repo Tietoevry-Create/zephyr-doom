@@ -10,7 +10,7 @@ menu "Zephyr Doom features"
 
 config FEATURE_DOOM_AUDIO
 	bool "Audio (I2S mixer output)"
-	default n
+	default y if BOARD_NRF5340DK_NRF5340_CPUAPP || BOARD_FRDM_MCXN947 || BOARD_FRDM_MCXN947_MCXN947_CPU0
 	select I2S
 	select I2S_MCUX_SAI if BOARD_FRDM_MCXN947 || BOARD_FRDM_MCXN947_MCXN947_CPU0
 	help
@@ -18,6 +18,7 @@ config FEATURE_DOOM_AUDIO
 
 config FEATURE_DOOM_BLE
 	bool "BLE input (HID clients via NCS helpers)"
+	default y if BOARD_NRF5340DK_NRF5340_CPUAPP
 	default n
 	select BT
 	select BT_CENTRAL
@@ -48,7 +49,7 @@ config FEATURE_DOOM_SD
 
 config FEATURE_DOOM_DISPLAY
 	bool "Display output (FT810 over SPI)"
-	default n
+	default y if BOARD_NRF5340DK_NRF5340_CPUAPP || BOARD_FRDM_MCXN947 || BOARD_FRDM_MCXN947_MCXN947_CPU0
 	select SPI
 	select GPIO
 	help
@@ -57,7 +58,7 @@ config FEATURE_DOOM_DISPLAY
 
 config FEATURE_DOOM_BUTTONS
 	bool "GPIO buttons"
-	default n
+	default y if BOARD_NRF5340DK_NRF5340_CPUAPP || BOARD_FRDM_MCXN947 || BOARD_FRDM_MCXN947_MCXN947_CPU0
 	depends on GPIO
 	help
 	  Enable GPIO button input via devicetree aliases sw0..sw3.
@@ -71,7 +72,7 @@ config FEATURE_DOOM_LEDS
 
 config FEATURE_DOOM_SHIELD
 	bool "Wired joystick shield (ADC + GPIO)"
-	default n
+	default y if BOARD_FRDM_MCXN947 || BOARD_FRDM_MCXN947_MCXN947_CPU0
 	depends on GPIO
 	help
 	  Enable support for a wired joystick + button shield.
