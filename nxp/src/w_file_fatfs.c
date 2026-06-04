@@ -13,7 +13,7 @@
 // GNU General Public License for more details.
 //
 // DESCRIPTION:
-//	WAD I/O functions.
+//  WAD I/O functions.
 //
 
 #include <stdio.h>
@@ -73,7 +73,7 @@ static void W_FatFS_CloseFile(wad_file_t *wad)
     */
 }
 
-// Read data from the specified position in the file into the 
+// Read data from the specified position in the file into the
 // provided buffer.  Returns the number of bytes read.
 
 size_t W_FatFS_Read(wad_file_t *wad, unsigned int offset,
@@ -109,11 +109,9 @@ size_t W_FatFS_Read(wad_file_t *wad, unsigned int offset,
 }
 
 
-wad_file_class_t fatfs_wad_file = 
+wad_file_class_t fatfs_wad_file =
 {
     W_FatFS_OpenFile,
     W_FatFS_CloseFile,
     W_FatFS_Read,
 };
-
-

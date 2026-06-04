@@ -52,7 +52,7 @@ typedef enum
     // Dead on the ground, view follows killer.
     PST_DEAD,
     // Ready to restart/respawn???
-    PST_REBORN      
+    PST_REBORN
 
 } playerstate_t;
 
@@ -90,7 +90,7 @@ typedef struct __attribute__((packed)) player_s
     // Bob/squat speed.
     fixed_t             deltaviewheight;
     // bounded/scaled total momentum.
-    fixed_t             bob;    
+    fixed_t             bob;
 
     // This is only used between levels,
     // mo->health is used during levels.
@@ -103,11 +103,11 @@ typedef struct __attribute__((packed)) player_s
     int         powers[NUMPOWERS];
     boolean     cards[NUMCARDS];
     boolean     backpack;
-    
+
     // Frags, kills of other players.
     short           frags[MAXPLAYERS];  // NRFD: Changed from int to short
     weapontype_t    readyweapon;
-    
+
     // Is wp_nochange if not changing.
     weapontype_t    pendingweapon;
 
@@ -132,15 +132,15 @@ typedef struct __attribute__((packed)) player_s
     short         secretcount; // NRFD: Was int
 
     // Hint messages.
-    char*       message;    
-    
+    char*       message;
+
     // For screen flashing (red or bright).
     int         damagecount;
     int         bonuscount;
 
     // Who did damage (NULL for floors/ceilings).
     mobj_t*     attacker;
-    
+
     // So gun flashes light up areas.
     int8_t         extralight;
 
@@ -156,7 +156,7 @@ typedef struct __attribute__((packed)) player_s
     pspdef_t        psprites[NUMPSPRITES];
 
     // True if secret level has been done.
-    boolean     didsecret;  
+    boolean     didsecret;
 
 } player_t;
 
@@ -168,15 +168,15 @@ typedef struct __attribute__((packed)) player_s
 typedef struct
 {
     boolean in; // whether the player is in game
-    
+
     // Player stats, kills, collected items etc.
     int     skills;
     int     sitems;
     int     ssecret;
-    int     stime; 
+    int     stime;
     int     frags[4];
     int     score;  // current score on entry, modified on return
-  
+
 } wbplayerstruct_t;
 
 typedef struct
@@ -185,11 +185,11 @@ typedef struct
 
     // if true, splash the secret level
     boolean didsecret;
-    
+
     // previous and next levels, origin 0
     int     last;
-    int     next;   
-    
+    int     next;
+
     int     maxkills;
     int     maxitems;
     int     maxsecret;
@@ -197,9 +197,9 @@ typedef struct
 
     // the par time
     int     partime;
-    
+
     // index of this player in game
-    int     pnum;   
+    int     pnum;
 
     wbplayerstruct_t    plyr[MAXPLAYERS];
 

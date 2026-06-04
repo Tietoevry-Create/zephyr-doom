@@ -248,4 +248,3 @@ apply patches with:
 .. code-block:: sh
 
    bash ./apply_zephyr_patches.sh
-

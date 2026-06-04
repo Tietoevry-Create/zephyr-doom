@@ -13,7 +13,7 @@
 // GNU General Public License for more details.
 //
 // DESCRIPTION:
-//	Disk load indicator.
+//  Disk load indicator.
 //
 
 #ifndef __V_DISKICON__

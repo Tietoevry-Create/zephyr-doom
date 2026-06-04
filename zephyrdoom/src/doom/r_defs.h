@@ -69,7 +69,7 @@ typedef struct
 {
     fixed_t x;
     fixed_t y;
-    
+
 } vertex_t;
 
 
@@ -77,7 +77,7 @@ typedef struct
 {
     fixed_t dx;
     fixed_t dy;
-    
+
 } vector_t;
 
 // Forward of LineDefs, for Sectors.
@@ -135,7 +135,7 @@ typedef struct  __attribute__((packed))
 
     short         linecount;  //NRFD-NOTE: changed from int to short
     struct line_s** lines;  // [linecount] size
-    
+
 } sector_t;
 
 degenmobj_t *SectorSoundOrg(sector_t *sec);
@@ -149,12 +149,12 @@ typedef struct  __attribute__((packed))
 {
     // add this to the calculated texture column
     short textureoffset_short; // NRFD-NOTE: Was fixed_t
-    
+
     // add this to the calculated texture top
     short rowoffset_short; // NRFD-NOTE: Was fixed_t
 
     // Texture indices.
-    // We do not maintain names here. 
+    // We do not maintain names here.
     // NRFD-TODO: Support more than 256 textures
     byte   toptexture;
     byte   bottomtexture;
@@ -163,7 +163,7 @@ typedef struct  __attribute__((packed))
     // Sector the SideDef is facing.
     // sector_t*   sector;
     uint8_t sector_num;
-    
+
 } side_t;
 
 fixed_t R_SideTextureOffset(side_t *side);
@@ -204,7 +204,7 @@ typedef struct  __attribute__((packed)) line_s
 
     // Visual appearance: SideDefs.
     //  sidenum[1] will be -1 if one sided
-    // short   sidenum[2];         
+    // short   sidenum[2];
 
     // Neat. Another bounding box, for the extent
     //  of the LineDef.
@@ -224,7 +224,7 @@ typedef struct  __attribute__((packed)) line_s
 
     // NRFD-TODO?
     // thinker_t for reversable actions
-    // void*   specialdata;        
+    // void*   specialdata;
 } line_t;
 
 vertex_t    LineV1          (line_t *line);
@@ -255,7 +255,7 @@ typedef struct  __attribute__((packed)) subsector_s
     sector_t*   sector;
     short   numlines;
     short   firstline;
-    
+
 } subsector_t;
 
 
@@ -268,7 +268,7 @@ typedef struct  __attribute__((packed))
 {
     // vertex_t*   v1;
     // vertex_t*   v2;
-    
+
     // fixed_t offset;
 
     // angle_t angle;
@@ -286,7 +286,7 @@ typedef mapseg_t seg_t;
 
 seg_t *GetSeg(int num);
 sector_t *SegFrontSector(seg_t *seg);
-sector_t *SegBackSector(seg_t *seg); 
+sector_t *SegBackSector(seg_t *seg);
 angle_t SegAngle(seg_t *seg);
 fixed_t SegOffset(seg_t *seg);
 vertex_t *SegV1(seg_t *seg);
@@ -313,7 +313,7 @@ typedef struct  __attribute__((packed))
 
     // If NF_SUBSECTOR its a subsector.
     unsigned short children[2];
-    
+
 } node_t;
 
 extern mapnode_t*          mapnodes;
@@ -383,13 +383,13 @@ typedef struct  __attribute__((packed)) drawseg_s
 
     // do not clip sprites below this
     fixed_t     tsilheight;
-    
+
     // Pointers to lists for sprite clipping,
     //  all three adjusted so [x1] is first value.
-    short*      sprtopclip;     
-    short*      sprbottomclip;  
+    short*      sprtopclip;
+    short*      sprbottomclip;
     short*      maskedtexturecol;
-    
+
 } drawseg_t;
 
 
@@ -403,7 +403,7 @@ typedef struct  __attribute__((packed)) vissprite_s
     // NRFD-TODO: XOR linked list possible?
     // struct vissprite_s* prev;
     struct vissprite_s* next;
-    
+
     short         x1; // NRFD-NOTE: Was int
     short         x2; // NRFD-NOTE: Was int
 
@@ -411,7 +411,7 @@ typedef struct  __attribute__((packed)) vissprite_s
     /*
     // for line side calculation
     fixed_t     gx;
-    fixed_t     gy;     
+    fixed_t     gy;
 
     // global bottom / top for silhouette clipping
     fixed_t     gz;
@@ -420,9 +420,9 @@ typedef struct  __attribute__((packed)) vissprite_s
 
     // horizontal position of x1
     fixed_t     startfrac;
-    
+
     fixed_t     scale;
-    
+
     // negative if flipped
     fixed_t     xiscale;
 
@@ -432,13 +432,13 @@ typedef struct  __attribute__((packed)) vissprite_s
     // for color translation and shadow draw,
     //  maxbright frames as well
     lighttable_t*   colormap;
-   
+
     // int         mobjflags; // NRFD-TODO?
-    
+
 } vissprite_t;
 
 
-//  
+//
 // Sprites are patches with a special naming convention
 //  so they can be recognized by R_InitSprites.
 // The base name is NNNNFx or NNNNFxFx, with
@@ -466,7 +466,7 @@ typedef struct  __attribute__((packed))
     // Flip bit (1 = flip) to use for view angles 0-7.
     // NRFD-NOTE: Optimized for memory, used to be: byte flip[8];
     byte    flip;
-    
+
 } spriteframe_t;
 
 
@@ -488,7 +488,7 @@ typedef struct  __attribute__((packed))
 
 //
 // Now what is a visplane, anyway?
-// 
+//
 typedef struct  __attribute__((packed))
 {
   fixed_t       height;
@@ -498,9 +498,9 @@ typedef struct  __attribute__((packed))
   short           lightlevel;
   short           minx;
   short           maxx;
-  
+
   // leave pads for [minx-1]/[maxx+1]
-  
+
   byte      pad1;
   // Here lies the rub for all
   //  dynamic resize/change of resolution.

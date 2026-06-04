@@ -13,7 +13,7 @@
 // GNU General Public License for more details.
 //
 // DESCRIPTION:
-//	Disk load indicator.
+//  Disk load indicator.
 //
 #include <string.h>
 
@@ -155,4 +155,3 @@ void V_RestoreDiskBackground(void)
     }
     */
 }
-

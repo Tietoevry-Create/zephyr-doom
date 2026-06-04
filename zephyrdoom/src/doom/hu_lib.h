@@ -40,14 +40,14 @@ typedef struct  __attribute__((packed))
     // left-justified position of scrolling text window
     short   x;
     short   y;
-    
+
     patch_t** f;      // font
     short   sc;     // start character
     char  l[HU_MAXLINELENGTH+1];  // line of text
     short   len;            // current line length
 
     // whether this line needs to be udpated
-    short   needsupdate;        
+    short   needsupdate;
 
 } hu_textline_t;
 
@@ -79,7 +79,7 @@ typedef struct  __attribute__((packed))
     short     lm;
 
     // pointer to boolean stating whether to update window
-    boolean*    on; 
+    boolean*    on;
     boolean   laston; // last value of *->on;
 
 } hu_itext_t;
@@ -111,7 +111,7 @@ boolean HUlib_delCharFromTextLine(hu_textline_t *t);
 void  HUlib_drawTextLine(hu_textline_t *l, boolean drawcursor);
 
 // erases text line
-void  HUlib_eraseTextLine(hu_textline_t *l); 
+void  HUlib_eraseTextLine(hu_textline_t *l);
 
 
 //
@@ -130,7 +130,7 @@ HUlib_initSText
   boolean*  on );
 
 // add a new line
-void HUlib_addLineToSText(hu_stext_t* s);  
+void HUlib_addLineToSText(hu_stext_t* s);
 
 // ?
 void
@@ -143,7 +143,7 @@ HUlib_addMessageToSText
 void HUlib_drawSText(hu_stext_t* s);
 
 // erases all stext lines
-void HUlib_eraseSText(hu_stext_t* s); 
+void HUlib_eraseSText(hu_stext_t* s);
 
 // Input Text Line widget routines
 void
@@ -179,6 +179,6 @@ HUlib_keyInIText
 void HUlib_drawIText(hu_itext_t* it);
 
 // erases all itext lines
-void HUlib_eraseIText(hu_itext_t* it); 
+void HUlib_eraseIText(hu_itext_t* it);
 
 #endif

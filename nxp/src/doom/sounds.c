@@ -13,8 +13,8 @@
 // GNU General Public License for more details.
 //
 // DESCRIPTION:
-//	Created by a sound utility.
-//	Kept as a sample, DOOM2 sounds.
+//  Created by a sound utility.
+//  Kept as a sample, DOOM2 sounds.
 //
 
 
@@ -100,7 +100,7 @@ musicinfo_t S_music[] =
     MUSIC("ultima"),
     MUSIC("read_m"),
     MUSIC("dm2ttl"),
-    MUSIC("dm2int") 
+    MUSIC("dm2int")
 };
 
 
@@ -226,4 +226,3 @@ sfxinfo_t S_sfx[] =
   SOUND("skeatk", 70),
   SOUND("radio",  60),
 };
-

@@ -134,4 +134,3 @@ void I_BindJoystickVariables(void)
     }
     */
 }
-

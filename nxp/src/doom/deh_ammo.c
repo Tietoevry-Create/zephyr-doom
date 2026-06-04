@@ -41,7 +41,7 @@ static void *DEH_AmmoStart(deh_context_t *context, char *line)
         DEH_Warning(context, "Invalid ammo number: %i", ammo_number);
         return NULL;
     }
-    
+
     return &maxammo[ammo_number];
 }
 
@@ -100,4 +100,3 @@ deh_section_t deh_section_ammo =
     NULL,
     DEH_AmmoSHA1Hash,
 };
-

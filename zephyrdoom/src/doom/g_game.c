@@ -2380,6 +2380,3 @@ boolean G_CheckDemoStatus (void)
     */
     return false;
 }
-
-
-

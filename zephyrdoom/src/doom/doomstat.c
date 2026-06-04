@@ -30,7 +30,3 @@ char *gamedescription;
 
 // Set if homebrew PWAD stuff has been added.
 const boolean   modifiedgame = false;
-
-
-
-

@@ -1506,4 +1506,4 @@ eliminate drift. Calibration procedure could help to address this issue.
 ==== MVP7
 
 * Game data upload differs by board (nRF uses SD upload; FRDM uses host flashing
-	of external flash by default).
+    of external flash by default).

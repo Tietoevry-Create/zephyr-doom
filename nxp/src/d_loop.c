@@ -91,7 +91,7 @@ static int      skiptics = 0;
 // Reduce the bandwidth needed by sampling game input less and transmitting
 // less.  If ticdup is 2, sample half normal, 3 = one third normal, etc.
 
-int		ticdup;
+int     ticdup;
 
 // Amount to offset the timer for game sync.
 
@@ -128,8 +128,8 @@ static int GetAdjustedTime(void)
 
     if (new_sync)
     {
-	// Use the adjustments from net_client.c only if we are
-	// using the new sync mode.
+    // Use the adjustments from net_client.c only if we are
+    // using the new sync mode.
 
         time_ms += (offsetms / FRACUNIT);
     }
@@ -139,7 +139,7 @@ static int GetAdjustedTime(void)
 
 static boolean BuildNewTic(void)
 {
-    int	gameticdiv;
+    int gameticdiv;
     ticcmd_t cmd;
     gameticdiv = gametic/ticdup;
 
@@ -204,7 +204,7 @@ void NetUpdate (void)
 {
     int nowtime;
     int newtics;
-    int	i;
+    int i;
 
     // If we are running with singletics (timing a demo), this
     // is all done separately.
@@ -212,7 +212,7 @@ void NetUpdate (void)
     if (singletics)
         return;
 
-    // Run network subsystems    
+    // Run network subsystems
     NET_CL_Run();
     NET_SV_Run();
 
@@ -359,7 +359,7 @@ void D_StartNetGame(net_gamesettings_t *settings,
         settings->new_sync = 0;
 
     // TODO: New sync code is not enabled by default because it's
-    // currently broken. 
+    // currently broken.
     //if (M_CheckParm("-oldsync") > 0)
     //    settings->new_sync = 0;
     //else
@@ -687,13 +687,13 @@ static void SinglePlayerClear(ticcmd_set_t *set)
 
 void TryRunTics (void)
 {
-    int	i;
-    int	lowtic;
-    int	entertic;
+    int i;
+    int lowtic;
+    int entertic;
     static int oldentertics;
     int realtics;
-    int	availabletics;
-    int	counts;
+    int availabletics;
+    int counts;
 
 
     // get real tics
@@ -802,7 +802,7 @@ void TryRunTics (void)
             TicdupSquash(set);
         }
 
-        NetUpdate ();	// check for new console commands
+        NetUpdate ();   // check for new console commands
     }
 }
 
@@ -892,4 +892,3 @@ boolean D_NonVanillaPlayback(boolean conditional, int lumpnum,
 
     return true;
 }
-

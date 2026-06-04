@@ -13,7 +13,7 @@
 // GNU General Public License for more details.
 //
 // DESCRIPTION:
-//	DOOM graphics stuff for NRF.
+//  DOOM graphics stuff for NRF.
 //
 
 // NRFD-EXCLUDE: #include "icon.c"

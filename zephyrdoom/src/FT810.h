@@ -351,4 +351,3 @@
 #define FT810_RETURN() ((36UL<<24))
 #define FT810_MACRO(m) ((37UL<<24)|(((m)&1UL)<<0))
 #define FT810_DISPLAY() ((0UL<<24))
-

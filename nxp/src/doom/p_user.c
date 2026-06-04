@@ -375,5 +375,3 @@ void P_PlayerThink (player_t* player)
     else
         player->fixedcolormap = 0;
 }
-
-

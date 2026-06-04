@@ -29,7 +29,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-// Nordic Propriatery gamepad/joycon 
+// Nordic Propriatery gamepad/joycon
 
 #include <stdio.h>
 
@@ -118,4 +118,3 @@ void N_rjoy_read() {
     volatile uint32_t *ipc_ptr_1 = &NRF_IPC_S->GPMEM[1];
     *ipc_ptr_1 = *(uint32_t*)&response;
 }
-

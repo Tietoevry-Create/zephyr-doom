@@ -13,10 +13,10 @@
 // GNU General Public License for more details.
 //
 // DESCRIPTION:
-//	Zone Memory Allocation. Neat.
+//  Zone Memory Allocation. Neat.
 //
-//	This is an implementation of the zone memory API which
-//	uses native calls to malloc() and free().
+//  This is an implementation of the zone memory API which
+//  uses native calls to malloc() and free().
 //
 
 #include <stdlib.h>

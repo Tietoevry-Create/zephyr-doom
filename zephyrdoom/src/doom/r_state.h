@@ -51,8 +51,8 @@ extern int              viewheight;
 extern int              firstflat;
 
 // for global animation
-extern short*             flattranslation;        
-extern short*             texturetranslation;     
+extern short*             flattranslation;
+extern short*             texturetranslation;
 
 
 // Sprite....
