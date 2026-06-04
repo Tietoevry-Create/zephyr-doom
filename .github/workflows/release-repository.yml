@@ -1,0 +1,112 @@
+---
+name: Release repository
+run-name: >
+  ${{ github.workflow }} — Triggered by
+  ${{ github.actor }} on ${{ github.ref_name }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      runner_label:
+        description: Label of the runner to execute the job
+        required: false
+        default: ubuntu-24.04
+        type: string
+      tag:
+        description: Tag of the release
+        required: true
+        type: string
+      description:
+        description: Description of the release
+        required: false
+        default: ''
+        type: string
+      prerelease:
+        description: Is this a pre-release?
+        required: false
+        default: false
+        type: boolean
+      draft:
+        description: Is this a draft release?
+        required: false
+        default: false
+        type: boolean
+      generate_release_notes:
+        description: |
+          Automatically generate release notes?
+          If description is specified, it will be pre-pended.
+        required: false
+        default: false
+        type: boolean
+
+env:
+  RUNNER_LABEL: ubuntu-24.04
+
+defaults:
+  run:
+    shell: bash
+
+permissions:
+  contents: write
+
+jobs:
+  process-runner:
+    name: Process runner information to execute the job
+    runs-on: ubuntu-24.04
+    outputs:
+      label: ${{ steps.runner-label.outputs.label }}
+
+    steps:
+      - name: Set runner label
+        id: runner-label
+        run: |
+          echo "label=${INPUT_RUNNER_LABEL:-$RUNNER_LABEL}" >> $GITHUB_OUTPUT
+        env:
+          INPUT_RUNNER_LABEL: ${{ github.event.inputs.runner_label }}
+
+  release-repository:
+    name: Release repository
+    needs: process-runner
+    runs-on: ${{ needs.process-runner.outputs.label }}
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Prepare runner env for release process
+        run: |
+          sudo apt-get update && sudo apt-get install -y \
+          git \
+          zip
+
+      - name: Set up Git user
+        run: |
+          git config user.name "${{ github.actor }}"
+          git config user.email "${{ github.actor_id }}+${{ github.actor }}@users.noreply.github.com"
+
+      - name: Create and push Git tag
+        run: |
+          git tag "${{ github.event.inputs.tag }}"
+          git push -u origin "${{ github.event.inputs.tag }}"
+
+      - name: Create ZIP archive of the repository
+        run: |
+          zip -v -r \
+          zephyr-doom-${{ github.event.inputs.tag }}.zip \
+          . \
+          -x ".git/*"
+
+      - name: Create release and upload the repository archive
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.event.inputs.tag }}
+          name: ${{ github.event.inputs.tag }}
+          body: |
+            ${{ github.event.inputs.description }}
+          prerelease: ${{ github.event.inputs.prerelease }}
+          draft: ${{ github.event.inputs.draft }}
+          generate_release_notes: ${{ github.event.inputs.generate_release_notes }}
+          files: zephyr-doom-${{ github.event.inputs.tag }}.zip

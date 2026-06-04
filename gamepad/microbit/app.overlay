@@ -5,63 +5,62 @@
  */
 
 / {
-	chosen {
-		nordic,nus-uart = &uart0;
-	};
+    chosen {
+        nordic,nus-uart = &uart0;
+    };
 
-	zephyr,user {
-		io-channels = <&adc 0>, <&adc 1>;
-		io-channel-names = "A0", "A1";
-	};
+    zephyr,user {
+        io-channels = <&adc 0>, <&adc 1>;
+        io-channel-names = "A0", "A1";
+    };
 
-	gpio_keys {
-		buttonC {
-			label = "BTN_C";
-			gpios = <&gpio0 12 GPIO_PULL_UP>;
-			zephyr,code = <INPUT_KEY_C>;
-		};
+    gpio_keys {
+        buttonC {
+            label = "BTN_C";
+            gpios = <&gpio0 12 GPIO_PULL_UP>;
+            zephyr,code = <INPUT_KEY_C>;
+        };
 
-		buttonD {
-			label = "BTN_D";
-			gpios = <&gpio0 17 GPIO_PULL_UP>;
-			zephyr,code = <INPUT_KEY_D>;
-		};
+        buttonD {
+            label = "BTN_D";
+            gpios = <&gpio0 17 GPIO_PULL_UP>;
+            zephyr,code = <INPUT_KEY_D>;
+        };
 
-		buttonE {
-			label = "BTN_E";
-			gpios = <&gpio0 1 GPIO_PULL_UP>;
-			zephyr,code = <INPUT_KEY_E>;
-		};
+        buttonE {
+            label = "BTN_E";
+            gpios = <&gpio0 1 GPIO_PULL_UP>;
+            zephyr,code = <INPUT_KEY_E>;
+        };
 
-		buttonF {
-			label = "BTN_F";
-			gpios = <&gpio0 13 GPIO_PULL_UP>;
-			zephyr,code = <INPUT_KEY_F>;
-		};
-	};
+        buttonF {
+            label = "BTN_F";
+            gpios = <&gpio0 13 GPIO_PULL_UP>;
+            zephyr,code = <INPUT_KEY_F>;
+        };
+    };
 };
 
 &adc {
-	#address-cells = <1>;
-	#size-cells = <0>;
-	status = "okay";
+    #address-cells = <1>;
+    #size-cells = <0>;
+    status = "okay";
 
-	channel@0 {
-		reg = <0>;
-		zephyr,gain = "ADC_GAIN_1_6";
-		zephyr,reference = "ADC_REF_INTERNAL";
-		zephyr,acquisition-time = <ADC_ACQ_TIME_DEFAULT>;
-		zephyr,input-positive = <NRF_SAADC_AIN1>;
-		zephyr,resolution = <10>;
-	};
+    channel@0 {
+        reg = <0>;
+        zephyr,gain = "ADC_GAIN_1_6";
+        zephyr,reference = "ADC_REF_INTERNAL";
+        zephyr,acquisition-time = <ADC_ACQ_TIME_DEFAULT>;
+        zephyr,input-positive = <NRF_SAADC_AIN1>;
+        zephyr,resolution = <10>;
+    };
 
-	channel@1 {
-		reg = <1>;
-		zephyr,gain = "ADC_GAIN_1_6";
-		zephyr,reference = "ADC_REF_INTERNAL";
-		zephyr,acquisition-time = <ADC_ACQ_TIME_DEFAULT>;
-		zephyr,input-positive = <NRF_SAADC_AIN2>;
-		zephyr,resolution = <10>;
-	};
+    channel@1 {
+        reg = <1>;
+        zephyr,gain = "ADC_GAIN_1_6";
+        zephyr,reference = "ADC_REF_INTERNAL";
+        zephyr,acquisition-time = <ADC_ACQ_TIME_DEFAULT>;
+        zephyr,input-positive = <NRF_SAADC_AIN2>;
+        zephyr,resolution = <10>;
+    };
 };
-
