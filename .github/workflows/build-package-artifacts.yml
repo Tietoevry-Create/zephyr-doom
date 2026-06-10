@@ -320,15 +320,26 @@ jobs:
 
       - name: Rename zephyrdoom artifacts
         run: |
-          cp "zephyrdoom/build/zephyr/merged.hex" \
+          app_build_dir="zephyrdoom/build/zephyrdoom/zephyr"
+
+          cp "zephyrdoom/build/merged.hex" \
           "merged-${{ env.NRF_SDK_VERSION }}-${{ runner.arch }}-${{ github.run_number }}.hex"
-          cp "zephyrdoom/build/zephyr/merged_domains.hex" \
-          "merged-domains-${{ env.NRF_SDK_VERSION }}-${{ runner.arch }}-${{ github.run_number }}.hex"
-          cp "zephyrdoom/build/zephyr/zephyr.hex" \
+
+          if [ -f "zephyrdoom/build/merged_domains.hex" ]; then
+            cp "zephyrdoom/build/merged_domains.hex" \
+            "merged-domains-${{ env.NRF_SDK_VERSION }}-${{ runner.arch }}-${{ github.run_number }}.hex"
+          fi
+
+          if [ -f "zephyrdoom/build/merged_CPUNET.hex" ]; then
+            cp "zephyrdoom/build/merged_CPUNET.hex" \
+            "merged-CPUNET-${{ env.NRF_SDK_VERSION }}-${{ runner.arch }}-${{ github.run_number }}.hex"
+          fi
+
+          cp "${app_build_dir}/zephyr.hex" \
           "zephyr-${{ env.NRF_SDK_VERSION }}-${{ runner.arch }}-${{ github.run_number }}.hex"
-          cp "zephyrdoom/build/zephyr/zephyr.elf" \
+          cp "${app_build_dir}/zephyr.elf" \
           "zephyr-${{ env.NRF_SDK_VERSION }}-${{ runner.arch }}-${{ github.run_number }}.elf"
-          cp "zephyrdoom/build/zephyr/zephyr.map" \
+          cp "${app_build_dir}/zephyr.map" \
           "zephyr-${{ env.NRF_SDK_VERSION }}-${{ runner.arch }}-${{ github.run_number }}.map"
 
       - name: Upload artifacts
@@ -338,6 +349,7 @@ jobs:
           path: |
             merged-${{ env.NRF_SDK_VERSION }}-${{ runner.arch }}-${{ github.run_number }}.hex
             merged-domains-${{ env.NRF_SDK_VERSION }}-${{ runner.arch }}-${{ github.run_number }}.hex
+            merged-CPUNET-${{ env.NRF_SDK_VERSION }}-${{ runner.arch }}-${{ github.run_number }}.hex
             zephyr-${{ env.NRF_SDK_VERSION }}-${{ runner.arch }}-${{ github.run_number }}.hex
             zephyr-${{ env.NRF_SDK_VERSION }}-${{ runner.arch }}-${{ github.run_number }}.elf
             zephyr-${{ env.NRF_SDK_VERSION }}-${{ runner.arch }}-${{ github.run_number }}.map
