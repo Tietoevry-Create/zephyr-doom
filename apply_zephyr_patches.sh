@@ -4,7 +4,7 @@ set -euo pipefail
 script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 repo_root="$script_dir"
 
-zephyr_dir="$repo_root/nxp/zephyr"
+zephyr_dir="$repo_root/zephyr"
 patches_dir="$repo_root/patches/zephyr"
 
 if [[ ! -d "$zephyr_dir/.git" ]]; then

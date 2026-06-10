@@ -2,7 +2,7 @@
 
 ## What this patch is
 
-`0001-spi-nxp-lpspi-dma-fix-stale-callback-race.patch` is a local patch against the Zephyr checkout under `nxp/zephyr`.
+`0001-spi-nxp-lpspi-dma-fix-stale-callback-race.patch` is a local patch against the Zephyr checkout under `zephyr/`.
 
 It updates Zephyr's NXP LPSPI SPI+DMA driver:
 
@@ -31,4 +31,4 @@ Run from the repo root:
 bash ./apply_zephyr_patches.sh
 ```
 
-Run it after `west update` (or any operation that refreshes `nxp/zephyr`).
+Run it after `west update` (or any operation that refreshes `zephyr/`).
