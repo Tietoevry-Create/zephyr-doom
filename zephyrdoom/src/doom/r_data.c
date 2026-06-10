@@ -348,7 +348,11 @@ void R_GenerateInit(int texture_storage_size)
     // generate_to_flash = N_ButtonState(1);
 
     // TODO
+#if defined(CONFIG_BOARD_NATIVE_SIM)
+    generate_to_flash = true;
+#else
     generate_to_flash = false;
+#endif
 
     generate_buffer = (byte*)I_VideoBuffers;
     store_loc = N_qspi_alloc_block();
@@ -457,7 +461,11 @@ void R_GenerateComposite_N (int num, texture_t *texture, char *patch_names)
     }
 
     // TODO
+#if defined(CONFIG_BOARD_NATIVE_SIM)
+    generate_to_flash = true;
+#else
     generate_to_flash = false;
+#endif
 
     if (generate_to_flash) {
         N_qspi_write(texture_loc, generate_buffer, texture_size);

@@ -38,7 +38,9 @@
 
     sdl_gpio {
         compatible = "zephyr,gpio-emul-sdl";
-        scancodes = <82 81 80 79 224 44 225 226 41 40>;
+        /* up    down  left  right  fire('X')  use(Space)
+         * speed('Z')  strafe('C')  menu(Esc)  enter(Return) */
+        scancodes = <82 81 80 79 27 44 29 6 41 40>;
     };
 };
 
