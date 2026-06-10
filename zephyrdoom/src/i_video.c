@@ -45,6 +45,12 @@
 
 #include "FT810.h"
 
+#if defined(CONFIG_BOARD_NATIVE_SIM)
+#include <zephyr/device.h>
+#include <zephyr/devicetree.h>
+#include <zephyr/drivers/display.h>
+#endif
+
 static uint32_t pixel_format;
 
 
@@ -132,6 +138,11 @@ static int current_dl;
 // Memory references for display driver memory
 static uint32_t display_vbuffer_locs[3]; // Frame buffer
 static uint32_t display_palette_locs[3]; // Pallette
+
+#if defined(CONFIG_BOARD_NATIVE_SIM)
+static const struct device *g_display_dev;
+static uint16_t g_fb565[SCREENWIDTH * SCREENHEIGHT];
+#endif
 
 // If true, game is running as a screensaver
 
@@ -306,6 +317,37 @@ void I_FinishUpdate (void)
     int tics;
     int i;
 
+#if defined(CONFIG_BOARD_NATIVE_SIM)
+    {
+        uint16_t pal565[256];
+        int j;
+
+        for (j = 0; j < 256; j++) {
+            uint8_t r = display_pal[j * 4 + 0];
+            uint8_t g = display_pal[j * 4 + 1];
+            uint8_t b = display_pal[j * 4 + 2];
+            pal565[j] = (uint16_t)(((r >> 3) << 11) |
+                                   ((g >> 2) << 5)  |
+                                    (b >> 3));
+        }
+
+        for (j = 0; j < SCREENWIDTH * SCREENHEIGHT; j++) {
+            g_fb565[j] = pal565[(uint8_t)I_VideoBuffer[j]];
+        }
+
+        {
+            struct display_buffer_descriptor desc;
+            desc.buf_size = SCREENWIDTH * SCREENHEIGHT * 2;
+            desc.width    = SCREENWIDTH;
+            desc.height   = SCREENHEIGHT;
+            desc.pitch    = SCREENWIDTH;
+
+            display_write(g_display_dev, 0, 0, &desc, g_fb565);
+        }
+        return;
+    }
+#endif
+
     // draws little dots on the bottom of the screen
     if (display_fps_dots)
     {
@@ -457,6 +499,21 @@ void I_GraphicsCheckCommandLine(void)
 
 void I_InitGraphics(void)
 {
+#if defined(CONFIG_BOARD_NATIVE_SIM)
+    printf("I_InitGraphics (native_sim / SDL)\n");
+    g_display_dev = DEVICE_DT_GET(DT_CHOSEN(zephyr_display));
+    if (!device_is_ready(g_display_dev)) {
+        printf("ERROR: SDL display device not ready\n");
+    }
+    display_set_pixel_format(g_display_dev, PIXEL_FORMAT_RGB_565);
+    display_blanking_off(g_display_dev);
+
+    I_VideoBuffer     = I_VideoBuffers[1];
+    I_VideoBackBuffer = I_VideoBuffers[0];
+    initialized = true;
+    return;
+#endif
+
     printf("I_InitGraphics\n");
     N_display_init();
     display_palette_locs[0] = N_display_ram_alloc(DISPLAY_PALETTE_SIZE);

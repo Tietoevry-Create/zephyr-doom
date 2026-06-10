@@ -25,6 +25,10 @@
 #define LED_PIN_3 10
 #define LED_PIN_4 0
 
+#elif defined(CONFIG_BOARD_NATIVE_SIM)
+
+/* native_sim: no board-specific pin definitions */
+
 #else
 
 #include "hal/nrf_gpio.h"

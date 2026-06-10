@@ -949,6 +949,11 @@ void G_Ticker (void)
             G_DoSaveGame ();
             break;
           case ga_playdemo:
+#if defined(CONFIG_BOARD_NATIVE_SIM)
+            if (menuactive) {
+                gameaction = ga_nothing;
+            } else
+#endif
             G_DoPlayDemo ();
             break;
           case ga_completed:
@@ -1099,7 +1104,10 @@ void G_Ticker (void)
         break;
 
       case GS_DEMOSCREEN:
-        D_PageTicker ();
+#if defined(CONFIG_BOARD_NATIVE_SIM)
+        if (!menuactive)
+#endif
+            D_PageTicker ();
         break;
     }
 }
@@ -2362,8 +2370,12 @@ boolean G_CheckDemoStatus (void)
 
         if (singledemo)
             I_Quit ();
+#if defined(CONFIG_BOARD_NATIVE_SIM)
+        /* Do not chain into the next attract-mode demo on native_sim. */
+#else
         else
             D_AdvanceDemo ();
+#endif
 
         return true;
     }

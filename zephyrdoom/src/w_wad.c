@@ -57,6 +57,7 @@ typedef PACKED_STRUCT({
 LOG_MODULE_REGISTER(w_wad, LOG_LEVEL_INF);
 
 // --- QSPI Flash Configuration ---
+#if !defined(CONFIG_BOARD_NATIVE_SIM)
 #if DT_NODE_HAS_STATUS(DT_ALIAS(spi_flash0), okay)
 #define FLASH_NODE DT_ALIAS(spi_flash0)
 #elif DT_NODE_HAS_STATUS(DT_NODELABEL(mx25r64), okay)
@@ -66,6 +67,7 @@ LOG_MODULE_REGISTER(w_wad, LOG_LEVEL_INF);
 #else
 #error "Unsupported board: no supported external flash devicetree node found."
 #endif
+#endif /* !CONFIG_BOARD_NATIVE_SIM */
 
 extern int no_sdcard;
 #define MAX_NUMLUMPS 1300
@@ -95,6 +97,7 @@ static bool wad_header_valid(const wadinfo_t* header) {
            !strncmp(header->identification, "PWAD", 4);
 }
 
+#if !defined(CONFIG_BOARD_NATIVE_SIM)
 static const struct device* wad_get_flash_device(void) {
     const struct device* flash_dev = DEVICE_DT_GET(FLASH_NODE);
     if (!device_is_ready(flash_dev)) {
@@ -103,6 +106,7 @@ static const struct device* wad_get_flash_device(void) {
     }
     return flash_dev;
 }
+#endif /* !CONFIG_BOARD_NATIVE_SIM */
 
 static boolean wad_should_transfer_from_sd(void) {
     /* Keep the existing button-triggered transfer behavior. */
@@ -221,6 +225,7 @@ unsigned int W_LumpNameHash(const char* s) {
 
 wad_file_t* W_AddFile(char* filename) {
     wad_file_t* wad_file_data;
+#if !defined(CONFIG_BOARD_NATIVE_SIM)
     const struct device* flash_dev = wad_get_flash_device();
     boolean do_wad_transfer;
     if (flash_dev == NULL) {
@@ -228,6 +233,9 @@ wad_file_t* W_AddFile(char* filename) {
     }
 
     do_wad_transfer = wad_should_transfer_from_sd();
+#else
+    N_qspi_init();
+#endif
 
     if (numlumps != 0) {
         I_Error("Only one wad file supported\n");
@@ -249,6 +257,26 @@ wad_file_t* W_AddFile(char* filename) {
 
     if (strcasecmp(filename + strlen(filename) - 3, "wad")) {
         I_Error("NRFD-TODO: W_AddFile\n");
+#if defined(CONFIG_BOARD_NATIVE_SIM)
+    } else {
+        const uint8_t* xip_ptr = wad_xip_base_ptr();
+        wadinfo_t header;
+        extern const unsigned int doom_wad_len;
+
+        wad_parse_header_from_xip(xip_ptr, filename, &header);
+
+        if ((numlumps + header.numlumps) > MAX_NUMLUMPS) {
+            I_Error("W_AddFile: MAX_NUMLUMPS reached\n");
+        }
+
+        first_lump_pos = header.infotableofs;
+        filelumps = (filelump_t*)N_qspi_data_pointer(first_lump_pos);
+        numlumps += header.numlumps;
+
+        wad_file_data->path = filename;
+        wad_file_data->length = (long)doom_wad_len;
+    }
+#else
     } else {
         // Copy entire WAD file to Flash memory
         long file_size = 4196366;
@@ -446,6 +474,7 @@ wad_file_t* W_AddFile(char* filename) {
         wad_file_data->path = filename;
         wad_file_data->length = file_size;
     }
+#endif /* !CONFIG_BOARD_NATIVE_SIM */
 
     wad_reset_hash_tables();
 

@@ -88,8 +88,13 @@ static void RunTic(ticcmd_t *cmds, boolean *ingame)
     // check that there are players in the game.  if not, we cannot
     // run a tic.
 
+#if defined(CONFIG_BOARD_NATIVE_SIM)
+    /* native_sim: skip attract-mode demo cycling; menu stays on a static screen */
+    advancedemo = false;
+#else
     if (advancedemo)
         D_DoAdvanceDemo ();
+#endif
 
     G_Ticker ();
 }

@@ -39,6 +39,11 @@ void D_AdvanceDemo (void);
 void D_DoAdvanceDemo (void);
 void D_StartTitle (void);
 
+extern boolean advancedemo;
+extern int demosequence;
+extern int pagetic;
+extern char *pagename;
+
 //
 // GLOBAL VARIABLES
 //

@@ -1,0 +1,48 @@
+/*
+ * native_sim overlay for zephyr-doom.
+ * Maps host keyboard keys to emulated GPIO pins via gpio-emul-sdl,
+ * and sets the SDL display to the Doom resolution.
+ */
+
+/ {
+    aliases {
+        doom-up     = &k_up;
+        doom-down   = &k_down;
+        doom-left   = &k_left;
+        doom-right  = &k_right;
+        doom-fire   = &k_fire;
+        doom-use    = &k_use;
+        doom-speed  = &k_speed;
+        doom-strafe = &k_strafe;
+        doom-menu   = &k_menu;
+        doom-enter  = &k_enter;
+    };
+
+    doom_keys {
+        compatible = "gpio-keys";
+        k_up:     k_up     { gpios = <&gpio0 0 GPIO_ACTIVE_HIGH>; };
+        k_down:   k_down   { gpios = <&gpio0 1 GPIO_ACTIVE_HIGH>; };
+        k_left:   k_left   { gpios = <&gpio0 2 GPIO_ACTIVE_HIGH>; };
+        k_right:  k_right  { gpios = <&gpio0 3 GPIO_ACTIVE_HIGH>; };
+        k_fire:   k_fire   { gpios = <&gpio0 4 GPIO_ACTIVE_HIGH>; };
+        k_use:    k_use    { gpios = <&gpio0 5 GPIO_ACTIVE_HIGH>; };
+        k_speed:  k_speed  { gpios = <&gpio0 6 GPIO_ACTIVE_HIGH>; };
+        k_strafe: k_strafe { gpios = <&gpio0 7 GPIO_ACTIVE_HIGH>; };
+        k_menu:   k_menu   { gpios = <&gpio0 8 GPIO_ACTIVE_HIGH>; };
+        k_enter:  k_enter  { gpios = <&gpio0 9 GPIO_ACTIVE_HIGH>; };
+    };
+};
+
+&gpio0 {
+    ngpios = <10>;
+
+    sdl_gpio {
+        compatible = "zephyr,gpio-emul-sdl";
+        scancodes = <82 81 80 79 224 44 225 226 41 40>;
+    };
+};
+
+&sdl_dc {
+    width  = <320>;
+    height = <200>;
+};

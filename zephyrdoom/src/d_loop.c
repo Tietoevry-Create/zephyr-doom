@@ -98,8 +98,12 @@ int     ticdup;
 fixed_t         offsetms;
 
 // Use new client syncronisation code
-
+#if defined(CONFIG_BOARD_NATIVE_SIM)
+/* Chocolate Doom disables broken newsync for single-player; native needs this too. */
+static boolean  new_sync = false;
+#else
 static boolean  new_sync = true;
+#endif
 
 // Callback functions for loop code.
 

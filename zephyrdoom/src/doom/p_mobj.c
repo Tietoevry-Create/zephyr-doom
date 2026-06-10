@@ -33,8 +33,11 @@
 
 #include "doomstat.h"
 
-// NRFD-TODO: Max mobj?
+#if defined(CONFIG_BOARD_NATIVE_SIM)
+#define MAX_MOBJ  512
+#else
 #define MAX_MOBJ  290
+#endif
 
 mobj_t  mobjs[MAX_MOBJ];
 
