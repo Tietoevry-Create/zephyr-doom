@@ -209,7 +209,23 @@ void D_Display(void) {
 
     // draw the view directly
     if (gamestate == GS_LEVEL && !automapactive && gametic)
-        R_RenderPlayerView(&players[displayplayer]);
+    {
+        if (players[displayplayer].mo == NULL)
+        {
+            static int diag_once = 0;
+            if (!diag_once)
+            {
+                printf("DIAG D_Display: players[displayplayer=%d].mo==NULL "
+                       "(consoleplayer=%d) - skipping render\n",
+                       displayplayer, consoleplayer);
+                diag_once = 1;
+            }
+        }
+        else
+        {
+            R_RenderPlayerView(&players[displayplayer]);
+        }
+    }
 
     if (gamestate == GS_LEVEL && gametic) HU_Drawer();
 
@@ -328,6 +344,9 @@ void D_DoomLoop(void) {
 
     D_StartGameLoop();
 
+    printf("DIAG D_DoomLoop after StartGameLoop: p1.mo=%p st=%d\n",
+           (void*)players[1].mo, players[1].playerstate);
+
     frame_time_prev = I_GetTimeRaw();
 
     // Game keeps restarting at startup without this.
@@ -354,6 +373,16 @@ void D_DoomLoop(void) {
         I_StartFrame();
 
         TryRunTics();  // will run at least one tic
+
+        {
+            static void *diag_last_mo = (void *)-1;
+            if ((void *)players[1].mo != diag_last_mo)
+            {
+                printf("DIAG after TryRunTics: gametic=%d p1.mo=%p st=%d\n",
+                       gametic, (void*)players[1].mo, players[1].playerstate);
+                diag_last_mo = (void *)players[1].mo;
+            }
+        }
 
         S_UpdateSounds(players[consoleplayer].mo);  // move positional sounds
 
@@ -1143,6 +1172,14 @@ void D_DoomMain(void) {
 
     DEH_printf("S_Init: Setting up sound.\n");
     S_Init(sfxVolume * 8, musicVolume * 8);
+
+#if defined(CONFIG_FEATURE_DOOM_NET)
+    DEH_printf("NET_Init: Init network subsystem.\n");
+    NET_Init();
+
+    // Initial netgame startup. Connect to server etc.
+    D_ConnectNetGame();
+#endif
 
     DEH_printf("D_CheckNetGame: Checking network game status.\n");
     D_CheckNetGame();

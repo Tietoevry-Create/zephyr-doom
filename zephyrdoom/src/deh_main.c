@@ -32,7 +32,13 @@
 #include "deh_defs.h"
 #include "deh_io.h"
 
-extern deh_section_t *deh_section_types[];
+// The nrf-doom fork excludes all dehacked section modules, so the upstream
+// definition of this table (which lists those modules) is absent. Provide an
+// empty table here so the DEH checksum / lookup code links. With no sections
+// the DEH checksum is a hash over nothing; against a chocolate-doom peer that
+// has no -deh patch loaded this only causes a cosmetic lobby "mismatch"
+// warning, never a connection refusal.
+deh_section_t *deh_section_types[] = { NULL };
 extern char *deh_signatures[];
 
 static boolean deh_initialized = false;

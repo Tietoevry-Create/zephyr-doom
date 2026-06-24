@@ -15,11 +15,17 @@
 #ifndef NET_STRUCTRW_H
 #define NET_STRUCTRW_H
 
-// NRFD-TODO?
 // #include "aes_prng.h"
 #include "sha1.h"
 #include "net_defs.h"
 #include "net_packet.h"
+
+// Upstream prng_seed_t comes from aes_prng.h (Strife's AES PRNG). The fork
+// excludes that module, so define the seed type here. It is only used by the
+// Strife-only NET_ReadPRNGSeed / NET_WritePRNGSeed helpers, which are never
+// called in a Doom game, but the definition is needed for net_structrw.c to
+// compile.
+typedef byte prng_seed_t[16];
 
 void NET_WriteConnectData(net_packet_t *packet, net_connect_data_t *data);
 boolean NET_ReadConnectData(net_packet_t *packet, net_connect_data_t *data);

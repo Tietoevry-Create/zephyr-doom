@@ -42,8 +42,17 @@
 
 // Networking and tick handling related.
 
-/* NRFD-TODO !! BACKUPTICS 128 */
+/* The nrf-doom fork reduced BACKUPTICS from the upstream value of 128 to 4 to
+ * save RAM on the MCU. For networked builds we restore the full upstream
+ * lockstep window (the host has plenty of memory and a short window causes
+ * stalls/resends); RAM-constrained single-player MCU builds keep the small
+ * value. BACKUPTICS only sizes local ring buffers - it is not part of the wire
+ * protocol - so this does not affect compatibility with chocolate-server. */
+#if defined(CONFIG_FEATURE_DOOM_NET)
+#define BACKUPTICS 128
+#else
 #define BACKUPTICS 4
+#endif
 
 typedef struct _net_module_s net_module_t;
 typedef struct _net_packet_s net_packet_t;

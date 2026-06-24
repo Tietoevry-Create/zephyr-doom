@@ -154,6 +154,12 @@ wbstartstruct_t wminfo;                 // parms for world map / intermission
 
 byte            consistancy[MAXPLAYERS][BACKUPTICS];
 
+#if defined(CONFIG_FEATURE_DOOM_NET)
+// Used by the per-tic consistency check below as the fallback value when a
+// player has no map object yet. Defined in m_random.c (not in m_random.h).
+extern int rndindex;
+#endif
+
 #define MAXPLMOVE               (forwardmove[1])
 
 #define TURBOTHRESHOLD  0x32
@@ -1020,6 +1026,30 @@ void G_Ticker (void)
             */
 
 
+#if defined(CONFIG_FEATURE_DOOM_NET)
+            // NRFD-NET: We interoperate with stock Chocolate Doom, which
+            // enforces the per-tic consistency byte. G_BuildTiccmd sends
+            // consistancy[consoleplayer][...] (the low byte of our player's
+            // mo->x), so we must compute and store that value here every tic.
+            // If we skip it, consistancy[][] stays 0 and the byte we send
+            // matches a peer's only while the player is motionless (a
+            // stationary mo->x has a zero low byte); the first frame anyone
+            // moves it diverges and the peer aborts with "consistency
+            // failure". We also verify incoming bytes, matching upstream.
+            if (netgame && !netdemo && !(gametic%ticdup) )
+            {
+                if (gametic > BACKUPTICS
+                    && consistancy[i][buf] != cmd->consistancy)
+                {
+                    I_Error ("consistency failure (%i should be %i)",
+                             cmd->consistancy, consistancy[i][buf]);
+                }
+                if (players[i].mo)
+                    consistancy[i][buf] = players[i].mo->x;
+                else
+                    consistancy[i][buf] = rndindex;
+            }
+#else
             // NRFD-TODO: multiplayer
             /*
             if (netgame && !netdemo && !(gametic%ticdup) )
@@ -1036,6 +1066,7 @@ void G_Ticker (void)
                     consistancy[i][buf] = rndindex;
             }
             */
+#endif
         }
     }
 

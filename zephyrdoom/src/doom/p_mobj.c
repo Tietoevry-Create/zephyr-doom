@@ -759,7 +759,10 @@ void P_SpawnPlayer (mapthing_t* mthing)
 
     // not playing?
     if (!playeringame[mthing->type-1])
+    {
+        printf("DIAG P_SpawnPlayer: SKIP player %d (playeringame=0)\n", mthing->type-1);
         return;
+    }
 
     p = &players[mthing->type-1];
 
@@ -780,6 +783,7 @@ void P_SpawnPlayer (mapthing_t* mthing)
     mobj->health = p->health;
 
     p->mo = mobj;
+    printf("DIAG P_SpawnPlayer: spawned player %d mo=%p\n", mthing->type-1, (void*)mobj);
     p->playerstate = PST_LIVE;
     p->refire = 0;
     p->message = NULL;

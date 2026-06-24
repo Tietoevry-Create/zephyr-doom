@@ -80,6 +80,22 @@ config FEATURE_DOOM_SHIELD
 	  The joystick axes are read via Zephyr ADC (devicetree io-channels), and
 	  the buttons are read via Zephyr GPIO (devicetree aliases).
 
+config FEATURE_DOOM_NET
+	bool "Network multiplayer (UDP, Chocolate Doom 3.0.0 compatible)"
+	default y if BOARD_NATIVE_SIM
+	default n
+	select NETWORKING
+	select NET_SOCKETS
+	help
+	  Enable Chocolate Doom 3.0.0 protocol-compatible UDP multiplayer, so the
+	  game can join a standard chocolate-server / chocolate-doom session.
+
+	  The transport (net_zephyr.c) uses Zephyr's BSD socket API. On native_sim
+	  this is backed by host-offloaded sockets (enable
+	  CONFIG_NET_NATIVE_OFFLOADED_SOCKETS in the board config), which needs no
+	  host-side network setup. On hardware targets an IP-capable network
+	  interface must additionally be configured.
+
 choice
 	prompt "Feature preset"
 	default FEATURE_DOOM_PRESET_CUSTOM

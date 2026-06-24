@@ -1149,6 +1149,9 @@ P_SetupLevel
 
     //printf ("free memory: 0x%x\n", Z_FreeMemory());
 
+    printf("DIAG P_SetupLevel END: p0.mo=%p st=%d | p1.mo=%p st=%d\n",
+           (void*)players[0].mo, players[0].playerstate,
+           (void*)players[1].mo, players[1].playerstate);
 }
 
 

@@ -138,6 +138,11 @@ static void LoadGameSettings(net_gamesettings_t *settings)
     {
         playeringame[i] = i < settings->num_players;
     }
+
+    printf("DIAG LoadGameSettings: consoleplayer=%d num_players=%d "
+           "playeringame=[%d %d %d %d]\n",
+           consoleplayer, settings->num_players,
+           playeringame[0], playeringame[1], playeringame[2], playeringame[3]);
 }
 
 // Save the game settings from global variables to the specified

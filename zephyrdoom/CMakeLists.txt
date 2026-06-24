@@ -46,7 +46,6 @@ set(DOOM_COMMON_SRCS
                 src/m_fixed.c
                 src/m_misc.c
                 src/m_controls.c
-                src/net_client.c
                 src/net_server.c
                 src/tables.c
                 src/v_diskicon.c
@@ -109,6 +108,29 @@ set(DOOM_COMMON_SRCS
 )
 
 target_sources(app PRIVATE ${DOOM_COMMON_SRCS})
+
+# Networking / multiplayer.
+#
+# When CONFIG_FEATURE_DOOM_NET is enabled we compile the real Chocolate Doom
+# client plus the platform-independent net plumbing and the Zephyr-socket UDP
+# transport. When it is disabled (the hardware targets, for now) we instead
+# compile net_client_stub.c, which provides the same symbols as no-ops so the
+# engine still links and runs single-player. net_server.c is always built as a
+# stub (we only ever join a server, never host one).
+if (CONFIG_FEATURE_DOOM_NET)
+    target_sources(app PRIVATE
+                    src/net_client.c
+                    src/net_io.c
+                    src/net_packet.c
+                    src/net_structrw.c
+                    src/net_common.c
+                    src/net_loop.c
+                    src/net_zephyr.c
+                    src/net_gui_headless.c
+    )
+else()
+    target_sources(app PRIVATE src/net_client_stub.c)
+endif()
 
 if (CONFIG_BOARD_NATIVE_SIM)
     target_sources(app PRIVATE

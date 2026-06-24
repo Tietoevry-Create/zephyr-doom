@@ -42,7 +42,12 @@ typedef struct   __attribute__((packed))
 
     // villsa - Strife specific:
 
-    /* NRFD-EXLUDE
+    // These Strife/Heretic/Hexen fields are never populated or transmitted in
+    // a Doom game, but the full Chocolate Doom net serializer (net_structrw.c)
+    // references them, so they must exist when networking is compiled in. The
+    // fork excludes them on RAM-constrained targets that don't build the net
+    // code (NRFD-EXLUDE).
+#if defined(CONFIG_FEATURE_DOOM_NET)
     byte buttons2;
     int inventory;
 
@@ -50,7 +55,7 @@ typedef struct   __attribute__((packed))
 
     byte lookfly;               // look/fly up/down/centering
     byte arti;                  // artitype_t to use
-    */
+#endif
 } ticcmd_t;
 
 
