@@ -1118,7 +1118,15 @@ void D_DoomMain(void) {
         else {
             startepisode = myargv[p + 1][0] - '0';
 
-            if (p + 2 < myargc) {
+            // For Doom 1, -warp takes two numbers (episode and map).
+            // Only consume the token after the episode as the map if it
+            // actually is a number; otherwise (e.g. "-warp 1 -skill 3",
+            // or "-warp 1" at end of args) default the map to 1. Without
+            // this guard a following flag like "-skill" was read as the
+            // map ('-' - '0' == -3 == 0xfd), producing an invalid map that
+            // a strict netgame server rejects.
+            if (p + 2 < myargc && myargv[p + 2][0] >= '0'
+                && myargv[p + 2][0] <= '9') {
                 startmap = myargv[p + 2][0] - '0';
             } else {
                 startmap = 1;
