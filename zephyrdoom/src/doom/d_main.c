@@ -29,6 +29,9 @@
 #endif
 
 #include <zephyr/kernel.h>
+#if defined(CONFIG_FEATURE_DOOM_NET) && !defined(CONFIG_BOARD_NATIVE_SIM)
+#include <zephyr/net/net_if.h>  // wait for PHY relink after display power-on
+#endif
 
 #include "am_map.h"
 #include "d_iwad.h"
@@ -1180,6 +1183,31 @@ void D_DoomMain(void) {
 
     DEH_printf("S_Init: Setting up sound.\n");
     S_Init(sfxVolume * 8, musicVolume * 8);
+
+#if !defined(CONFIG_BOARD_NATIVE_SIM) && defined(CONFIG_FEATURE_DOOM_NET) \
+    && defined(CONFIG_FEATURE_DOOM_DISPLAY)
+    // Power on the display before joining the network: the FT810 power-on
+    // briefly drops the Ethernet PHY link, so trigger that glitch (and let the
+    // link recover) before the netgame handshake. I_InitGraphics is idempotent.
+    DEH_printf("I_InitGraphics: early display power-on (pre-net).\n");
+    I_InitGraphics();
+
+    // Wait for the link to come back after the display glitch before connecting.
+    // Bounded so an unplugged cable still falls through.
+    {
+        struct net_if *iface = net_if_get_default();
+        int waited = 0;
+
+        k_msleep(200);  // let the link drop first, then wait for it back
+        while (iface != NULL && !net_if_is_carrier_ok(iface) && waited < 4000)
+        {
+            k_msleep(50);
+            waited += 50;
+        }
+        DEH_printf("Post-display link wait: carrier=%d after %d ms\n",
+                   iface != NULL ? net_if_is_carrier_ok(iface) : -1, waited);
+    }
+#endif
 
 #if defined(CONFIG_FEATURE_DOOM_NET)
     DEH_printf("NET_Init: Init network subsystem.\n");

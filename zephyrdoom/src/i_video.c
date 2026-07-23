@@ -499,6 +499,12 @@ void I_GraphicsCheckCommandLine(void)
 
 void I_InitGraphics(void)
 {
+    // Idempotent: called early (pre-net) on hardware, then again from D_DoomLoop.
+    if (initialized)
+    {
+        return;
+    }
+
 #if defined(CONFIG_BOARD_NATIVE_SIM)
     printf("I_InitGraphics (native_sim / SDL)\n");
     g_display_dev = DEVICE_DT_GET(DT_CHOSEN(zephyr_display));

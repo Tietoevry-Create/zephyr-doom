@@ -27,6 +27,11 @@
 #include "m_misc.h"
 #include "m_argv.h"  // haleyjd 20110212: warning fix
 
+#if defined(CONFIG_FEATURE_DOOM_NET) && !defined(CONFIG_BOARD_NATIVE_SIM)
+#include <zephyr/kernel.h>      // k_msleep
+#include <zephyr/net/net_if.h>  // net_if_get_default, net_if_is_carrier_ok
+#endif
+
 int     myargc;
 char**      myargv;
 
@@ -252,6 +257,34 @@ char *M_GetExecutableName(void)
     return "doom"; // NRFD-NOTE: Not applicable to NRFD
 }
 
+#if defined(CONFIG_FEATURE_DOOM_NET) && !defined(CONFIG_BOARD_NATIVE_SIM)
+// True if the Ethernet link comes up within timeout_ms (link negotiation takes
+// ~1.7 s after reset). Used to pick multiplayer vs single-player at boot.
+static boolean EthernetLinkUpWithin(int timeout_ms)
+{
+    struct net_if *iface = net_if_get_default();
+    int waited = 0;
+
+    if (iface == NULL)
+    {
+        return false;
+    }
+
+    while (waited < timeout_ms)
+    {
+        if (net_if_is_carrier_ok(iface))
+        {
+            return true;
+        }
+
+        k_msleep(50);
+        waited += 50;
+    }
+
+    return false;
+}
+#endif
+
 void M_ArgvInit(void)
 {
 #if defined(CONFIG_BOARD_NATIVE_SIM)
@@ -290,7 +323,34 @@ void M_ArgvInit(void)
     myargc = argc;
     myargv = argv_storage;
 #else
-    myargc = 0;
-    myargv = NULL;
+    // Hardware targets have no command line.
+    static char *argv_storage[16];
+    int argc = 0;
+
+    argv_storage[argc++] = "doom";
+
+#if defined(CONFIG_FEATURE_DOOM_NET)
+    // Cable at boot -> join the server; no cable -> single-player demo/menu.
+    if (EthernetLinkUpWithin(CONFIG_DOOM_NET_LINK_WAIT_MS))
+    {
+        printf("M_ArgvInit: Ethernet link up; joining %s\n",
+               CONFIG_DOOM_SERVER_ADDR);
+        argv_storage[argc++] = "-connect";
+        argv_storage[argc++] = CONFIG_DOOM_SERVER_ADDR;
+        argv_storage[argc++] = "-nodes";
+        argv_storage[argc++] = "2";
+        argv_storage[argc++] = "-warp";
+        argv_storage[argc++] = "1";
+        argv_storage[argc++] = "-skill";
+        argv_storage[argc++] = "3";
+    }
+    else
+    {
+        printf("M_ArgvInit: No Ethernet link; starting single-player\n");
+    }
+#endif
+
+    myargc = argc;
+    myargv = argv_storage;
 #endif
 }

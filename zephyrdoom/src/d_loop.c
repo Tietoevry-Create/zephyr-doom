@@ -500,17 +500,22 @@ boolean D_InitNetGame(net_connect_data_t *connect_data)
 
         if (!NET_CL_Connect(addr, connect_data))
         {
-            I_Error("D_InitNetGame: Failed to connect to %s\n",
-                    NET_AddrToString(addr));
+            // Server unreachable: fall back to single-player (leave result
+            // false) instead of aborting the whole game.
+            printf("D_InitNetGame: Failed to connect to %s; "
+                   "falling back to single-player\n",
+                   NET_AddrToString(addr));
         }
+        else
+        {
+            printf("D_InitNetGame: Connected to %s\n", NET_AddrToString(addr));
 
-        printf("D_InitNetGame: Connected to %s\n", NET_AddrToString(addr));
+            // Wait for launch message received from server.
 
-        // Wait for launch message received from server.
+            NET_WaitForLaunch();
 
-        NET_WaitForLaunch();
-
-        result = true;
+            result = true;
+        }
     }
 
     return result;

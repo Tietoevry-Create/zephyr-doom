@@ -274,8 +274,17 @@ static void NET_Zephyr_SendPacket(net_addr_t *addr, net_packet_t *packet)
 
     if (sent < 0)
     {
-        I_Error("NET_Zephyr_SendPacket: Error transmitting packet: errno %d",
-                errno);
+        // Drop the packet; don't crash. UDP is lossy and Doom's netcode
+        // retransmits, so a transient send failure must not be fatal.
+        static int64_t last_log;
+        int64_t now = k_uptime_get();
+
+        if (now - last_log > 1000)
+        {
+            printf("NET_Zephyr_SendPacket: dropped packet, sendto errno %d\n",
+                   errno);
+            last_log = now;
+        }
     }
 }
 
@@ -296,13 +305,21 @@ static boolean NET_Zephyr_RecvPacket(net_addr_t **addr, net_packet_t **packet)
 
     if (result < 0)
     {
-        // No packet waiting.
+        // No packet this poll. Any error (not just EAGAIN) is non-fatal, so a
+        // transient link hiccup can't kill the game.
+        if (errno != EAGAIN && errno != EWOULDBLOCK)
+        {
+            static int64_t last_log;
+            int64_t now = k_uptime_get();
 
-        if (errno == EAGAIN || errno == EWOULDBLOCK)
-            return false;
+            if (now - last_log > 1000)
+            {
+                printf("NET_Zephyr_RecvPacket: recvfrom errno %d\n", errno);
+                last_log = now;
+            }
+        }
 
-        I_Error("NET_Zephyr_RecvPacket: Error receiving packet: errno %d",
-                errno);
+        return false;
     }
 
     // Put the data into a new packet structure

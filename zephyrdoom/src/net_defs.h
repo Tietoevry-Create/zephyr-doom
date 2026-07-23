@@ -33,8 +33,15 @@
 // The maximum number of players, multiplayer/networking.
 // This is the maximum supported by the networking code; individual games
 // have their own values for MAXPLAYERS that can be smaller.
-
+//
+// 4 on hardware to save ~19 KB (recvwindow + ticdata scale with this); Doom's
+// MAXPLAYERS is 4 anyway. native_sim has RAM to spare and keeps 8. Peers with
+// different values interoperate as long as the actual player count fits both.
+#if defined(CONFIG_BOARD_NATIVE_SIM)
 #define NET_MAXPLAYERS 8
+#else
+#define NET_MAXPLAYERS 4
+#endif
 
 // Maximum length of a player's name.
 
