@@ -1,4 +1,35 @@
 /*
+ * Copyright (c) 2019 - 2020, Nordic Semiconductor ASA
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright notice, this
+ *    list of conditions and the following disclaimer.
+ *
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *
+ * 3. Neither the name of the copyright holder nor the names of its
+ *    contributors may be used to endorse or promote products derived from this
+ *    software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
+ */
+
+/*
  * Unified button backend:
  * - nRF5340DK: 4 buttons, simple edge->keydown/keyup mapping.
  * - FRDM-MCXN947: 2 buttons, debounced with long-press gestures.
@@ -72,8 +103,12 @@ static bool gpio_pressed(const struct gpio_dt_spec* gpio) {
 
 /*
  * FRDM: 2-button UI with debounce and long-press actions.
- *  - sw1: up/forward, long-press => ESC
- *  - sw0: short => ENTER + FIRE, long => USE
+ *  - sw1 alias (physical "User SW3"): up/forward, long-press => ESC
+ *  - sw0 alias (physical "User SW2"): short => ENTER + FIRE, long => USE
+ *
+ * Note: sw0/sw1 are Zephyr devicetree aliases (sw0=user_button_2 "User SW2",
+ * sw1=user_button_3 "User SW3"), not the board silkscreen. Physical SW1 on the
+ * FRDM-MCXN947 is the RESET button and is not used here.
  */
 
 enum { BUTTON_DEBOUNCE_MS = 30, BUTTON_LONGPRESS_MS = 600 };
@@ -145,7 +180,7 @@ void N_ReadButtons(void) {
     update_debounced(&b0, now_ms);
     update_debounced(&b1, now_ms);
 
-    /* sw1: up/forward with long-press ESC */
+    /* sw1 (User SW3): up/forward with long-press ESC */
     if (b1.debounced && !b1_prev) {
         b1.pressed_ms = now_ms;
         b1.long_sent = false;
@@ -169,7 +204,7 @@ void N_ReadButtons(void) {
         b1.up_down_sent = false;
     }
 
-    /* sw0: short = ENTER + FIRE, long = USE */
+    /* sw0 (User SW2): short = ENTER + FIRE, long = USE */
     if (b0.debounced && !b0_prev) {
         b0.pressed_ms = now_ms;
         b0.long_sent = false;
