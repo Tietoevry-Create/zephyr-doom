@@ -232,19 +232,3 @@ Current limitations / known issues
    ``false``.
 - Bluetooth / gamepad input is not implemented (stub only).
 - Only two on-board buttons are mapped; no joystick / analog input.
-
-Fix: ``spi_lpspi`` DMA errors/timeouts
--------------------------------------
-
-If you see repeated Zephyr logs like ``spi_lpspi: unknown spi transfer state``,
-``DMA callback error``, or ``Timeout waiting for transfer complete`` while the
-display/audio still mostly work, it is likely a timing/race issue in Zephyr's
-NXP LPSPI+DMA driver.
-
-This repo tracks the fix as a local Zephyr patch under ``patches/zephyr``.
-After running ``west update`` (or otherwise refreshing the Zephyr checkout),
-apply patches with:
-
-.. code-block:: sh
-
-   bash ./apply_zephyr_patches.sh

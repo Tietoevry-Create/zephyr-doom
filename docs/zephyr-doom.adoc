@@ -417,10 +417,21 @@ Select `zephyrdoom`;*
 Flashing the application image depends on your environment (MCU-Link,
 LinkServer, pyOCD, etc.).
 
-This project also expects the Doom WAD in external flash (XIP) at offset 0.
-Pre-generated hex images are available in `gamedata/`.
+This project also expects the Doom game data in external flash (XIP), mapped
+at `0x80000000` on the FRDM-MCXN947.
 
-Example (pyOCD):
+The recommended default is the pre-populated full external-flash image
+`gamedata/mcxn947-qspi-full.bin` (8 MiB: WAD at offset 0 plus cached game
+data). Flash it raw to the QSPI base — this erases and replaces the entire
+external flash in a single pass:
+
+[source,bash]
+----
+pyocd flash -t MCXN947VDF --base-address 0x80000000 gamedata/mcxn947-qspi-full.bin
+----
+
+Alternatively, `gamedata/qspi_nxp_80.hex` contains just the plain WAD at the
+same base (`0x80000000`):
 
 [source,bash]
 ----
