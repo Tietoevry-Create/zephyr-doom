@@ -18,30 +18,30 @@ on:
       toolchain_version:
         description: Version of the nRF toolchain to install (only for X64)
         required: false
-        default: v2.6.2
+        default: v3.2.4
         type: string
       nrf_sdk_version:
         description: Version of the nRF SDK to install
         required: false
-        default: v2.6.0
+        default: v3.2.4
         type: string
       zephyr_sdk_version:
         description: Version of the Zephyr SDK to install (only for ARM64)
         required: false
-        default: 0.16.5-1
+        default: 0.17.0
         type: string
       board_target:
         description: Target board for the build
         required: false
-        default: nrf5340dk_nrf5340_cpuapp
+        default: nrf5340dk/nrf5340/cpuapp
         type: string
 
 env:
   RUNNER_LABEL: ubuntu-24.04
-  TOOLCHAIN_VERSION: v2.6.2
-  NRF_SDK_VERSION: v2.6.0
-  ZEPHYR_SDK_VERSION: 0.16.5-1
-  BOARD_TARGET: nrf5340dk_nrf5340_cpuapp
+  TOOLCHAIN_VERSION: v3.2.4
+  NRF_SDK_VERSION: v3.2.4
+  ZEPHYR_SDK_VERSION: 0.17.0
+  BOARD_TARGET: nrf5340dk/nrf5340/cpuapp
 
 defaults:
   run:
@@ -76,10 +76,16 @@ jobs:
 
       - name: Set build env variables
         run: |
-          echo "TOOLCHAIN_VERSION=${INPUT_TOOLCHAIN_VERSION:-$TOOLCHAIN_VERSION}" >> $GITHUB_ENV
-          echo "NRF_SDK_VERSION=${INPUT_NRF_SDK_VERSION:-$NRF_SDK_VERSION}" >> $GITHUB_ENV
-          echo "ZEPHYR_SDK_VERSION=${INPUT_ZEPHYR_SDK_VERSION:-$ZEPHYR_SDK_VERSION}" >> $GITHUB_ENV
-          echo "BOARD_TARGET=${INPUT_BOARD_TARGET:-$BOARD_TARGET}" >> $GITHUB_ENV
+          toolchain_version="${INPUT_TOOLCHAIN_VERSION:-$TOOLCHAIN_VERSION}"
+          nrf_sdk_version="${INPUT_NRF_SDK_VERSION:-$NRF_SDK_VERSION}"
+          zephyr_sdk_version="${INPUT_ZEPHYR_SDK_VERSION:-$ZEPHYR_SDK_VERSION}"
+          board_target="${INPUT_BOARD_TARGET:-$BOARD_TARGET}"
+
+          echo "TOOLCHAIN_VERSION=${toolchain_version}" >> $GITHUB_ENV
+          echo "NRF_SDK_VERSION=${nrf_sdk_version}" >> $GITHUB_ENV
+          echo "ZEPHYR_SDK_VERSION=${zephyr_sdk_version}" >> $GITHUB_ENV
+          echo "BOARD_TARGET=${board_target}" >> $GITHUB_ENV
+          echo "BOARD_ARTIFACT_NAME=${board_target//\//_}" >> $GITHUB_ENV
         env:
           INPUT_TOOLCHAIN_VERSION: ${{ github.event.inputs.toolchain_version }}
           INPUT_NRF_SDK_VERSION: ${{ github.event.inputs.nrf_sdk_version }}
@@ -314,24 +320,36 @@ jobs:
 
       - name: Rename zephyrdoom artifacts
         run: |
-          cp "zephyrdoom/build/zephyr/merged.hex" \
+          app_build_dir="zephyrdoom/build/zephyrdoom/zephyr"
+
+          cp "zephyrdoom/build/merged.hex" \
           "merged-${{ env.NRF_SDK_VERSION }}-${{ runner.arch }}-${{ github.run_number }}.hex"
-          cp "zephyrdoom/build/zephyr/merged_domains.hex" \
-          "merged-domains-${{ env.NRF_SDK_VERSION }}-${{ runner.arch }}-${{ github.run_number }}.hex"
-          cp "zephyrdoom/build/zephyr/zephyr.hex" \
+
+          if [ -f "zephyrdoom/build/merged_domains.hex" ]; then
+            cp "zephyrdoom/build/merged_domains.hex" \
+            "merged-domains-${{ env.NRF_SDK_VERSION }}-${{ runner.arch }}-${{ github.run_number }}.hex"
+          fi
+
+          if [ -f "zephyrdoom/build/merged_CPUNET.hex" ]; then
+            cp "zephyrdoom/build/merged_CPUNET.hex" \
+            "merged-CPUNET-${{ env.NRF_SDK_VERSION }}-${{ runner.arch }}-${{ github.run_number }}.hex"
+          fi
+
+          cp "${app_build_dir}/zephyr.hex" \
           "zephyr-${{ env.NRF_SDK_VERSION }}-${{ runner.arch }}-${{ github.run_number }}.hex"
-          cp "zephyrdoom/build/zephyr/zephyr.elf" \
+          cp "${app_build_dir}/zephyr.elf" \
           "zephyr-${{ env.NRF_SDK_VERSION }}-${{ runner.arch }}-${{ github.run_number }}.elf"
-          cp "zephyrdoom/build/zephyr/zephyr.map" \
+          cp "${app_build_dir}/zephyr.map" \
           "zephyr-${{ env.NRF_SDK_VERSION }}-${{ runner.arch }}-${{ github.run_number }}.map"
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: build-${{ env.NRF_SDK_VERSION }}-${{ runner.arch }}-${{ env.BOARD_TARGET }}-${{ github.run_number }}
+          name: build-${{ env.NRF_SDK_VERSION }}-${{ runner.arch }}-${{ env.BOARD_ARTIFACT_NAME }}-${{ github.run_number }}
           path: |
             merged-${{ env.NRF_SDK_VERSION }}-${{ runner.arch }}-${{ github.run_number }}.hex
             merged-domains-${{ env.NRF_SDK_VERSION }}-${{ runner.arch }}-${{ github.run_number }}.hex
+            merged-CPUNET-${{ env.NRF_SDK_VERSION }}-${{ runner.arch }}-${{ github.run_number }}.hex
             zephyr-${{ env.NRF_SDK_VERSION }}-${{ runner.arch }}-${{ github.run_number }}.hex
             zephyr-${{ env.NRF_SDK_VERSION }}-${{ runner.arch }}-${{ github.run_number }}.elf
             zephyr-${{ env.NRF_SDK_VERSION }}-${{ runner.arch }}-${{ github.run_number }}.map

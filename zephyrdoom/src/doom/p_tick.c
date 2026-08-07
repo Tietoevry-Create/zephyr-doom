@@ -50,8 +50,7 @@ void P_InitThinkers (void)
 }
 
 
-
-#include "compiler_abstraction.h"
+/* Avoid BSP-specific headers; we only need a compiler barrier here. */
 
 //
 // P_AddThinker
@@ -60,11 +59,11 @@ void P_InitThinkers (void)
 void P_AddThinker (thinker_t* thinker)
 {
     thinkercap.prev->next = thinker;
-    __ASM volatile("": : :"memory");
+    __asm__ volatile("" ::: "memory");
     thinker->next = &thinkercap;
-    __ASM volatile("": : :"memory");
+    __asm__ volatile("" ::: "memory");
     thinker->prev = thinkercap.prev;
-    __ASM volatile("": : :"memory");
+    __asm__ volatile("" ::: "memory");
     thinkercap.prev = thinker;
 }
 

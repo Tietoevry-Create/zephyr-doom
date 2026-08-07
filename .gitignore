@@ -41,3 +41,8 @@ output
 btferret/
 nRF5_SDK/
 ncs/
+.west/
+bootloader/
+modules/
+tools/
+zephyr/

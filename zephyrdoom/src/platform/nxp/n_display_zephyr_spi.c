@@ -1,9 +1,6 @@
 /*
- * Common FT810 display backend: Zephyr SPI + GPIO + optional cache flush.
- *
- * This replaces the older nRF-only register-level SPIM/GPIOTE/DPPI display
- * implementation and allows both nRF5340DK and FRDM-MCXN947 to share the same
- * `n_display.c`.
+ * Display backend for FRDM-MCXN947: Zephyr SPI + optional cache flush +
+ * chunking. Copied from the working NXP port.
  */
 
 #include <stdbool.h>
@@ -32,6 +29,7 @@
 #include <zephyr/drivers/spi.h>
 #include <zephyr/kernel.h>
 #include <zephyr/sys/printk.h>
+#include <zephyr/sys/util.h>
 
 #include "FT810.h"
 #include "board_config.h"
@@ -75,6 +73,9 @@ static void display_spi_thread_fn(void* p1, void* p2, void* p3) {
 
         k_mutex_lock(&display_spi_bus_mutex, K_FOREVER);
 
+        /* CS low */
+        gpio_pin_set(gpio0_dev, DISPLAY_PIN_CS_N, 0);
+
         /* Chunk the transfer to avoid SPI/DMA length limitations. */
         while (data_len > 0) {
             size_t chunk_len = data_len;
@@ -95,18 +96,15 @@ static void display_spi_thread_fn(void* p1, void* p2, void* p3) {
             bufs[1].len = chunk_len;
             const struct spi_buf_set tx = {.buffers = bufs, .count = 2};
 
-            /* FT81x re-parses the 3-byte address header only on a CS toggle.
-             * Keep CS per chunk or the header bytes shear the pixel stream.
-             */
-            gpio_pin_set(gpio0_dev, DISPLAY_PIN_CS_N, 0);
             (void)spi_write(spi_dev, &spi_cfg, &tx);
-            gpio_pin_set(gpio0_dev, DISPLAY_PIN_CS_N, 1);
 
             addr += (uint32_t)chunk_len;
             data_ptr += chunk_len;
             data_len -= chunk_len;
         }
 
+        /* CS high */
+        gpio_pin_set(gpio0_dev, DISPLAY_PIN_CS_N, 1);
         k_mutex_unlock(&display_spi_bus_mutex);
         k_sem_give(&display_spi_done_sem);
     }
@@ -119,10 +117,7 @@ void N_display_gpiote_end_to_cs(void) {
 void N_display_gpiote_clear(void) { /* No-op in Zephyr SPI path */ }
 
 void N_display_spi_init(void) {
-    /* SPI controller selected via devicetree alias `spi4`.
-     * - nRF5340DK: `spi4 = &spi4;`
-     * - FRDM-MCXN947: `spi4 = &arduino_spi;`
-     */
+    /* Use SPI4 (aliased to Arduino SPI in the FRDM overlay) */
     spi_dev = DEVICE_DT_GET(DT_ALIAS(spi4));
     if (!device_is_ready(spi_dev)) {
         printk("SPI device not ready\n");
@@ -283,6 +278,7 @@ void N_display_spi_wr(uint32_t addr, int dataSize, uint8_t* data) {
     display_spi_flush_tx_cache(data, (size_t)dataSize);
     display_spi_wait_idle();
     k_mutex_lock(&display_spi_bus_mutex, K_FOREVER);
+    gpio_pin_set(gpio0_dev, DISPLAY_PIN_CS_N, 0);
 
     const uint8_t* data_ptr = (const uint8_t*)data;
     size_t data_len = (size_t)dataSize;
@@ -305,18 +301,14 @@ void N_display_spi_wr(uint32_t addr, int dataSize, uint8_t* data) {
             {.buf = (void*)data_ptr, .len = chunk_len},
         };
         const struct spi_buf_set tx = {.buffers = bufs, .count = 2};
-
-        /* Toggle CS per chunk so FT81x re-parses the address header.
-         * Otherwise hdr bytes are treated as pixel data (shear).
-         */
-        gpio_pin_set(gpio0_dev, DISPLAY_PIN_CS_N, 0);
         (void)spi_write(spi_dev, &spi_cfg, &tx);
-        gpio_pin_set(gpio0_dev, DISPLAY_PIN_CS_N, 1);
 
         cur_addr += (uint32_t)chunk_len;
         data_ptr += chunk_len;
         data_len -= chunk_len;
     }
+
+    gpio_pin_set(gpio0_dev, DISPLAY_PIN_CS_N, 1);
     k_mutex_unlock(&display_spi_bus_mutex);
 }
 
@@ -348,19 +340,16 @@ uint8_t N_display_spi_rd8(uint32_t addr) {
 
 uint32_t ram_free_loc = FT810_RAM_G;
 
-void N_display_wakeup() { N_display_spi_cmd(0x00, 0x00); }
+void N_display_wakeup(void) { N_display_spi_cmd(0x00, 0x00); }
 
-void N_display_init() {
+void N_display_init(void) {
     N_display_spi_init();
 
     N_display_power_reset();
-
     N_display_wakeup();
-
     k_msleep(80);
 
     N_display_spi_cmd(FT810_CMD_CLKEXT, 0x00);
-
     k_msleep(80);
 
     printf("N_display_init - Display ID: %.2X\n",
@@ -368,29 +357,24 @@ void N_display_init() {
     printf("N_display_init - CPU Reset: %.2X\n",
            N_display_spi_rd8(FT810_REG_CPURESET));
 
-    N_display_spi_wr16(FT810_REG_HSIZE, 800);  // Active width of LCD display
-    N_display_spi_wr16(FT810_REG_VSIZE, 480);  // Active height of LCD display
-    N_display_spi_wr16(FT810_REG_HCYCLE,
-                       928);  // Total number of clocks per line
-    N_display_spi_wr16(FT810_REG_HOFFSET, 88);  // Start of active line
-    N_display_spi_wr16(FT810_REG_HSYNC0, 0);   // Start of horizontal sync pulse
-    N_display_spi_wr16(FT810_REG_HSYNC1, 48);  // End of horizontal sync pulse
-    N_display_spi_wr16(FT810_REG_VCYCLE,
-                       525);  // Total number of lines per screen
-    N_display_spi_wr16(FT810_REG_VOFFSET, 32);  // Start of active screen
-    N_display_spi_wr16(FT810_REG_VSYNC0, 0);    // Start of vertical sync pulse
-    N_display_spi_wr16(FT810_REG_VSYNC1, 3);    // End of vertical sync pulse
-    N_display_spi_wr8(FT810_REG_SWIZZLE, 0);    // Define RGB output pins
-    N_display_spi_wr8(FT810_REG_PCLK_POL, 1);   // Define active edge of PCLK
+    N_display_spi_wr16(FT810_REG_HSIZE, 800);
+    N_display_spi_wr16(FT810_REG_VSIZE, 480);
+    N_display_spi_wr16(FT810_REG_HCYCLE, 928);
+    N_display_spi_wr16(FT810_REG_HOFFSET, 88);
+    N_display_spi_wr16(FT810_REG_HSYNC0, 0);
+    N_display_spi_wr16(FT810_REG_HSYNC1, 48);
+    N_display_spi_wr16(FT810_REG_VCYCLE, 525);
+    N_display_spi_wr16(FT810_REG_VOFFSET, 32);
+    N_display_spi_wr16(FT810_REG_VSYNC0, 0);
+    N_display_spi_wr16(FT810_REG_VSYNC1, 3);
+    N_display_spi_wr8(FT810_REG_SWIZZLE, 0);
+    N_display_spi_wr8(FT810_REG_PCLK_POL, 1);
 
     uint8_t disGpio = N_display_spi_rd8(FT810_REG_GPIO);
     N_display_spi_wr8(FT810_REG_GPIO, disGpio | 0x80);
-
-    N_display_spi_wr8(FT810_REG_PWM_DUTY, 0xFF);  // Backlight PWM duty cycle
-
-    N_display_spi_wr8(FT810_REG_PCLK, 2);  // Pixel Clock
-
-    N_display_spi_wr8(FT810_REG_ROTATE, 1);  // inverted (up-down)
+    N_display_spi_wr8(FT810_REG_PWM_DUTY, 0xFF);
+    N_display_spi_wr8(FT810_REG_PCLK, 2);
+    N_display_spi_wr8(FT810_REG_ROTATE, 1);
 }
 
 uint32_t N_display_ram_alloc(size_t size) {
@@ -399,15 +383,15 @@ uint32_t N_display_ram_alloc(size_t size) {
     return result;
 }
 
-void N_display_dlswap_frame() {
+void N_display_dlswap_frame(void) {
     N_display_spi_wr32(FT810_REG_DLSWAP, FT810_DLSWAP_FRAME);
 }
 
 uint32_t display_dli = 0;
 
-void dl_start() { display_dli = FT810_RAM_DL; }
+void dl_start(void) { display_dli = FT810_RAM_DL; }
 void dl(uint32_t cmd) {
     N_display_spi_wr32(display_dli, cmd);
     display_dli += 4;
 }
-void dl_end() { N_display_spi_wr32(display_dli, FT810_DISPLAY()); }
+void dl_end(void) { N_display_spi_wr32(display_dli, FT810_DISPLAY()); }

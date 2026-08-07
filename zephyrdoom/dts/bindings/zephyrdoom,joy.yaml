@@ -1,0 +1,23 @@
+# SPDX-License-Identifier: Apache-2.0
+
+description: Doom wired joystick ADC channel consumer
+
+compatible: "zephyrdoom,joy"
+
+properties:
+  io-channels:
+    type: phandle-array
+    required: true
+    description: ADC controller phandles for joystick axes (X index 0, Y index 1)
+
+  swap-axes:
+    type: boolean
+    description: If set, swap X/Y axes when generating Doom joystick events.
+
+  invert-x:
+    type: boolean
+    description: If set, invert the X axis sign (left/right).
+
+  invert-y:
+    type: boolean
+    description: If set, invert the Y axis sign (up/down).

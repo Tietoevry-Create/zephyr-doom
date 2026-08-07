@@ -35,6 +35,7 @@
 #include "d_main.h"
 #include "deh_main.h"
 #include "doom_config.h"
+#include "doom_status_led.h"
 #include "doomdef.h"
 #include "doomstat.h"
 #include "dstrings.h"
@@ -46,19 +47,16 @@
 #include "i_input.h"
 #include "i_joystick.h"
 #include "i_system.h"
-#include "i_timer.h"
 #include "i_video.h"
 #include "m_argv.h"
 #include "m_config.h"
 #include "m_controls.h"
 #include "m_menu.h"
 #include "m_misc.h"
-#include "n_fs.h"
 #include "n_rjoy.h"
 #include "net_client.h"
 #include "net_dedicated.h"
 #include "net_query.h"
-#include "nrf.h"
 #include "p_saveg.h"
 #include "p_setup.h"
 #include "r_local.h"
@@ -313,6 +311,8 @@ void D_BindVariables(void) {
 void D_DoomLoop(void) {
     printf("D_DoomLoop\n");
     main_loop_started = true;
+
+    doom_status_led_set(DOOM_STATUS_LED_RUNNING);
 
     I_SetWindowTitle(gamedescription);
     I_GraphicsCheckCommandLine();

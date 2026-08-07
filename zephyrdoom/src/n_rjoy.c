@@ -29,92 +29,16 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-// Nordic Propriatery gamepad/joycon
+/*
+ * Joystick backend wrapper.
+ *
+ * This project only needs the wired shield backend on FRDM-MCXN947.
+ * The implementation lives in src/n_rjoy_shield.c.
+ */
 
-#include <stdio.h>
+int n_rjoy_backend_init(void);
+void n_rjoy_backend_read(void);
 
-#include "nrf.h"
-#include <hal/nrf_clock.h>
-// #include "nrf_delay.h"
-#include "board_config.h"
+int N_rjoy_init(void) { return n_rjoy_backend_init(); }
 
-#undef PACKED_STRUCT
-
-#include "doomkeys.h"
-#include "d_event.h"
-#include "i_system.h"
-
-// State.
-#include "doom/doomstat.h"
-
-const int x_cen = 128;
-const int y_cen = 128;
-const int guard = 4;
-
-extern short st_faceindex;
-
-static player_t* plyr;
-
-typedef struct {
-    uint8_t counter;
-    uint8_t buttons;
-    uint8_t joyX;
-    uint8_t joyY;
-} rjoy_radio_packet_t;
-
-typedef struct {
-    uint8_t face;
-    uint8_t health;
-    uint8_t ammo;
-    uint8_t armor;
-} radio_packet_out;
-
-rjoy_radio_packet_t prev_joy_state;
-
-int N_rjoy_init() {
-    plyr = &players[consoleplayer];
-
-    return 1;
-}
-
-
-void N_rjoy_read() {
-    volatile uint32_t *ipc_ptr = &NRF_IPC_S->GPMEM[0];
-    uint32_t radio_packet = *ipc_ptr;
-    rjoy_radio_packet_t new_joy_state;
-    uint32_t *tmp = (uint32_t*)(&new_joy_state);
-    *tmp = radio_packet;
-    //printf("%d %d %d %d %lx\n", new_joy_state.counter, new_joy_state.buttons, new_joy_state.joyX, new_joy_state.joyY, *tmp);
-    if (new_joy_state.counter != prev_joy_state.counter) {
-        // printf("N_rjoy_read: %d\n", new_joy_state.counter);
-        event_t ev;
-
-        int joyX = new_joy_state.joyX-x_cen;
-        int joyY = new_joy_state.joyY-y_cen;
-
-        if (-guard < joyX && joyX < guard) joyX = 0;
-        if (-guard < joyY && joyY < guard) joyY = 0;
-
-        // printf("N_rjoy_read: %d %d\n", joyX, joyY);
-
-        ev.type = ev_joystick;
-        ev.data1 = new_joy_state.buttons;
-        ev.data2 = -joyY;
-        ev.data3 = -joyX;
-        ev.data4 = 0;
-        ev.data5 = 0;
-
-        D_PostEvent(&ev);
-    }
-    prev_joy_state = new_joy_state;
-
-    // Provide current face to radio for transfer to gamepad
-    radio_packet_out response = {0};
-    response.face = st_faceindex;
-    response.health = plyr->health;
-    response.ammo = plyr->ammo[weaponinfo[plyr->readyweapon].ammo];
-    response.armor = plyr->armorpoints;
-
-    volatile uint32_t *ipc_ptr_1 = &NRF_IPC_S->GPMEM[1];
-    *ipc_ptr_1 = *(uint32_t*)&response;
-}
+void N_rjoy_read(void) { n_rjoy_backend_read(); }

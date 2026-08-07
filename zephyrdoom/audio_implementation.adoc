@@ -1,0 +1,59 @@
+= Audio implementation: Zephyr port vs older Nordic nRF‑Doom
+
+This document describes the audio differences between this Zephyr-based port and the older nRF5 SDK-based port by Nordic.
+
+Reference: link:https://github.com/NordicPlayground/nrf-doom[Nordic nrf-doom].
+
+== Summary
+
+* Core format unchanged: Doom SFX are mixed in software and sent as 16-bit signed stereo over I2S; music remains disabled.
+* Rate alignment: This port targets ~10.87 kHz to match the older implementation.
+* Driver model change: From register/SDK-driven I2S with an ISR pump to Zephyr I2S with a feeder thread and underrun recovery.
+
+== Parameters
+
+* Sample rate
+** This port: 10870 Hz (configured in `src/n_i2s.c` via `SAMPLE_RATE`), derived from the Audio PLL (ACLK).
+** Older repo: ≈10869.5 Hz (derived from the 44.1 kHz family); effectively the same audible rate.
+
+* PCM format
+** This port: 16-bit signed, stereo, interleaved L/R.
+** Older repo: 16-bit signed, stereo, interleaved L/R.
+
+* Source assets
+** Both: Doom SFX are 8-bit unsigned mono at 11025 Hz; no resampling is performed.
+
+* Mixing pipeline
+** Both: Up to 16 channels; for each output sample, read 8-bit value, convert to signed by subtracting 128, apply per-channel left/right gains from Doom volume/separation, and accumulate into 16-bit outputs. Pitch parameter is ignored (no pitch shifting).
+
+* Clipping/normalization
+** Both: No explicit limiter; accumulation may overflow in 16-bit range.
+
+* Music
+** Both: Disabled/not supported in these builds.
+
+== Clocking and I2S
+
+* This port (Zephyr)
+** Device tree (`boards/nrf5340dk_nrf5340_cpuapp.overlay`) enables `i2s0` with `clock-source = "ACLK"` and `&clock hfclkaudio-frequency = <11289600>`.
+** Runtime I2S setup via Zephyr: `word_size = 16`, `channels = 2`, `format = I2S_FMT_DATA_FORMAT_I2S`, `frame_clk_freq = 10870`.
+
+* Older repo (nRF5 SDK)
+** Register-level I2S configuration using 44.1 kHz-family ratios to yield ~10.869 kHz.
+
+== Buffering and runtime behavior
+
+* This port (Zephyr)
+** Ring of 5 blocks × 512 samples (stereo interleaved).
+** Dedicated high-priority feeder thread calls `i2s_buf_write()` to push audio.
+** If no mixed block is ready, silence is written to avoid underruns.
+** On write errors, recovery is attempted: STOP → DROP → prime with silence → START.
+
+* Older repo (nRF5 SDK)
+** ISR/SDK-driven ring feeding I2S DMA; no explicit silence-fallback path documented.
+
+
+== Integration
+
+* This port: `N_I2S_init()` is called on startup; `I_UpdateSound()` is invoked consistently (including during screen wipes). Continuous I2S feeding is handled by a Zephyr thread.
+* Older repo: Standard update path without Zephyr threading; I2S driven via ISR/SDK.

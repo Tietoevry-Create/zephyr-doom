@@ -22,18 +22,17 @@
 #include "w_file.h"
 #include "z_zone.h"
 
+#if defined(CONFIG_FAT_FILESYSTEM_ELM)
 #include "ff.h"
 
-typedef struct
-{
+typedef struct {
     wad_file_t wad;
     FIL fstream;
 } fatfs_wad_file_t;
 
 extern wad_file_class_t fatfs_wad_file;
 
-static wad_file_t *W_FatFS_OpenFile(char *path)
-{
+static wad_file_t* W_FatFS_OpenFile(char* path) {
     return NULL; /*
     printf("FatFS: Opening: %s\n", path);
     fatfs_wad_file_t *result;
@@ -60,8 +59,7 @@ static wad_file_t *W_FatFS_OpenFile(char *path)
     */
 }
 
-static void W_FatFS_CloseFile(wad_file_t *wad)
-{
+static void W_FatFS_CloseFile(wad_file_t* wad) {
     /*
     fatfs_wad_file_t *fatfs_wad;
 
@@ -76,9 +74,8 @@ static void W_FatFS_CloseFile(wad_file_t *wad)
 // Read data from the specified position in the file into the
 // provided buffer.  Returns the number of bytes read.
 
-size_t W_FatFS_Read(wad_file_t *wad, unsigned int offset,
-                   void *buffer, size_t buffer_len)
-{
+size_t W_FatFS_Read(wad_file_t* wad, unsigned int offset, void* buffer,
+                    size_t buffer_len) {
     return 0;
     /*
     fatfs_wad_file_t *fatfs_wad;
@@ -108,10 +105,34 @@ size_t W_FatFS_Read(wad_file_t *wad, unsigned int offset,
     */
 }
 
-
-wad_file_class_t fatfs_wad_file =
-{
+wad_file_class_t fatfs_wad_file = {
     W_FatFS_OpenFile,
     W_FatFS_CloseFile,
     W_FatFS_Read,
 };
+
+#else
+
+static wad_file_t* W_FatFS_OpenFile(char* path) {
+    (void)path;
+    return NULL;
+}
+
+static void W_FatFS_CloseFile(wad_file_t* wad) { (void)wad; }
+
+size_t W_FatFS_Read(wad_file_t* wad, unsigned int offset, void* buffer,
+                    size_t buffer_len) {
+    (void)wad;
+    (void)offset;
+    (void)buffer;
+    (void)buffer_len;
+    return 0;
+}
+
+wad_file_class_t fatfs_wad_file = {
+    W_FatFS_OpenFile,
+    W_FatFS_CloseFile,
+    W_FatFS_Read,
+};
+
+#endif
