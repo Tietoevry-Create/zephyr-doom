@@ -265,7 +265,7 @@ MCUXpresso configuration Tool 26.06
 | Hardware not supported.
 |===
 
-[cols="1,1,1,1,1,1,1,1,1" options="header, autowidth"]
+[cols="1,1,1,1,1,1,1,1,1,1" options="header, autowidth"]
 |===
 ^| Item
 ^| Version
@@ -275,7 +275,8 @@ MCUXpresso configuration Tool 26.06
 ^| MVP4
 ^| MVP5
 ^| MVP6
-^| MVP7
+^| MVP7 (nRF5340)
+^| MVP7 (FRDM-MCXN947)
 
 | https://www.nordicsemi.com/Products/Low-power-short-range-wireless/nRF5340[nRF5340]
 dev kit
@@ -287,10 +288,12 @@ dev kit
 ^| ✅
 ^| ✅
 ^| ✅
+^| ❌
 
 | https://www.nxp.com/design/design-center/development-boards-and-designs/FRDM-MCXN947[FRDM-MCXN947]
 dev kit
 | N/A
+^| ❌
 ^| ❌
 ^| ❌
 ^| ❌
@@ -309,6 +312,7 @@ https://www.laskakit.cz/320x480-barevny-lcd-tft-displej-3-5-shield-arduino-uno/[
 ^| ❌
 ^| ❌
 ^| ❌
+^| ❌
 
 | 2.8" ILI9341
 https://cz.mouser.com/ProductDetail/Adafruit/1947?qs=GURawfaeGuArmJSJoJoDJA%3D%3D[SPI display]
@@ -316,6 +320,7 @@ https://cz.mouser.com/ProductDetail/Adafruit/1947?qs=GURawfaeGuArmJSJoJoDJA%3D%3
 ^| ❌
 ^| ❌
 ^| ✅
+^| ❌
 ^| ❌
 ^| ❌
 ^| ❌
@@ -331,6 +336,7 @@ https://www.hotmcu.com/43-graphical-ips-lcd-touchscreen-800x480-spi-ft810-p-333.
 ^| ✅
 ^| ✅
 ^| ✅
+^| ✅
 
 | https://microbit.org/new-microbit/[micro:bit v2]
 | 2.x
@@ -338,6 +344,7 @@ https://www.hotmcu.com/43-graphical-ips-lcd-touchscreen-800x480-spi-ft810-p-333.
 ^| ✅
 ^| ✅
 ^| ✅
+^| ❌
 ^| ❌
 ^| ❌
 ^| ❌
@@ -351,6 +358,7 @@ https://www.hotmcu.com/43-graphical-ips-lcd-touchscreen-800x480-spi-ft810-p-333.
 ^| ❌
 ^| ❌
 ^| ❌
+^| ❌
 
 | https://www.xbox.com/en-US/accessories/controllers/xbox-wireless-controller[Xbox controller]
 | Model 1914
@@ -361,6 +369,7 @@ https://www.hotmcu.com/43-graphical-ips-lcd-touchscreen-800x480-spi-ft810-p-333.
 ^| ✅
 ^| ✅
 ^| ✅
+^| ❌
 
 | https://www.raspberrypi.com/products/raspberry-pi-400/[Keyboard]
 | RPi 400
@@ -371,6 +380,7 @@ https://www.hotmcu.com/43-graphical-ips-lcd-touchscreen-800x480-spi-ft810-p-333.
 ^| ✅
 ^| ✅
 ^| ✅
+^| ❌
 
 | https://www.ti.com/product/PCM5102[DAC]
 | PCM5102A
@@ -379,6 +389,7 @@ https://www.hotmcu.com/43-graphical-ips-lcd-touchscreen-800x480-spi-ft810-p-333.
 ^| ❌
 ^| ❌
 ^| ❌
+^| ✅
 ^| ✅
 ^| ✅
 
@@ -390,10 +401,12 @@ https://www.hotmcu.com/43-graphical-ips-lcd-touchscreen-800x480-spi-ft810-p-333.
 ^| ❌
 ^| ✅
 ^| ✅
+^| ✅
 ^| ❌
 
 | https://www.aliexpress.com/item/1005006466958888.html?spm=a2g0o.order_list.order_list_main.45.31781802mk4G8k[Joystick Shield] for arduino
 | V1.2
+^| ❌
 ^| ❌
 ^| ❌
 ^| ❌
