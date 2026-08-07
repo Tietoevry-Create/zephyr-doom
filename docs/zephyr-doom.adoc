@@ -234,8 +234,14 @@ inside Visual Studio Code.
 
 | MCUXpresso for VS Code
 | 26.7.52
-| N/A
-
+| MCUXpresso Installer 26.06.117;  
+MCUXpresso SKD Developer 26.06;
+Zephyr Developer 4.3;
+Arm GNU Toolchain 14.2.1;
+Standalone Toolchain Add-ons 14.2.2;
+Zephyr SDK 0.17.4;
+LinkServer 26.06;
+MCUXpresso configuration Tool 26.06
 |===
 
 === Compatibility Matrix
