@@ -219,18 +219,23 @@ dev kit
 | N/A
 
 | Visual Studio Code
-| 1.109.4
+| 1.132
 | N/A
 
 | nRF Connect SDK
-| v2.6.2
+| v3.2.4
 | N/A
 
 | nRF Connect for Visual Studio Code
-| 2026.1.1327
+| 2026.8.2347
 | Can be downloaded using the *Toolchain Manager* found in
 *nRF Connect for Desktop*. Alternatively, it can be downloaded directly from
 inside Visual Studio Code.
+
+| MCUXpresso for VS Code
+| 26.7.52
+| N/A
+
 |===
 
 === Compatibility Matrix
