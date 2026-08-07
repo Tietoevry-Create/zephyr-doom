@@ -152,6 +152,10 @@ else()
     target_sources(app PRIVATE src/n_display_stub.c)
 endif()
 
+if (CONFIG_USBD_CDC_ECM_CLASS)
+    target_sources(app PRIVATE src/n_usb.c)
+endif()
+
 if (CONFIG_FEATURE_DOOM_AUDIO)
     target_sources(app PRIVATE
                     src/n_i2s.c

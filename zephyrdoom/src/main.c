@@ -62,6 +62,9 @@ static void doom_install_crash_handler(void) {}
 void D_DoomMain(void);
 void M_ArgvInit(void);
 void N_ButtonsInit(void);
+#if defined(CONFIG_USBD_CDC_ECM_CLASS)
+int N_usb_net_init(void);
+#endif
 
 #if defined(CONFIG_SOC_NRF5340_CPUAPP)
 static void platform_clock_cache_init(void) {
@@ -161,6 +164,9 @@ int main(void) {
     N_ButtonsInit();
 #if defined(CONFIG_FEATURE_DOOM_AUDIO)
     N_I2S_init();
+#endif
+#if defined(CONFIG_USBD_CDC_ECM_CLASS)
+    N_usb_net_init();
 #endif
     M_ArgvInit();
 
