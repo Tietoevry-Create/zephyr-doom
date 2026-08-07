@@ -132,6 +132,10 @@ resource requirements by removing NRFX/NCS elements. Validate on Nordic Semicond
 | Open
 | Enable save and load functionality to store/restore gameplay progress.
 
+| SPI error at NXP dev kit
+| Open
+| <err> spi_lpspi: unknown spi stransfer state:0; root cause is a race condition in Zephyr’s NXP LPSPI DMA driver
+
 | Music
 | Open
 | N/A
@@ -203,6 +207,10 @@ https://www.hotmcu.com/43-graphical-ips-lcd-touchscreen-800x480-spi-ft810-p-333.
 | https://www.nxp.com/design/design-center/development-boards-and-designs/FRDM-MCXN947[FRDM-MCXN947]
 dev kit
 | N/A
+| N/A
+
+| https://www.aliexpress.com/item/1005006466958888.html?spm=a2g0o.order_list.order_list_main.45.31781802mk4G8k[Joystick Shield] for arduino
+| V1.2
 | N/A
 |===
 
@@ -384,6 +392,16 @@ https://www.hotmcu.com/43-graphical-ips-lcd-touchscreen-800x480-spi-ft810-p-333.
 ^| ✅
 ^| ❌
 
+| https://www.aliexpress.com/item/1005006466958888.html?spm=a2g0o.order_list.order_list_main.45.31781802mk4G8k[Joystick Shield] for arduino
+| V1.2
+^| ❌
+^| ❌
+^| ❌
+^| ❌
+^| ❌
+^| ❌
+^| ✅
+
 |===
 
 === Prerequisites
@@ -399,6 +417,7 @@ https://www.hotmcu.com/43-graphical-ips-lcd-touchscreen-800x480-spi-ft810-p-333.
 . Install the https://marketplace.visualstudio.com/items?itemName=NXPSemiconductors.mcuxpresso[MCUXpresso for VS Code].
 
 === Build
+Project is using per-board defaults for CONFIG_FEATURE_DOOM_* to enable / disable specific peripherals (for example, BLE defaults on for the nRF5340 build) while remaining overrideable in prj.conf.
 
 ==== Game for nRF5340 dev kit
 
@@ -1375,7 +1394,7 @@ dev kit:
 
 * *Features:*
 ** FRDM-MCXN947 support (FT810 over SPI, audio over I2S/SAI, GPIO buttons).
-** Optional wired joystick/button shield on FRDM (Arduino header + ADC + GPIO).
+** Optional wired https://www.aliexpress.com/item/1005006466958888.html?spm=a2g0o.order_list.order_list_main.45.31781802mk4G8k[joystick/button] shield on FRDM (Arduino header + ADC + GPIO).
 ** Per-board defaults for `CONFIG_FEATURE_DOOM_*` (BLE defaults on for the nRF5340 build; shield defaults on for the FRDM build) while remaining overrideable.
 ** Fixed FT810 SPI chunked-write CS framing to avoid display corruption.
 
@@ -1454,13 +1473,13 @@ dev kit:
 
 |===
 
-*** Wired joystick/button shield defaults (Arduino header, i.e. connected in the way that all J4 header pins on the dev kit are occupied):
+*** Wired joystick/button shield defaults (Arduino header, i.e. using dev kit headers J1, 2, 3, 4, connected in the way that all J1 and J4 header pins on the dev kit are occupied):
 +
 [cols="1,1,1" options="header, autowidth"]
 |===
 ^| Shield
 ^| Function
-^| FRDM-MCXN947 pin / header
+^| Comment
 
 | Joystick
 | X axis
