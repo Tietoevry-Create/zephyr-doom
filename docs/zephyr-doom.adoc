@@ -420,9 +420,7 @@ VS Code:
 * *Copy content of `zephyr-doom\zephyrdoom` folder to created project*
 * *Visual Studio Code -> MCUXpresso for VS Code -> Projects -> zephyrdoom -> mouse right-click -> Build*
 
-or
-
-Build from the repository root using `west`:
+or build from the repository root using `west`:
 
 [source,bash]
 ----
