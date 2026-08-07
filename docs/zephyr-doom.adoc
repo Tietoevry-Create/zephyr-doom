@@ -107,7 +107,7 @@ on RPi 400).
 | Done
 | Ported to NXP FRDM-MCXN947 dev kit.
 
-| Pure Zephyr port
+| "Pure" Zephyr port
 | Done
 | Modify the code to make it compatible with any Zephyr device that meets the
 resource requirements by removing NRFX/NCS elements. Validate on Nordic Semiconductor and NXP dev kit.
@@ -1369,7 +1369,8 @@ dev kit:
 === MVP7
 
 * *Goals:*
-** Port Zephyr-Doom to the NXP FRDM-MCXN947 dev kit.
+** Prepare "Pure" Zephyr port (remove NRFX/NCS elements).
+** Port Zephyr-Doom to the NXP FRDM-MCXN947 dev kit. Validate that the new code base is still running on nRF5340 dev kit.
 ** Unify board configuration so switching boards does not require editing `prj.conf` feature toggles.
 
 * *Features:*
@@ -1378,76 +1379,82 @@ dev kit:
 ** Per-board defaults for `CONFIG_FEATURE_DOOM_*` (BLE defaults on for the nRF5340 build; shield defaults on for the FRDM build) while remaining overrideable.
 ** Fixed FT810 SPI chunked-write CS framing to avoid display corruption.
 
-* *Pins/buttons mapping (FRDM-MCXN947):*
-** The wiring below is the default configuration used by the `zephyrdoom` FRDM build.
-** For the authoritative source, see `zephyrdoom/boards/frdm_mcxn947_mcxn947_cpu0.overlay` and `zephyrdoom/src/config/board_config.h`.
-** FT810 display wiring:
+* *Pins/buttons mapping:*
+** Nordic Semiconductor https://www.nordicsemi.com/Products/Low-power-short-range-wireless/nRF5340[nRF5340] dev kit - same as for MVP6.
+** NXP https://www.nxp.com/design/design-center/development-boards-and-designs/FRDM-MCXN947[FRDM-MCXN947] dev kit:
+*** For the authoritative source, see `zephyrdoom/boards/frdm_mcxn947_mcxn947_cpu0.overlay` and `zephyrdoom/src/config/board_config.h`.
+*** FT810 display wiring:
 +
 [cols="1,1,1" options="header, autowidth"]
 |===
 ^| Peripheral
 ^| Function
-^| FRDM-MCXN947 pin / header
+^| FRDM-MCXN947 dev kit header and pin number - joystick shield pin name / function (MCU pin)
 
 | SPI/FT810 display
-| 3.3V
-| 3.3V
+| 5V
+| J3 pin 10 - N/A / N/A (5V0)
 
 | SPI/FT810 display
 | GND
-| GND
+| J3 pin 12 - N/A / N/A (GND)
 
 | SPI/FT810 display
 | SCK
-| Arduino SPI header `SCK` (Flexcomm1 / `arduino_spi`)
+| J2 pin 12 - D13 / SCK (P0_25)
 
 | SPI/FT810 display
 | MOSI
-| Arduino SPI header `MOSI` (Flexcomm1 / `arduino_spi`)
+| J2 pin 8 - D11 / MOSI (P0_24)
 
 | SPI/FT810 display
 | MISO
-| Arduino SPI header `MISO` (Flexcomm1 / `arduino_spi`)
+| J2 pin 10 - D12 / MISO (P0_26)
 
 | SPI/FT810 display
 | CS_N
-| P0_27 (Arduino D10)
+| J2 pin 6 - D10 / CS (P0_27)
 
 | SPI/FT810 display
 | PD_N
-| P0_28 (Arduino D8)
+| J2 pin 2 - 3V3 / PD (P0_28)
 |===
 
-** I2S DAC wiring (SAI1):
+*** I2S DAC wiring (SAI1):
 +
 [cols="1,1,1" options="header, autowidth"]
 |===
 ^| Peripheral
 ^| Function
-^| FRDM-MCXN947 pin
+^| FRDM-MCXN947 dev kit header and pin number - joystick shield pin name / function (MCU pin)
 
 | I2S/DAC
 | 3.3V
-| VDD
+| N/A - 3V3 / VDD (N/A)
 
 | I2S/DAC
 | GND
-| GND
+| N/A - GND / GND (N/A)
 
 | I2S/DAC
-| SCK (BCLK)
-| SAI1_TX_BCLK (PIO1_0)
+| BCK
+| J5 pin 6 - N/A / SCK (BCLK) (P1_0)
 
 | I2S/DAC
-| LRCK (WS)
-| SAI1_TX_FS (PIO1_1)
+| LCK
+| J5 pin 5 - N/A / LRCK (WS) (P1_1)
 
 | I2S/DAC
-| SDOUT
-| SAI1_TXD0 (PIO2_8)
+| DIN
+| J8 pin 13 - N/A / STDOUT (P2_8)
+
+| I2S/DAC
+| SCK
+| connect to ground
+
 |===
 
-** Wired joystick/button shield defaults (Arduino header):
+*** Wired joystick/button shield defaults (Arduino header, i.e. connected in the way that all J4 header pins on the dev kit are occupied):
 +
 [cols="1,1,1" options="header, autowidth"]
 |===
@@ -1463,27 +1470,27 @@ dev kit:
 | Y axis
 | A1 (ADC channel 1, inverted)
 
-| Button
-| Strafe
+| Button A
+| Change weapon
 | D2 (active-low, pull-up)
 
-| Button
+| Button B
 | Fire
 | D3 (active-low, pull-up)
 
-| Button
+| Button C
 | Use
 | D4 (active-low, pull-up)
 
-| Button
+| Button D
 | Speed
 | D5 (active-low, pull-up)
 
-| Button
+| Button E 
 | Map
 | D6 (active-low, pull-up)
 
-| Button
+| Button F
 | Menu
 | D7 (active-low, pull-up)
 |===
@@ -1564,5 +1571,6 @@ eliminate drift. Calibration procedure could help to address this issue.
 
 ==== MVP7
 
-* Game data upload differs by board (nRF uses SD upload; FRDM uses host flashing
-    of external flash by default).
+* NXP https://www.nxp.com/design/design-center/development-boards-and-designs/FRDM-MCXN947[FRDM-MCXN947] dev kit:
+** As SD card support was not added / tested for the NXP dev kit, the only way is to flash data to external flash.
+** There is SPI error - root cause is a race in Zephyr’s NXP LPSPI DMA driver; fix would require driver modifications but as it does not effect functionality or stability it was put on-hold.
