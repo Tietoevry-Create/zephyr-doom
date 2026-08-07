@@ -1572,5 +1572,5 @@ eliminate drift. Calibration procedure could help to address this issue.
 ==== MVP7
 
 * NXP https://www.nxp.com/design/design-center/development-boards-and-designs/FRDM-MCXN947[FRDM-MCXN947] dev kit:
-** As SD card support was not added / tested for the NXP dev kit, the only way is to flash data to external flash.
-** There is SPI error - root cause is a race in Zephyr’s NXP LPSPI DMA driver; fix would require driver modifications but as it does not effect functionality or stability it was put on-hold.
+** As SD card support was not added / tested for the NXP dev kit, the only way how to get game data into dev kit is to flash it directly to external flash.
+** SPI error—the root cause is a race condition in Zephyr’s NXP LPSPI DMA driver. Fixing it would require driver modifications, but since it does not affect functionality or stability, the fix has been put on hold.
