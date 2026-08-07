@@ -108,25 +108,29 @@ on RPi 400).
 | Ported to NXP FRDM-MCXN947 dev kit.
 
 | Pure Zephyr port
-| In progress
+| Done
 | Modify the code to make it compatible with any Zephyr device that meets the
-resource requirements by removing NRFX/NCS elements. Validate on Nordic Semiconductor dev kit.
+resource requirements by removing NRFX/NCS elements. Validate on Nordic Semiconductor and NXP dev kit.
 
 | Simulation on PC
-| Open
+| In progress
 | Native Posix target.
 
-| Upgrade to Zephyr 4.X
+| Multiplayer
+| In progress
+| N/A
+
+| Upgrade to Zephyr 4.4
+| Open
+| N/A
+
+| Upgrade to Chocolate Doom 3.1.1
 | Open
 | N/A
 
 | Game save and load
 | Open
 | Enable save and load functionality to store/restore gameplay progress.
-
-| Multiplayer
-| Open
-| N/A
 
 | Music
 | Open
@@ -186,6 +190,14 @@ https://www.hotmcu.com/43-graphical-ips-lcd-touchscreen-800x480-spi-ft810-p-333.
 
 | https://www.raspberrypi.com/products/raspberry-pi-400/[Keyboard]
 | RPi 400
+| N/A
+
+| https://www.ti.com/product/PCM5102[DAC]
+| PCM5102A
+| N/A
+
+| https://www.aliexpress.com/item/1005005302035188.html?spm=a2g0o.order_list.order_list_main.205.45501802xbtOmK[Micro SD card reader]
+| N/A
 | N/A
 
 | https://www.nxp.com/design/design-center/development-boards-and-designs/FRDM-MCXN947[FRDM-MCXN947]
