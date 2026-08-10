@@ -26,8 +26,7 @@ packages.
 
 Zephyr-Doom has only been tested with Shareware version of Doom 1.
 
-[cols="1,1,1" options="header, autowidth"]** to control game on nRF5340
-*** https://www.xbox.com/en-US/accessories/controllers/xbox-wireless-controller[Xbox controller] or https://www.raspberrypi.com/products/raspberry-pi-400/[Keyboard];Build
+[cols="1,1,1" options="header, autowidth"]
 |===
 ^| Game
 ^| Status
