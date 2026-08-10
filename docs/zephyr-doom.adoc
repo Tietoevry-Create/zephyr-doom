@@ -243,7 +243,7 @@ inside Visual Studio Code.
 
 | MCUXpresso for VS Code
 | 26.7.52
-| MCUXpresso Installer 26.06.117;  
+| MCUXpresso Installer 26.06.117;
 MCUXpresso SKD Developer 26.06;
 Zephyr Developer 4.3;
 Arm GNU Toolchain 14.2.1;
@@ -1534,7 +1534,7 @@ https://www.nordicsemi.com/Products/Low-power-short-range-wireless/nRF5340[nRF53
 | Speed
 | D5 (active-low, pull-up)
 
-| Button E 
+| Button E
 | Map
 | D6 (active-low, pull-up)
 
