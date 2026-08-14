@@ -427,6 +427,13 @@ Example (pyOCD):
 pyocd flash -t MCXN947VDF gamedata/qspi_nxp_80.hex
 ----
 
+=== Multiplayer
+
+zephyr-doom joins Chocolate Doom 3.0.0 network games (native_sim, FRDM-MCXN947
+over Ethernet, and nRF5340 DK over USB CDC-ECM). For installing `chocolate-doom`,
+running the relay server, and the per-target setup steps, see
+https://github.com/Tietoevry-Create/zephyr-doom/blob/master/docs/multiplayer.adoc[multiplayer setup].
+
 == MVPs
 
 === MVP1

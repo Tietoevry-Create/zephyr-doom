@@ -1,0 +1,220 @@
+= Multiplayer setup
+
+zephyr-doom speaks the *Chocolate Doom 3.0.0* UDP network protocol, so it plays
+against a stock `chocolate-server` and stock `chocolate-doom` desktop clients. It
+can *join* a game on three targets:
+
+* *native_sim* — the Linux build, joining over host-offloaded sockets (no
+  host-side network setup).
+* *FRDM-MCXN947* — joining over real Ethernet (ENET-QOS).
+* *nRF5340 DK* — joining over USB CDC-ECM (the board appears as a USB network
+  adapter on the host).
+
+NOTE: zephyr-doom can only *join* a game, not host one (`net_server.c` is
+stubbed). A `chocolate-server` relay is always required.
+
+For the design rationale and the debugging history behind the current state, see
+`zephyrdoom/multiplayer_summary.md`.
+
+== Prerequisites (host PC)
+
+. *Chocolate Doom* — provides both `chocolate-doom` (desktop client) and
+  `chocolate-server` (relay). On Debian/Ubuntu:
++
+[source,bash]
+----
+sudo apt install chocolate-doom
+----
+
+. *A WAD* — the shareware `gamedata/doom1.wad` in this repo works, or a
+  commercial `doom.wad`. All participants must use the same WAD.
+
+. *UDP port 2342* open on the host firewall (the default game port).
+
+== The relay server
+
+Every game needs one `chocolate-server`, run on the host PC:
+
+[source,bash]
+----
+chocolate-server -port 2342
+----
+
+Start the server *first*, then start the players. The first peer to connect
+becomes the controller (`consoleplayer 0`) and its game settings win; connect
+order is otherwise not important.
+
+.Common client arguments
+[cols="1,3"]
+|===
+| Argument | Meaning
+
+| `-connect <host>:<port>` | Address of the `chocolate-server`.
+| `-nodes N`               | Wait for `N` players before the game launches.
+| `-warp 1`                | Start on episode 1, map 1. Keep the map a real digit.
+| `-skill 3`               | Skill level (1–5).
+|===
+
+WARNING: In `-warp <episode> <map>`, always give a numeric map (e.g. `-warp 1 -skill 3`,
+where map defaults to 1). A following flag was previously misread as the map
+(`'-' - '0' = 0xfd`), an invalid map the server rejects, hanging the handshake.
+
+== native_sim (Linux)
+
+Build from the repository root:
+
+[source,bash]
+----
+west build -b native_sim/native/64 -p auto zephyrdoom
+----
+
+Run, passing Doom arguments through the `DOOM_ARGS` environment variable:
+
+[source,bash]
+----
+DOOM_ARGS="-connect 127.0.0.1:2342 -nodes 2 -warp 1 -skill 3" ./build/zephyr/zephyr.exe
+----
+
+A full local game on one host (server + native_sim + a desktop client):
+
+[source,bash]
+----
+# terminal 1
+chocolate-server -port 2342
+
+# terminal 2
+DOOM_ARGS="-connect 127.0.0.1:2342 -nodes 2 -warp 1 -skill 3" ./build/zephyr/zephyr.exe
+
+# terminal 3
+SDL_VIDEODRIVER=x11 chocolate-doom -connect 127.0.0.1:2342 -iwad gamedata/doom1.wad
+----
+
+[IMPORTANT]
+====
+Launch any *desktop* `chocolate-doom` peer with `SDL_VIDEODRIVER=x11` (or set
+`video_driver "x11"` in `~/.local/share/chocolate-doom/chocolate-doom.cfg`). On
+GNOME/Wayland, SDL2's Wayland backend starts in a bad frame-pacing state that
+makes the desktop client feel ~1 s laggy. This is a host display-stack quirk, not
+a zephyr-doom issue, and does not affect native_sim's own window.
+====
+
+You can mix and match up to 4 players in any combination of native_sim and
+desktop `chocolate-doom` (bump `-nodes` accordingly).
+
+== Hardware targets (shared setup)
+
+Both boards use the same static IPv4 scheme:
+
+[cols="1,2"]
+|===
+| Board IP   | `192.168.10.2`
+| Host IP    | `192.168.10.1`
+| Server     | `192.168.10.1:2342` (`CONFIG_DOOM_SERVER_ADDR`)
+| Netmask    | `255.255.255.0`
+|===
+
+Hardware has no command line, so the board decides at boot from the network
+carrier (see `M_ArgvInit`):
+
+* *Link up within `CONFIG_DOOM_NET_LINK_WAIT_MS`* → it injects
+  `-connect $CONFIG_DOOM_SERVER_ADDR -nodes 2 -warp 1 -skill 3` and joins the game.
+* *No link* → it boots to single-player.
+
+So the run sequence is always: bring up the host interface and
+`chocolate-server` *first*, then reset the board so it sees the link at boot.
+
+== FRDM-MCXN947 (Ethernet)
+
+Build and flash:
+
+[source,bash]
+----
+west build -b frdm_mcxn947_mcxn947_cpu0 -p auto zephyrdoom
+west flash
+----
+
+Wire an Ethernet cable directly between the board and the PC, then configure the
+PC's NIC on the cable subnet:
+
+[source,bash]
+----
+sudo ip addr add 192.168.10.1/24 dev <iface>   # e.g. enp3s0
+sudo ip link set <iface> up
+----
+
+Run:
+
+. `chocolate-server -port 2342`
+. Start the other player(s) (e.g. a native_sim or desktop client, as above).
+. *Reset the board.* With the link present it joins `192.168.10.1:2342` as a
+  player; the board is typically the second node. `CONFIG_DOOM_NET_LINK_WAIT_MS`
+  defaults to 3000 ms (PHY negotiation takes ~1.7 s).
+
+== nRF5340 DK (USB CDC-ECM)
+
+The nRF5340 DK has no Ethernet port, so it exposes a USB network adapter
+instead. Build/flash with the nRF Connect SDK toolchain (via the nRF Connect for
+VS Code extension, or `west` if your environment is set up for NCS):
+
+[source,bash]
+----
+west build -b nrf5340dk_nrf5340_cpuapp -p auto zephyrdoom
+west flash
+----
+
+Connect the board's *USB* port (the nRF USB device connector, `zephyr_udc0`, not
+the debugger port) to the PC. It enumerates as a CDC-ECM Ethernet interface
+(USB VID:PID `2fe3:0001`, product "zephyr-doom net"). Configure that interface on
+the host:
+
+[source,bash]
+----
+ip link                                         # find the new interface, e.g. enxXXXXXXXXXXXX
+sudo ip addr add 192.168.10.1/24 dev <iface>
+sudo ip link set <iface> up
+----
+
+Run:
+
+. `chocolate-server -port 2342`
+. Start the other player(s).
+. *Reset the board.* It waits up to `CONFIG_DOOM_NET_LINK_WAIT_MS` (8000 ms on
+  this target, to allow USB enumeration) for the link, then joins
+  `192.168.10.1:2342`.
+
+== Troubleshooting
+
+[cols="2,3"]
+|===
+| Symptom | Cause / fix
+
+| Desktop `chocolate-doom` feels ~1 s laggy (smooth but delayed)
+| SDL2 Wayland present pacing. Launch with `SDL_VIDEODRIVER=x11` (or set
+  `video_driver "x11"` in its config).
+
+| `Warning: WAD SHA1 does not match server ...`
+| Cosmetic — `W_Checksum` is stubbed, so the checksum is empty (`da39a3ee...`).
+  Harmless; the game still plays.
+
+| native_sim hangs at `D_CheckNetGame` / never reaches the game
+| Malformed `-warp` (map not a digit), or not enough peers for `-nodes`. Use a
+  numeric map and match `-nodes` to the actual player count.
+
+| Board boots to single-player instead of joining
+| No carrier at boot. Bring up the host interface and `chocolate-server` before
+  resetting the board; check the host IP is `192.168.10.1/24` on the right
+  interface.
+
+| Board joins then drops mid-game
+| On FRDM-MCXN947 the PHY monitor could mis-read link-down under load; it is
+  worked around with `CONFIG_PHY_MONITOR_PERIOD=3600000`. Ensure that config is
+  present if you re-tune the board.
+|===
+
+== Limitations
+
+* Join only — no hosting (`net_server.c` stubbed); a `chocolate-server` is
+  required.
+* Up to 4 players. Hardware builds set `NET_MAXPLAYERS=4` (RAM); native_sim
+  keeps 8, but Doom itself caps at 4.
+* Respawn (`G_DoReborn`) is stubbed, so cooperative respawn does not yet work.

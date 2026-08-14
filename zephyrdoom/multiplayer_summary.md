@@ -1,15 +1,22 @@
 # zephyr-doom multiplayer
 
-Chocolate Doom 3.0.0-compatible UDP multiplayer, on two targets:
+Chocolate Doom 3.0.0-compatible UDP multiplayer, on three targets:
 
 - **native_sim** — the Linux build joins a stock `chocolate-server` and renders
   in its SDL window. Works with 3-4 players in any mix of native_sim and desktop
   `chocolate-doom`, connect order independent.
 - **FRDM-MCXN947** — the board joins over real Ethernet (ENET-QOS). Confirmed in
   a 2-player game against native_sim.
+- **nRF5340 DK** — no Ethernet port, so the board joins over **USB CDC-ECM**
+  (it enumerates as a USB network adapter on the host). Same static-IP scheme
+  and boot-time SP/MP decision as the NXP board.
 
 Branch: `feature/Markek1/multiplayer`. Join only; native/board can't host a game
 (`net_server.c` is stubbed).
+
+> **Setup/run instructions** (installing chocolate-doom, the server, and each
+> target) live in `docs/multiplayer.adoc`. This file is the design rationale and
+> debugging history.
 
 ## How it works
 
@@ -93,6 +100,24 @@ Sits at ~84%.
 `I_InitGraphics` is called early (before the handshake) and is idempotent, so the
 glitch and recovery happen before the game is live; a short carrier wait follows.
 
+## nRF5340: multiplayer over USB CDC-ECM
+
+The nRF5340 DK has no Ethernet port, so it nets over **USB CDC-ECM** instead: the
+board presents a USB network adapter to the host, and the same Zephyr IP stack +
+`net_zephyr.c` transport run on top of it (the netcode is transport-agnostic).
+
+- Enabled in `boards/nrf5340dk_nrf5340_cpuapp.conf`: `FEATURE_DOOM_NET`, the USB
+  device stack (`USB_DEVICE_STACK_NEXT`, `USBD_CDC_ECM_CLASS`), `NET_L2_ETHERNET`,
+  IPv4/UDP, static IP `192.168.10.2` / GW `192.168.10.1`.
+- `src/n_usb.c` (`N_usb_net_init`, called from `main.c`) builds the USB device
+  (VID:PID `2fe3:0001`, "zephyr-doom net") and registers the CDC-ECM class; the
+  overlay declares the `zephyr,cdc-ecm-ethernet` node.
+- `CONFIG_DOOM_NET_LINK_WAIT_MS=8000` (vs 3000 on NXP) to give USB enumeration
+  time before the boot-time SP-vs-MP decision.
+- Host side: the board enumerates as e.g. `enxXXXXXXXXXXXX`; put it on the cable
+  subnet (`sudo ip addr add 192.168.10.1/24 dev <iface>`) and run the server
+  there. Built with the nRF Connect SDK toolchain.
+
 ## Known-open
 
 - Board display SPI is flaky (`spi_lpspi` DMA errors, `Display ID: FF` at init).
@@ -109,5 +134,7 @@ glitch and recovery happen before the game is live; a short carrier wait follows
 - `src/m_argv.c` — hardware boot decides SP vs MP from the Ethernet carrier.
 - `src/doom/d_main.c` — `-warp` fix, early display init + link wait.
 - `src/doomtype.h` — `boolean` ODR fix.
-- `boards/frdm_mcxn947_mcxn947_cpu0.conf` — board networking + RAM tuning.
+- `src/n_usb.c` — nRF5340 USB CDC-ECM bring-up.
+- `boards/frdm_mcxn947_mcxn947_cpu0.conf` — NXP networking + RAM tuning.
+- `boards/nrf5340dk_nrf5340_cpuapp.{conf,overlay}` — USB CDC-ECM networking.
 - `boards/native_sim_native_64.{conf,overlay}` — SDL display + offloaded sockets.
