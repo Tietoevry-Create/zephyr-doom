@@ -1918,19 +1918,6 @@ void M_StartControlPanel (void)
     if (menuactive)
         return;
 
-#if defined(CONFIG_BOARD_NATIVE_SIM)
-    if (demoplayback) {
-        demoplayback = false;
-    }
-    advancedemo = false;
-    gameaction = ga_nothing;
-    if (gamestate == GS_LEVEL) {
-        gamestate = GS_DEMOSCREEN;
-        pagetic = 0x7fffffff;
-        pagename = DEH_String("TITLEPIC");
-    }
-#endif
-
     menuactive = 1;
     currentMenu = &MainDef;         // JDC
     itemOn = currentMenu->lastOn;   // JDC

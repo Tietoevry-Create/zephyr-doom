@@ -1158,24 +1158,8 @@ void D_DoomMain(void) {
     if (gameaction != ga_loadgame) {
         if (autostart || netgame)
             G_InitNew(startskill, startepisode, startmap);
-#if defined(CONFIG_BOARD_NATIVE_SIM)
-        else {
-            /* Skip the attract-mode demo loop on native_sim; it races the menu
-             * and flickers because demoplayback is not paused while menuactive. */
-            gamestate = GS_DEMOSCREEN;
-            pagetic = 0x7fffffff;
-            pagename = DEH_String("TITLEPIC");
-            advancedemo = false;
-            demosequence = -1;
-            demoplayback = false;
-            usergame = false;
-            gameaction = ga_nothing;
-            M_StartControlPanel();
-        }
-#else
         else
             D_StartTitle();  // start up intro loop
-#endif
     }
 
     N_rjoy_init();
