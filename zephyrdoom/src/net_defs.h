@@ -50,11 +50,14 @@
 // Networking and tick handling related.
 
 /* The nrf-doom fork reduced BACKUPTICS from the upstream value of 128 to 4 to
- * save RAM on the MCU. For networked builds we restore the full upstream
- * lockstep window (the host has plenty of memory and a short window causes
- * stalls/resends); RAM-constrained single-player MCU builds keep the small
- * value. BACKUPTICS only sizes local ring buffers - it is not part of the wire
- * protocol - so this does not affect compatibility with chocolate-server. */
+ * save RAM on the MCU. Networked builds need the full upstream lockstep window
+ * back, on hardware as much as on native_sim: a 4-tic window stalls and forces
+ * resends against a real server. ticdata, send_queue and recvwindow all scale
+ * with it, which is the main reason the FRDM build has to claw RAM back
+ * elsewhere (NET_MAXPLAYERS 4, smaller k_heap). Single-player MCU builds keep
+ * the small value. BACKUPTICS only sizes local ring buffers, it is not part of
+ * the wire protocol, so it does not affect compatibility with
+ * chocolate-server. */
 #if defined(CONFIG_FEATURE_DOOM_NET)
 #define BACKUPTICS 128
 #else
