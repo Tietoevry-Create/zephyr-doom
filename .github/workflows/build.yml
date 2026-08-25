@@ -21,3 +21,8 @@ on:
 
 permissions:
   contents: read
+
+jobs:
+  build-artifacts:
+    name: Build artifacts
+    timeout-minutes: 180
