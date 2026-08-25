@@ -1,4 +1,10 @@
 /*
+ * Copyright (c) 2016 Intel Corporation
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+/*
  * Unified Zephyr main entrypoint.
  *
  * - On boards that enable FATFS+disk access, mounts the disk and lists files.

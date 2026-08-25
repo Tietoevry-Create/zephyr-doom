@@ -141,7 +141,7 @@ static uint32_t display_palette_locs[3]; // Pallette
 
 #if defined(CONFIG_BOARD_NATIVE_SIM)
 static const struct device *g_display_dev;
-static uint16_t g_fb565[SCREENWIDTH * SCREENHEIGHT];
+static uint32_t g_fb8888[SCREENWIDTH * SCREENHEIGHT];
 #endif
 
 // If true, game is running as a screensaver
@@ -319,30 +319,31 @@ void I_FinishUpdate (void)
 
 #if defined(CONFIG_BOARD_NATIVE_SIM)
     {
-        uint16_t pal565[256];
+        uint32_t pal8888[256];
         int j;
 
         for (j = 0; j < 256; j++) {
             uint8_t r = display_pal[j * 4 + 0];
             uint8_t g = display_pal[j * 4 + 1];
             uint8_t b = display_pal[j * 4 + 2];
-            pal565[j] = (uint16_t)(((r >> 3) << 11) |
-                                   ((g >> 2) << 5)  |
-                                    (b >> 3));
+            pal8888[j] = 0xFF000000u |
+                         ((uint32_t)r << 16) |
+                         ((uint32_t)g << 8)  |
+                          (uint32_t)b;
         }
 
         for (j = 0; j < SCREENWIDTH * SCREENHEIGHT; j++) {
-            g_fb565[j] = pal565[(uint8_t)I_VideoBuffer[j]];
+            g_fb8888[j] = pal8888[(uint8_t)I_VideoBuffer[j]];
         }
 
         {
             struct display_buffer_descriptor desc;
-            desc.buf_size = SCREENWIDTH * SCREENHEIGHT * 2;
+            desc.buf_size = SCREENWIDTH * SCREENHEIGHT * 4;
             desc.width    = SCREENWIDTH;
             desc.height   = SCREENHEIGHT;
             desc.pitch    = SCREENWIDTH;
 
-            display_write(g_display_dev, 0, 0, &desc, g_fb565);
+            display_write(g_display_dev, 0, 0, &desc, g_fb8888);
         }
         return;
     }
@@ -511,7 +512,7 @@ void I_InitGraphics(void)
     if (!device_is_ready(g_display_dev)) {
         printf("ERROR: SDL display device not ready\n");
     }
-    display_set_pixel_format(g_display_dev, PIXEL_FORMAT_RGB_565);
+    display_set_pixel_format(g_display_dev, PIXEL_FORMAT_ARGB_8888);
     display_blanking_off(g_display_dev);
 
     I_VideoBuffer     = I_VideoBuffers[1];

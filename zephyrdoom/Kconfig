@@ -65,6 +65,7 @@ config FEATURE_DOOM_BUTTONS
 
 config FEATURE_DOOM_LEDS
 	bool "Status LEDs"
+	default y if BOARD_NRF5340DK_NRF5340_CPUAPP || BOARD_FRDM_MCXN947 || BOARD_FRDM_MCXN947_MCXN947_CPU0
 	default n
 	depends on GPIO
 	help

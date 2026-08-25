@@ -21,7 +21,7 @@
         doom-shield-fire = &doom_shield_fire;
         doom-shield-use = &doom_shield_use;
         doom-shield-speed = &doom_shield_speed;
-        doom-shield-strafe = &doom_shield_strafe;
+        doom-shield-weapon = &doom_shield_weapon;
         doom-shield-mapbtn = &doom_shield_map;
         doom-shield-menu = &doom_shield_menu;
     };
@@ -42,9 +42,9 @@
     doom_shield_keys: doom_shield_keys {
         compatible = "gpio-keys";
 
-        doom_shield_strafe: shield_btn_strafe {
+        doom_shield_weapon: shield_btn_weapon {
             gpios = <&arduino_header ARDUINO_HEADER_R3_D2 (GPIO_PULL_UP | GPIO_ACTIVE_LOW)>;
-            label = "doom_shield_strafe";
+            label = "doom_shield_weapon";
         };
 
         doom_shield_fire: shield_btn_fire {

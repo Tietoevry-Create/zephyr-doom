@@ -47,7 +47,7 @@ static struct adc_dt_spec joy_y;
 #define BTN_FIRE_NODE DT_ALIAS(doom_shield_fire)
 #define BTN_USE_NODE DT_ALIAS(doom_shield_use)
 #define BTN_SPEED_NODE DT_ALIAS(doom_shield_speed)
-#define BTN_STRAFE_NODE DT_ALIAS(doom_shield_strafe)
+#define BTN_WEAPON_NODE DT_ALIAS(doom_shield_weapon)
 #define BTN_MAP_NODE DT_ALIAS(doom_shield_mapbtn)
 #define BTN_MENU_NODE DT_ALIAS(doom_shield_menu)
 
@@ -57,14 +57,14 @@ static const struct gpio_dt_spec btn_use =
     GPIO_DT_SPEC_GET_OR(BTN_USE_NODE, gpios, {0});
 static const struct gpio_dt_spec btn_speed =
     GPIO_DT_SPEC_GET_OR(BTN_SPEED_NODE, gpios, {0});
-static const struct gpio_dt_spec btn_strafe =
-    GPIO_DT_SPEC_GET_OR(BTN_STRAFE_NODE, gpios, {0});
+static const struct gpio_dt_spec btn_weapon =
+    GPIO_DT_SPEC_GET_OR(BTN_WEAPON_NODE, gpios, {0});
 static const struct gpio_dt_spec btn_map =
     GPIO_DT_SPEC_GET_OR(BTN_MAP_NODE, gpios, {0});
 static const struct gpio_dt_spec btn_menu =
     GPIO_DT_SPEC_GET_OR(BTN_MENU_NODE, gpios, {0});
 
-static bool prev_strafe;
+static bool prev_weapon;
 static bool prev_map;
 static bool prev_menu;
 
@@ -156,7 +156,7 @@ static void maybe_post_joystick_event(event_t* ev) {
 
 int n_rjoy_backend_init(void) {
     joy_adc_ready = false;
-    prev_strafe = prev_map = prev_menu = false;
+    prev_weapon = prev_map = prev_menu = false;
     prev_menu_nav_x = 0;
     prev_menu_nav_y = 0;
     memset(&prev_joystick_event, 0, sizeof(prev_joystick_event));
@@ -171,8 +171,8 @@ int n_rjoy_backend_init(void) {
     if (gpio_is_ready_dt(&btn_speed)) {
         (void)gpio_pin_configure_dt(&btn_speed, GPIO_INPUT);
     }
-    if (gpio_is_ready_dt(&btn_strafe)) {
-        (void)gpio_pin_configure_dt(&btn_strafe, GPIO_INPUT);
+    if (gpio_is_ready_dt(&btn_weapon)) {
+        (void)gpio_pin_configure_dt(&btn_weapon, GPIO_INPUT);
     }
     if (gpio_is_ready_dt(&btn_map)) {
         (void)gpio_pin_configure_dt(&btn_map, GPIO_INPUT);
@@ -207,15 +207,16 @@ int n_rjoy_backend_init(void) {
 }
 
 void n_rjoy_backend_read(void) {
-    /* Edge-triggered key events for strafe/map/menu buttons. */
-    bool strafe = gpio_pressed(&btn_strafe);
+    /* Edge-triggered key events for weapon-switch/map/menu buttons. */
+    bool weapon = gpio_pressed(&btn_weapon);
     bool map = gpio_pressed(&btn_map);
     bool menu = gpio_pressed(&btn_menu);
 
-    if (strafe != prev_strafe) {
-        post_key_event(strafe ? ev_keydown : ev_keyup, key_strafe);
-        prev_strafe = strafe;
+    /* Momentary press cycles to the next weapon. */
+    if (weapon && !prev_weapon) {
+        pulse_key(key_nextweapon);
     }
+    prev_weapon = weapon;
 
     if (map && !prev_map) {
         pulse_key(key_map_toggle);

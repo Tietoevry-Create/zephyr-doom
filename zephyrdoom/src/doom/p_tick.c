@@ -152,9 +152,7 @@ void P_Ticker (void)
     // pause if in menu and at least one tic has been run
     if ( !netgame
          && menuactive
-#if !defined(CONFIG_BOARD_NATIVE_SIM)
          && !demoplayback
-#endif
          && players[consoleplayer].viewz != 1)
     {
         return;

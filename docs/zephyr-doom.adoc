@@ -107,16 +107,24 @@ on RPi 400).
 | Done
 | Ported to NXP FRDM-MCXN947 dev kit.
 
-| Pure Zephyr port
-| In progress
+| "Pure" Zephyr port
+| Done
 | Modify the code to make it compatible with any Zephyr device that meets the
-resource requirements by removing NRFX/NCS elements. Validate on Nordic Semiconductor dev kit.
+resource requirements by removing NRFX/NCS elements. Validate on Nordic Semiconductor and NXP dev kit.
 
 | Simulation on PC
-| Open
+| In progress
 | Native Posix target.
 
-| Upgrade to Zephyr 4.X
+| Multiplayer
+| In progress
+| N/A
+
+| Upgrade to Zephyr 4.4
+| Open
+| N/A
+
+| Upgrade to Chocolate Doom 3.1.1
 | Open
 | N/A
 
@@ -124,9 +132,9 @@ resource requirements by removing NRFX/NCS elements. Validate on Nordic Semicond
 | Open
 | Enable save and load functionality to store/restore gameplay progress.
 
-| Multiplayer
+| SPI error at NXP dev kit
 | Open
-| N/A
+| <err> spi_lpspi: unknown spi stransfer state:0; root cause is a race condition in Zephyr’s NXP LPSPI DMA driver
 
 | Music
 | Open
@@ -188,9 +196,21 @@ https://www.hotmcu.com/43-graphical-ips-lcd-touchscreen-800x480-spi-ft810-p-333.
 | RPi 400
 | N/A
 
+| https://www.ti.com/product/PCM5102[DAC]
+| PCM5102A
+| N/A
+
+| https://www.aliexpress.com/item/1005005302035188.html?spm=a2g0o.order_list.order_list_main.205.45501802xbtOmK[Micro SD card reader]
+| N/A
+| N/A
+
 | https://www.nxp.com/design/design-center/development-boards-and-designs/FRDM-MCXN947[FRDM-MCXN947]
 dev kit
 | N/A
+| N/A
+
+| https://www.aliexpress.com/item/1005006466958888.html?spm=a2g0o.order_list.order_list_main.45.31781802mk4G8k[Joystick Shield] for arduino
+| V1.2
 | N/A
 |===
 
@@ -207,18 +227,29 @@ dev kit
 | N/A
 
 | Visual Studio Code
-| 1.109.4
+| 1.132
 | N/A
 
 | nRF Connect SDK
-| v2.6.2
+| v3.2.4
 | N/A
 
 | nRF Connect for Visual Studio Code
-| 2026.1.1327
+| 2026.8.2347
 | Can be downloaded using the *Toolchain Manager* found in
 *nRF Connect for Desktop*. Alternatively, it can be downloaded directly from
 inside Visual Studio Code.
+
+| MCUXpresso for VS Code
+| 26.7.52
+| MCUXpresso Installer 26.06.117;
+MCUXpresso SKD Developer 26.06;
+Zephyr Developer 4.3;
+Arm GNU Toolchain 14.2.1;
+Standalone Toolchain Add-ons 14.2.2;
+Zephyr SDK 0.17.4;
+LinkServer 26.06;
+MCUXpresso configuration Tool 26.06
 |===
 
 === Compatibility Matrix
@@ -234,7 +265,7 @@ inside Visual Studio Code.
 | Hardware not supported.
 |===
 
-[cols="1,1,1,1,1,1,1,1,1" options="header, autowidth"]
+[cols="1,1,1,1,1,1,1,1,1,1" options="header, autowidth"]
 |===
 ^| Item
 ^| Version
@@ -244,7 +275,8 @@ inside Visual Studio Code.
 ^| MVP4
 ^| MVP5
 ^| MVP6
-^| MVP7
+^| MVP7 (nRF5340)
+^| MVP7 (FRDM-MCXN947)
 
 | https://www.nordicsemi.com/Products/Low-power-short-range-wireless/nRF5340[nRF5340]
 dev kit
@@ -256,10 +288,12 @@ dev kit
 ^| ✅
 ^| ✅
 ^| ✅
+^| ❌
 
 | https://www.nxp.com/design/design-center/development-boards-and-designs/FRDM-MCXN947[FRDM-MCXN947]
 dev kit
 | N/A
+^| ❌
 ^| ❌
 ^| ❌
 ^| ❌
@@ -278,6 +312,7 @@ https://www.laskakit.cz/320x480-barevny-lcd-tft-displej-3-5-shield-arduino-uno/[
 ^| ❌
 ^| ❌
 ^| ❌
+^| ❌
 
 | 2.8" ILI9341
 https://cz.mouser.com/ProductDetail/Adafruit/1947?qs=GURawfaeGuArmJSJoJoDJA%3D%3D[SPI display]
@@ -285,6 +320,7 @@ https://cz.mouser.com/ProductDetail/Adafruit/1947?qs=GURawfaeGuArmJSJoJoDJA%3D%3
 ^| ❌
 ^| ❌
 ^| ✅
+^| ❌
 ^| ❌
 ^| ❌
 ^| ❌
@@ -300,6 +336,7 @@ https://www.hotmcu.com/43-graphical-ips-lcd-touchscreen-800x480-spi-ft810-p-333.
 ^| ✅
 ^| ✅
 ^| ✅
+^| ✅
 
 | https://microbit.org/new-microbit/[micro:bit v2]
 | 2.x
@@ -307,6 +344,7 @@ https://www.hotmcu.com/43-graphical-ips-lcd-touchscreen-800x480-spi-ft810-p-333.
 ^| ✅
 ^| ✅
 ^| ✅
+^| ❌
 ^| ❌
 ^| ❌
 ^| ❌
@@ -320,6 +358,7 @@ https://www.hotmcu.com/43-graphical-ips-lcd-touchscreen-800x480-spi-ft810-p-333.
 ^| ❌
 ^| ❌
 ^| ❌
+^| ❌
 
 | https://www.xbox.com/en-US/accessories/controllers/xbox-wireless-controller[Xbox controller]
 | Model 1914
@@ -330,6 +369,7 @@ https://www.hotmcu.com/43-graphical-ips-lcd-touchscreen-800x480-spi-ft810-p-333.
 ^| ✅
 ^| ✅
 ^| ✅
+^| ❌
 
 | https://www.raspberrypi.com/products/raspberry-pi-400/[Keyboard]
 | RPi 400
@@ -340,6 +380,7 @@ https://www.hotmcu.com/43-graphical-ips-lcd-touchscreen-800x480-spi-ft810-p-333.
 ^| ✅
 ^| ✅
 ^| ✅
+^| ❌
 
 | https://www.ti.com/product/PCM5102[DAC]
 | PCM5102A
@@ -348,6 +389,7 @@ https://www.hotmcu.com/43-graphical-ips-lcd-touchscreen-800x480-spi-ft810-p-333.
 ^| ❌
 ^| ❌
 ^| ❌
+^| ✅
 ^| ✅
 ^| ✅
 
@@ -360,28 +402,57 @@ https://www.hotmcu.com/43-graphical-ips-lcd-touchscreen-800x480-spi-ft810-p-333.
 ^| ✅
 ^| ✅
 ^| ✅
+^| ❌
+
+| https://www.aliexpress.com/item/1005006466958888.html?spm=a2g0o.order_list.order_list_main.45.31781802mk4G8k[Joystick Shield] for arduino
+| V1.2
+^| ❌
+^| ❌
+^| ❌
+^| ❌
+^| ❌
+^| ❌
+^| ❌
+^| ✅
 
 |===
 
 === Prerequisites
 
 . Install the https://code.visualstudio.com/download[Visual Studio Code].
-. Install the https://www.nordicsemi.com/Products/Development-software/nRF-Connect-SDK/GetStarted[nRF Connect SDK].
-. Install the https://www.nordicsemi.com/Products/Development-tools/nRF-Connect-for-VS-Code/Download#infotabs[nRF Connect for VS Code].
+
+==== For nRF5340 dev kit
+
+. Install the https://www.nordicsemi.com/Products/Development-tools/nRF-Connect-for-VS-Code/Download#infotabs[nRF Connect for VS Code] (or https://www.nordicsemi.com/Products/Development-software/nRF-Connect-SDK/GetStarted[nRF Connect SDK]).
+
+==== For FRDM-MCXN947 dev kit
+
+. Install the https://marketplace.visualstudio.com/items?itemName=NXPSemiconductors.mcuxpresso[MCUXpresso for VS Code].
 
 === Build
+Project is using per-board defaults for CONFIG_FEATURE_DOOM_* to enable / disable specific peripherals (for example, BLE defaults on for the nRF5340 build) while remaining overrideable in prj.conf.
 
-==== Game
+==== Game for nRF5340 dev kit
+
+VS Code:
 
 * *Visual Studio Code -> nRF Connect extension -> Add Folder as Application ->
-Select `zephyrdoom` folder;*
+Select `zephyrdoom` folder*
 * *Visual Studio Code -> nRF Connect extension -> Applications ->
 Add build configuration -> Select board target `nrf5340dk_nrf5340_cpuapp` ->
-Build Configuration;*
+Build Configuration*
 
-==== Game (FRDM-MCXN947)
+==== Game for FRDM-MCXN947 dev kit
 
-Build from the repository root using `west`:
+VS Code:
+
+* *Visual Studio Code -> MCUXpresso for VS Code -> Import Repository -> Remote -> Repository - MCUExpresso SDK, Revision - main, Name - mcuxsdk, Location - based on your preference*
+* *Visual Studio Code -> MCUXpresso for VS Code -> Import Repository -> Remote -> Repository - Zephyr, Revision - v4.3.0, Name - zephyr, Location - based on your preference*
+* *Visual Studio Code -> MCUXpresso for VS Code -> New Project Wizard -> Project Type - Zephyr -> Board - NXP FRDM-MCXN947 (CPU0)  -> Repository - zephyr repo imported in previous step -> Zephyr SDK - zephyr-sdk-0.17.4 (ARM) -> Project Name - zephyrdoom -> Location - based on your preference  -> Create Project*
+* *Copy content of `zephyr-doom\zephyrdoom` folder to created project*
+* *Visual Studio Code -> MCUXpresso for VS Code -> Projects -> zephyrdoom -> mouse right-click -> Build Project*
+
+or build from the repository root using `west`:
 
 [source,bash]
 ----
@@ -390,13 +461,16 @@ west build -b frdm_mcxn947_mcxn947_cpu0 -p auto zephyrdoom
 
 === Flash
 
-==== Game
+==== Game for nRF5340 dev kit
 
-. Connect Nordic Semiconductor
-https://www.nordicsemi.com/Products/Low-power-short-range-wireless/nRF5340[nRF5340]
-dev kit.
+VS Code:
 
-. Flash data (contains `WAD` file) to external flash:
+. Connect https://www.nordicsemi.com/Products/Low-power-short-range-wireless/nRF5340[nRF5340] dev kit.
+
+. Flash game data (contains `WAD` file) to external flash (XIP), mapped at `0x12000000`. The recommended default is the pre-populated full external-flash image
+`gamedata/qspi.hex` (8 MiB: WAD at offset 0 plus cached game
+data). Flash it raw to the QSPI base — this erases and replaces the entire
+external flash in a single pass:
 +
 [source,bash]
 ----
@@ -406,26 +480,46 @@ nrfjprog --family nrf53 --qspicustominit --program qspi.hex --verify
 . Select game app.
 +
 *Visual Studio Code -> nRF Connect extension -> Applications ->
-Select `zephyrdoom`;*
+Select `zephyrdoom`*
 
 . Flash the game.
 +
-*Visual Studio Code -> nRF Connect extension -> Actions -> Flash;*
+*Visual Studio Code -> nRF Connect extension -> Actions -> Flash*
 
-==== Game (FRDM-MCXN947)
+==== Game for FRDM-MCXN947 dev kit
 
-Flashing the application image depends on your environment (MCU-Link,
-LinkServer, pyOCD, etc.).
+VS Code:
 
-This project also expects the Doom WAD in external flash (XIP) at offset 0.
-Pre-generated hex images are available in `gamedata/`.
+. Connect https://www.nxp.com/design/design-center/development-boards-and-designs/FRDM-MCXN947[FRDM-MCXN947] dev kit.
 
-Example (pyOCD):
-
+. Flash game data (contains `WAD` file) to external flash (XIP), mapped at `0x80000000`. The recommended default is the pre-populated full external-flash image
+`gamedata/mcxn947-qspi-full.bin` (8 MiB: WAD at offset 0 plus cached game
+data). Flash it raw to the QSPI base — this erases and replaces the entire
+external flash in a single pass:
++
+[source,bash]
+----
+pyocd flash -t MCXN947VDF --base-address 0x80000000 gamedata/mcxn947-qspi-full.bin
+----
++
+Or from Windows powershell:
++
+[source,bash]
+----
+& 'C:\nxp\LinkServer_25.12.83\LinkServer.exe' flash 'MCXN947:FRDM-MCXN947' load .\mcxn947-qspi-full.bin:0x80000000
+----
++
+Alternatively, `gamedata/qspi_nxp_80.hex` contains just the plain WAD at the
+same base (`0x80000000`):
++
 [source,bash]
 ----
 pyocd flash -t MCXN947VDF gamedata/qspi_nxp_80.hex
 ----
+
+. Flash the game.
++
+*Visual Studio Code -> MCUXpresso for VS Code -> Projects -> Select `zephyrdoom` -> mouse right-click -> Flash the Selected Target*
 
 === Multiplayer
 
@@ -1180,6 +1274,8 @@ dev kit;
 ** 4.3" FT810
 https://www.hotmcu.com/43-graphical-ips-lcd-touchscreen-800x480-spi-ft810-p-333.html[SPI IPS display];
 ** External https://www.aliexpress.com/item/1005007477490325.html?spm=a2g0o.order_list.order_list_main.172.16071802jqGhmR[DAC] connected via I2S;
+** to control the game:
+*** https://www.xbox.com/en-US/accessories/controllers/xbox-wireless-controller[Xbox controller] or https://www.raspberrypi.com/products/raspberry-pi-400/[Keyboard];
 
 * *Pins/buttons mapping:*
 ** Nordic Semiconductor
@@ -1317,91 +1413,108 @@ dev kit:
 === MVP7
 
 * *Goals:*
-** Port Zephyr-Doom to the NXP FRDM-MCXN947 dev kit.
+** Prepare "Pure" Zephyr port (remove NRFX/NCS elements).
+** Port Zephyr-Doom to the NXP FRDM-MCXN947 dev kit. Validate that the new code base is still running on nRF5340 dev kit.
 ** Unify board configuration so switching boards does not require editing `prj.conf` feature toggles.
 
 * *Features:*
 ** FRDM-MCXN947 support (FT810 over SPI, audio over I2S/SAI, GPIO buttons).
-** Optional wired joystick/button shield on FRDM (Arduino header + ADC + GPIO).
+** Optional wired https://www.aliexpress.com/item/1005006466958888.html?spm=a2g0o.order_list.order_list_main.45.31781802mk4G8k[joystick/button] shield on FRDM (Arduino header + ADC + GPIO).
 ** Per-board defaults for `CONFIG_FEATURE_DOOM_*` (BLE defaults on for the nRF5340 build; shield defaults on for the FRDM build) while remaining overrideable.
 ** Fixed FT810 SPI chunked-write CS framing to avoid display corruption.
 
-* *Pins/buttons mapping (FRDM-MCXN947):*
-** The wiring below is the default configuration used by the `zephyrdoom` FRDM build.
-** For the authoritative source, see `zephyrdoom/boards/frdm_mcxn947_mcxn947_cpu0.overlay` and `zephyrdoom/src/config/board_config.h`.
-** FT810 display wiring:
+* *Required Hardware:*
+** Nordic Semiconductor
+https://www.nordicsemi.com/Products/Low-power-short-range-wireless/nRF5340[nRF5340] or https://www.nxp.com/design/design-center/development-boards-and-designs/FRDM-MCXN947[FRDM-MCXN947] dev kit;
+** 4.3" FT810 https://www.hotmcu.com/43-graphical-ips-lcd-touchscreen-800x480-spi-ft810-p-333.html[SPI IPS display];
+** External https://www.aliexpress.com/item/1005007477490325.html?spm=a2g0o.order_list.order_list_main.172.16071802jqGhmR[DAC] connected via I2S;
+** to control the game on nRF5340:
+*** https://www.xbox.com/en-US/accessories/controllers/xbox-wireless-controller[Xbox controller] or https://www.raspberrypi.com/products/raspberry-pi-400/[Keyboard];
+** to control the game on FRDM-MCXN947:
+*** https://www.aliexpress.com/item/1005006466958888.html?spm=a2g0o.order_list.order_list_main.45.31781802mk4G8k[Joystick Shield] for arduino;
+
+* *Pins/buttons mapping:*
+** Nordic Semiconductor https://www.nordicsemi.com/Products/Low-power-short-range-wireless/nRF5340[nRF5340] dev kit - same as for MVP6.
+** NXP https://www.nxp.com/design/design-center/development-boards-and-designs/FRDM-MCXN947[FRDM-MCXN947] dev kit:
+*** For the authoritative source, see `zephyrdoom/boards/frdm_mcxn947_mcxn947_cpu0.overlay` and `zephyrdoom/src/config/board_config.h`.
+*** FT810 display wiring:
 +
 [cols="1,1,1" options="header, autowidth"]
 |===
 ^| Peripheral
 ^| Function
-^| FRDM-MCXN947 pin / header
+^| FRDM-MCXN947 dev kit header and pin number - joystick shield pin name / function (MCU pin)
 
 | SPI/FT810 display
-| 3.3V
-| 3.3V
+| 5V
+| J3 pin 10 - N/A / N/A (5V0)
 
 | SPI/FT810 display
 | GND
-| GND
+| J3 pin 12 - N/A / N/A (GND)
 
 | SPI/FT810 display
 | SCK
-| Arduino SPI header `SCK` (Flexcomm1 / `arduino_spi`)
+| J2 pin 12 - D13 / SCK (P0_25)
 
 | SPI/FT810 display
 | MOSI
-| Arduino SPI header `MOSI` (Flexcomm1 / `arduino_spi`)
+| J2 pin 8 - D11 / MOSI (P0_24)
 
 | SPI/FT810 display
 | MISO
-| Arduino SPI header `MISO` (Flexcomm1 / `arduino_spi`)
+| J2 pin 10 - D12 / MISO (P0_26)
 
 | SPI/FT810 display
 | CS_N
-| P0_27 (Arduino D10)
+| J2 pin 6 - D10 / CS (P0_27)
 
 | SPI/FT810 display
 | PD_N
-| P0_28 (Arduino D8)
+| J2 pin 2 - 3V3 / PD (P0_28)
 |===
 
-** I2S DAC wiring (SAI1):
+*** I2S DAC wiring (SAI1):
 +
 [cols="1,1,1" options="header, autowidth"]
 |===
 ^| Peripheral
 ^| Function
-^| FRDM-MCXN947 pin
+^| FRDM-MCXN947 dev kit header and pin number - joystick shield pin name / function (MCU pin)
 
 | I2S/DAC
 | 3.3V
-| VDD
+| N/A - 3V3 / VDD (N/A)
 
 | I2S/DAC
 | GND
-| GND
+| N/A - GND / GND (N/A)
 
 | I2S/DAC
-| SCK (BCLK)
-| SAI1_TX_BCLK (PIO1_0)
+| BCK
+| J5 pin 6 - N/A / SCK (BCLK) (P1_0)
 
 | I2S/DAC
-| LRCK (WS)
-| SAI1_TX_FS (PIO1_1)
+| LCK
+| J5 pin 5 - N/A / LRCK (WS) (P1_1)
 
 | I2S/DAC
-| SDOUT
-| SAI1_TXD0 (PIO2_8)
+| DIN
+| J8 pin 13 - N/A / STDOUT (P2_8)
+
+| I2S/DAC
+| SCK
+| connect to ground
+
 |===
 
-** Wired joystick/button shield defaults (Arduino header):
+*** Wired joystick/button shield defaults (Arduino header, i.e. using dev kit headers J1, 2, 3, 4, connected in the way that all J1 and J4 header pins on the dev kit are occupied):
 +
 [cols="1,1,1" options="header, autowidth"]
 |===
 ^| Shield
 ^| Function
-^| FRDM-MCXN947 pin / header
+^| Comment
 
 | Joystick
 | X axis
@@ -1411,27 +1524,27 @@ dev kit:
 | Y axis
 | A1 (ADC channel 1, inverted)
 
-| Button
-| Strafe
+| Button A
+| Change weapon
 | D2 (active-low, pull-up)
 
-| Button
+| Button B
 | Fire
 | D3 (active-low, pull-up)
 
-| Button
+| Button C
 | Use
 | D4 (active-low, pull-up)
 
-| Button
+| Button D
 | Speed
 | D5 (active-low, pull-up)
 
-| Button
+| Button E
 | Map
 | D6 (active-low, pull-up)
 
-| Button
+| Button F
 | Menu
 | D7 (active-low, pull-up)
 |===
@@ -1512,5 +1625,6 @@ eliminate drift. Calibration procedure could help to address this issue.
 
 ==== MVP7
 
-* Game data upload differs by board (nRF uses SD upload; FRDM uses host flashing
-    of external flash by default).
+* NXP https://www.nxp.com/design/design-center/development-boards-and-designs/FRDM-MCXN947[FRDM-MCXN947] dev kit:
+** As SD card support was not added / tested for the NXP dev kit, the only way how to get game data into dev kit is to flash it directly to external flash.
+** SPI error—the root cause is a race condition in Zephyr’s NXP LPSPI DMA driver. Fixing it would require driver modifications, but since it does not affect functionality or stability, the fix has been put on hold.

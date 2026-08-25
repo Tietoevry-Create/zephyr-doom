@@ -25,6 +25,16 @@ static struct native_key keys[] = {
     { GPIO_DT_SPEC_GET_OR(DT_ALIAS(doom_strafe), gpios, {0}), KEY_RALT,       false },
     { GPIO_DT_SPEC_GET_OR(DT_ALIAS(doom_menu),   gpios, {0}), KEY_ESCAPE,     false },
     { GPIO_DT_SPEC_GET_OR(DT_ALIAS(doom_enter),  gpios, {0}), KEY_ENTER,      false },
+    /* Host Tab -> automap toggle (game binds key_map_toggle = 'm'). */
+    { GPIO_DT_SPEC_GET_OR(DT_ALIAS(doom_automap), gpios, {0}), 'm',           false },
+    /* Host 1-7 -> weapon slots (game binds key_weapon1..7 = '1'..'7'). */
+    { GPIO_DT_SPEC_GET_OR(DT_ALIAS(doom_weap1),  gpios, {0}), '1',            false },
+    { GPIO_DT_SPEC_GET_OR(DT_ALIAS(doom_weap2),  gpios, {0}), '2',            false },
+    { GPIO_DT_SPEC_GET_OR(DT_ALIAS(doom_weap3),  gpios, {0}), '3',            false },
+    { GPIO_DT_SPEC_GET_OR(DT_ALIAS(doom_weap4),  gpios, {0}), '4',            false },
+    { GPIO_DT_SPEC_GET_OR(DT_ALIAS(doom_weap5),  gpios, {0}), '5',            false },
+    { GPIO_DT_SPEC_GET_OR(DT_ALIAS(doom_weap6),  gpios, {0}), '6',            false },
+    { GPIO_DT_SPEC_GET_OR(DT_ALIAS(doom_weap7),  gpios, {0}), '7',            false },
 };
 
 #define NUM_KEYS (sizeof(keys) / sizeof(keys[0]))
