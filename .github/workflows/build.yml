@@ -1,0 +1,37 @@
+---
+name: Build
+
+run-name: >
+  ${{ github.workflow }} — Triggered by
+  ${{ github.actor }} on ${{ github.ref_name }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      zephyr_version:
+        description: Zephyr version to build with
+        required: false
+        default: 4.3.0
+        type: string
+      zephyr_sdk_version:
+        description: Zephyr SDK version to install
+        required: false
+        default: 0.17.4
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  build-artifacts:
+    name: Build artifacts
+    runs-on: ubuntu-24.04
+    timeout-minutes: 180
+    env:
+      ZEPHYR_VERSION: ${{ inputs.zephyr_version }}
+      ZEPHYR_SDK_VERSION: ${{ inputs.zephyr_sdk_version }}
+      ZEPHYR_TOOLCHAIN_VARIANT: host
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
