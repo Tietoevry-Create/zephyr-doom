@@ -1,22 +1,21 @@
-# zephyr-doom multiplayer
+# zephyr-doom multiplayer: design notes
 
 Chocolate Doom 3.0.0-compatible UDP multiplayer, on three targets:
 
-- **native_sim** — the Linux build joins a stock `chocolate-server` and renders
+- **native_sim**: the Linux build joins a stock `chocolate-server` and renders
   in its SDL window. Works with 3-4 players in any mix of native_sim and desktop
   `chocolate-doom`, connect order independent.
-- **FRDM-MCXN947** — the board joins over real Ethernet (ENET-QOS). Confirmed in
+- **FRDM-MCXN947**: the board joins over real Ethernet (ENET-QOS). Confirmed in
   a 2-player game against native_sim.
-- **nRF5340 DK** — no Ethernet port, so the board joins over **USB CDC-ECM**
+- **nRF5340 DK**: no Ethernet port, so the board joins over **USB CDC-ECM**
   (it enumerates as a USB network adapter on the host). Same static-IP scheme
   and boot-time SP/MP decision as the NXP board.
 
-Branch: `feature/Markek1/multiplayer`. Join only; native/board can't host a game
-(`net_server.c` is stubbed).
+Join only; native/board can't host a game (`net_server.c` is stubbed).
 
-> **Setup/run instructions** (installing chocolate-doom, the server, and each
-> target) live in `docs/multiplayer.adoc`. This file is the design rationale and
-> debugging history.
+> **Setup and run instructions** (installing chocolate-doom, running the relay
+> server, and the per-target network setup) live in `docs/multiplayer.adoc`.
+> This file is the design rationale and the debugging history behind the code.
 
 ## How it works
 
@@ -32,28 +31,6 @@ peer to connect is the controller (`consoleplayer 0`) and its settings win.
 
 Sync (`d_loop.c`): strict 35 Hz lockstep, `gametic` advances only up to
 `lowtic = min(maketic, recvtic)`. Default old sync; `-newsync` flips it.
-
-## Running
-
-native_sim (all on one host via `127.0.0.1`):
-
-1. `chocolate-server -port 2342`
-2. native_sim: `DOOM_ARGS="-connect 127.0.0.1:2342 -nodes 2 -warp 1 -skill 3" ./build/zephyr/zephyr.exe`
-3. desktop: `SDL_VIDEODRIVER=x11 chocolate-doom -connect 127.0.0.1:2342 -iwad gamedata/doom1.wad`
-
-Board (direct cable to PC, board is player 2):
-
-1. PC NIC on the cable subnet: `sudo ip addr add 192.168.10.1/24 dev <iface>`
-2. `chocolate-server -port 2342`
-3. Reset the board. With a cable present it auto-connects to
-   `CONFIG_DOOM_SERVER_ADDR` (`192.168.10.1:2342`); with no cable it boots to
-   single-player. No command line on hardware, so `M_ArgvInit` decides from the
-   Ethernet carrier and injects the args.
-4. native_sim as player 1 (as above).
-
-`-warp 1 -skill 3`: keep the map a real digit. The parser used to read a
-following flag (`-skill`) as the map (`'-'-'0' = 0xfd`), an invalid map the
-server rejects, hanging the handshake.
 
 ## native_sim: notable fixes
 
@@ -74,7 +51,7 @@ reader; index 0 was immune, index >=1 landed at the wrong address. Fix: include
 
 Enabled in `boards/frdm_mcxn947_mcxn947_cpu0.conf`: `FEATURE_DOOM_NET`,
 `NET_L2_ETHERNET`, IPv4/UDP, static IP `192.168.10.2`. Do not enable
-`CONFIG_POSIX_API` — it force-selects `POSIX_TIMERS`, whose `timer.c` doesn't
+`CONFIG_POSIX_API`, because it force-selects `POSIX_TIMERS`, whose `timer.c` doesn't
 build against this tree's picolibc. The netcode is already POSIX-free.
 
 **RAM.** ~416 KB total, and Doom's two framebuffers take 128 KB. Doom's zone
@@ -122,19 +99,26 @@ board presents a USB network adapter to the host, and the same Zephyr IP stack +
 
 - Board display SPI is flaky (`spi_lpspi` DMA errors, `Display ID: FF` at init).
   Pre-existing, cosmetic, doesn't affect networking. Not yet chased down.
-- Hosting via `-server` — dead until `net_server.c` (`NET_SV_*`) is implemented.
+- Hosting via `-server`: dead until `net_server.c` (`NET_SV_*`) is implemented.
 - `W_Checksum` stubbed -> harmless "WAD SHA1 does not match server" warning.
 - `G_DoReborn` respawn stubbed (`g_game.c`).
+- Hardware games are fixed at 2 players: `M_ArgvInit` injects `-nodes 2` and
+  there is no way to change it short of rebuilding.
+- Proper fix for the PHY mis-read on FRDM would be a devicetree `fixed-link`
+  (or MDIO/MAC locking in `eth_nxp_enet_qos`) instead of stretching
+  `CONFIG_PHY_MONITOR_PERIOD`.
 
 ## Key files
 
-- `src/net_zephyr.c` — UDP transport (offloaded on native_sim, real stack on HW).
-- `src/net_client.c` — client handshake.
-- `src/d_loop.c` — lockstep, `TryRunTics`; single-player fallback on connect fail.
-- `src/m_argv.c` — hardware boot decides SP vs MP from the Ethernet carrier.
-- `src/doom/d_main.c` — `-warp` fix, early display init + link wait.
-- `src/doomtype.h` — `boolean` ODR fix.
-- `src/n_usb.c` — nRF5340 USB CDC-ECM bring-up.
-- `boards/frdm_mcxn947_mcxn947_cpu0.conf` — NXP networking + RAM tuning.
-- `boards/nrf5340dk_nrf5340_cpuapp.{conf,overlay}` — USB CDC-ECM networking.
-- `boards/native_sim_native_64.{conf,overlay}` — SDL display + offloaded sockets.
+- `src/net_zephyr.c`: UDP transport (offloaded on native_sim, real stack on HW).
+- `src/net_client.c`: client handshake.
+- `src/d_loop.c`: lockstep, `TryRunTics`; single-player fallback on connect fail.
+- `src/m_argv.c`: hardware boot decides SP vs MP from the Ethernet carrier.
+- `src/doom/d_main.c`: `-warp` fix, early display init + link wait.
+- `src/doomtype.h`: `boolean` ODR fix.
+- `src/n_usb.c`: nRF5340 USB CDC-ECM bring-up.
+- `boards/frdm_mcxn947_mcxn947_cpu0.conf`: NXP networking + RAM tuning.
+- `boards/nrf5340dk_nrf5340_cpuapp.{conf,overlay}`: USB CDC-ECM networking.
+- `boards/native_sim_native_64.{conf,overlay}`: SDL display + offloaded sockets.
+- `src/net_client_stub.c`: no-op stand-ins built when `FEATURE_DOOM_NET=n`.
+- `src/net_gui_headless.c`: replaces upstream's libtextscreen lobby.

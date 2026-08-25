@@ -117,8 +117,10 @@ resource requirements by removing NRFX/NCS elements. Validate on Nordic Semicond
 | Native Posix target.
 
 | Multiplayer
-| In progress
-| N/A
+| Done
+| Chocolate Doom 3.0.0 compatible UDP netplay on native_sim, FRDM-MCXN947
+(Ethernet) and nRF5340 dev kit (USB CDC-ECM). Joining a game only; hosting is
+not implemented.
 
 | Upgrade to Zephyr 4.4
 | Open
@@ -456,7 +458,36 @@ or build from the repository root using `west`:
 
 [source,bash]
 ----
-west build -b frdm_mcxn947_mcxn947_cpu0 -p auto zephyrdoom
+west build -b frdm_mcxn947/mcxn947/cpu0 -p auto zephyrdoom
+----
+
+==== Game for native_sim (PC)
+
+The `native_sim` target builds the game as an ordinary Linux executable, with
+the display in an SDL window and the host keyboard for input. No dev kit is
+needed, and there is no game data to flash, because the WAD is linked into the
+binary.
+
+Build from the repository root using `west`:
+
+[source,bash]
+----
+west build -b native_sim/native/64 -p auto zephyrdoom
+----
+
+Run it directly:
+
+[source,bash]
+----
+./build/zephyr/zephyr.exe
+----
+
+Doom command-line arguments are passed through the `DOOM_ARGS` environment
+variable, because the native simulator owns the real command line:
+
+[source,bash]
+----
+DOOM_ARGS="-warp 1 -skill 3" ./build/zephyr/zephyr.exe
 ----
 
 === Flash
@@ -523,9 +554,28 @@ pyocd flash -t MCXN947VDF gamedata/qspi_nxp_80.hex
 
 === Multiplayer
 
-zephyr-doom joins Chocolate Doom 3.0.0 network games (native_sim, FRDM-MCXN947
-over Ethernet, and nRF5340 DK over USB CDC-ECM). For installing `chocolate-doom`,
-running the relay server, and the per-target setup steps, see
+zephyr-doom joins Chocolate Doom 3.0.0 network games on all three targets:
+native_sim, FRDM-MCXN947 over Ethernet, and nRF5340 dev kit over USB CDC-ECM.
+It can only *join* a game, so a `chocolate-server` running on a PC is always
+required.
+
+A two-player game run entirely on the host is the quickest way to check that a
+build works:
+
+[source,bash]
+----
+# terminal 1
+chocolate-server -port 2342
+
+# terminal 2
+DOOM_ARGS="-connect 127.0.0.1:2342 -nodes 2 -warp 1 -skill 3" ./build/zephyr/zephyr.exe
+
+# terminal 3
+SDL_VIDEODRIVER=x11 chocolate-doom -connect 127.0.0.1:2342 -iwad gamedata/doom1.wad
+----
+
+For the host prerequisites, the per-target network setup, the expected console
+output and troubleshooting, see
 https://github.com/Tietoevry-Create/zephyr-doom/blob/master/docs/multiplayer.adoc[multiplayer setup].
 
 == MVPs
