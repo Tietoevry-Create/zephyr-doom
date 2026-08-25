@@ -27,3 +27,11 @@ jobs:
     name: Build artifacts
     runs-on: ubuntu-24.04
     timeout-minutes: 180
+    env:
+      ZEPHYR_VERSION: ${{ inputs.zephyr_version }}
+      ZEPHYR_SDK_VERSION: ${{ inputs.zephyr_sdk_version }}
+      ZEPHYR_TOOLCHAIN_VARIANT: host
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
