@@ -25,4 +25,5 @@ permissions:
 jobs:
   build-artifacts:
     name: Build artifacts
+    runs-on: ubuntu-24.04
     timeout-minutes: 180
