@@ -1704,5 +1704,5 @@ eliminate drift. Calibration procedure could help to address this issue.
 
 ==== MVP8
 
-* native_sim board support covers only display and game control using host keyboard. There is no audio, LEDs or SD card support as of now.
+* native_sim board support covers only display and game control using host keyboard. There is no audio, BLE or SD card support as of now.
 * Game menu supports only New Game option.
