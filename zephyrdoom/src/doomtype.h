@@ -88,6 +88,15 @@
 
 #include <stdint.h>
 
+// Pull in stdbool unconditionally so that __bool_true_false_are_defined is
+// always set at this point. Otherwise `boolean` is uint8_t (1 byte) in
+// translation units that already included <stdbool.h> (e.g. via
+// <zephyr/kernel.h>) but a 4-byte enum in those that did not, giving structs
+// containing `boolean` (notably player_t) a different sizeof/layout per TU.
+// That stride mismatch corrupts players[1..] (players[0] at offset 0 is
+// immune) and was the cause of the garbage/NULL players[N].mo in netgames.
+#include <stdbool.h>
+
 #if defined(__cplusplus) || defined(__bool_true_false_are_defined)
 
 // Use builtin bool type with C++.

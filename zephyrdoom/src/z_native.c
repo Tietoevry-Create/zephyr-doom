@@ -55,7 +55,11 @@ void *test_malloc(size_t size)
 {
     int *result;
 
+#if defined(CONFIG_BOARD_NATIVE_SIM)
+    if (test_malloced + size > 8 * 1024 * 1024)
+#else
     if (test_malloced + size > 2 * 1024 * 1024)
+#endif
     {
         return NULL;
     }

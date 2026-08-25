@@ -1,0 +1,68 @@
+/*
+ * native_sim overlay for zephyr-doom.
+ * Maps host keyboard keys to emulated GPIO pins via gpio-emul-sdl,
+ * and sets the SDL display to the Doom resolution.
+ */
+
+/ {
+    aliases {
+        doom-up     = &k_up;
+        doom-down   = &k_down;
+        doom-left   = &k_left;
+        doom-right  = &k_right;
+        doom-fire   = &k_fire;
+        doom-use    = &k_use;
+        doom-speed  = &k_speed;
+        doom-strafe = &k_strafe;
+        doom-menu   = &k_menu;
+        doom-enter  = &k_enter;
+        doom-automap = &k_map;
+        doom-weap1  = &k_w1;
+        doom-weap2  = &k_w2;
+        doom-weap3  = &k_w3;
+        doom-weap4  = &k_w4;
+        doom-weap5  = &k_w5;
+        doom-weap6  = &k_w6;
+        doom-weap7  = &k_w7;
+    };
+
+    doom_keys {
+        compatible = "gpio-keys";
+        k_up:     k_up     { gpios = <&gpio0 0 GPIO_ACTIVE_HIGH>; };
+        k_down:   k_down   { gpios = <&gpio0 1 GPIO_ACTIVE_HIGH>; };
+        k_left:   k_left   { gpios = <&gpio0 2 GPIO_ACTIVE_HIGH>; };
+        k_right:  k_right  { gpios = <&gpio0 3 GPIO_ACTIVE_HIGH>; };
+        k_fire:   k_fire   { gpios = <&gpio0 4 GPIO_ACTIVE_HIGH>; };
+        k_use:    k_use    { gpios = <&gpio0 5 GPIO_ACTIVE_HIGH>; };
+        k_speed:  k_speed  { gpios = <&gpio0 6 GPIO_ACTIVE_HIGH>; };
+        k_strafe: k_strafe { gpios = <&gpio0 7 GPIO_ACTIVE_HIGH>; };
+        k_menu:   k_menu   { gpios = <&gpio0 8 GPIO_ACTIVE_HIGH>; };
+        k_enter:  k_enter  { gpios = <&gpio0 9 GPIO_ACTIVE_HIGH>; };
+        k_map:    k_map    { gpios = <&gpio0 10 GPIO_ACTIVE_HIGH>; };
+        k_w1:     k_w1     { gpios = <&gpio0 11 GPIO_ACTIVE_HIGH>; };
+        k_w2:     k_w2     { gpios = <&gpio0 12 GPIO_ACTIVE_HIGH>; };
+        k_w3:     k_w3     { gpios = <&gpio0 13 GPIO_ACTIVE_HIGH>; };
+        k_w4:     k_w4     { gpios = <&gpio0 14 GPIO_ACTIVE_HIGH>; };
+        k_w5:     k_w5     { gpios = <&gpio0 15 GPIO_ACTIVE_HIGH>; };
+        k_w6:     k_w6     { gpios = <&gpio0 16 GPIO_ACTIVE_HIGH>; };
+        k_w7:     k_w7     { gpios = <&gpio0 17 GPIO_ACTIVE_HIGH>; };
+    };
+};
+
+&gpio0 {
+    ngpios = <18>;
+
+    sdl_gpio {
+        compatible = "zephyr,gpio-emul-sdl";
+        /* up    down  left  right  fire('X')  use(Space)
+         * speed('Z')  strafe('C')  menu(Esc)  enter(Return)
+         * map(Tab)  weap1..weap7 ('1'..'7') */
+        scancodes = <82 81 80 79 27 44 29 6 41 40
+                     43 30 31 32 33 34 35 36>;
+    };
+};
+
+&sdl_dc {
+    width  = <320>;
+    height = <200>;
+};

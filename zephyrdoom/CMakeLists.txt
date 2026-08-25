@@ -2,6 +2,20 @@ cmake_minimum_required(VERSION 3.20.0)
 find_package(Zephyr REQUIRED HINTS $ENV{ZEPHYR_BASE})
 project(zephyr_doom)
 
+if (CONFIG_BOARD_NATIVE_SIM)
+    set(DOOM_WAD_SRC "${CMAKE_CURRENT_BINARY_DIR}/doom_wad.c")
+    set(DOOM_WAD_BIN "${CMAKE_CURRENT_SOURCE_DIR}/../gamedata/doom1.wad")
+    add_custom_command(
+        OUTPUT ${DOOM_WAD_SRC}
+        COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/scripts/gen_wad_c.py
+                ${DOOM_WAD_BIN} ${DOOM_WAD_SRC}
+        DEPENDS ${DOOM_WAD_BIN}
+        COMMENT "Embedding doom1.wad into doom_wad.c"
+    )
+    add_custom_target(doom_wad_gen DEPENDS ${DOOM_WAD_SRC})
+    add_dependencies(app doom_wad_gen)
+endif()
+
 target_include_directories(app PRIVATE src/)
 target_include_directories(app PRIVATE src/config)
 
@@ -9,7 +23,6 @@ set(DOOM_COMMON_SRCS
                 src/main.c
                 src/doom_status_led.c
                 src/n_mem.c
-                src/n_buttons.c
                 src/i_timer.c
                 src/n_rjoy.c
                 src/n_rjoy_shield.c
@@ -95,10 +108,21 @@ set(DOOM_COMMON_SRCS
                 src/doom/wi_stuff.c
 )
 
-target_sources(app PRIVATE
-                ${DOOM_COMMON_SRCS}
-                src/n_qspi.c
-)
+target_sources(app PRIVATE ${DOOM_COMMON_SRCS})
+
+if (CONFIG_BOARD_NATIVE_SIM)
+    target_sources(app PRIVATE
+                    src/n_qspi_native.c
+                    src/n_input_native.c
+                    ${CMAKE_CURRENT_BINARY_DIR}/doom_wad.c
+    )
+else()
+    target_sources(app PRIVATE src/n_qspi.c)
+endif()
+
+if (NOT CONFIG_BOARD_NATIVE_SIM)
+    target_sources(app PRIVATE src/n_buttons.c)
+endif()
 
 if (CONFIG_FEATURE_DOOM_DISPLAY)
     target_sources(app PRIVATE src/n_display.c)
@@ -117,7 +141,7 @@ if (CONFIG_FEATURE_DOOM_BLE)
     target_sources(app PRIVATE src/bluetooth_control.c)
 endif()
 
-if (NOT (CONFIG_BOARD_NRF5340DK_NRF5340_CPUAPP OR CONFIG_BOARD_FRDM_MCXN947 OR CONFIG_BOARD_FRDM_MCXN947_MCXN947_CPU0))
+if (NOT (CONFIG_BOARD_NRF5340DK_NRF5340_CPUAPP OR CONFIG_BOARD_FRDM_MCXN947 OR CONFIG_BOARD_FRDM_MCXN947_MCXN947_CPU0 OR CONFIG_BOARD_NATIVE_SIM))
     message(FATAL_ERROR "Unsupported board for unified_implementation: ${CONFIG_BOARD}")
 endif()
 

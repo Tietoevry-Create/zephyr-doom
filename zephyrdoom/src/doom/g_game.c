@@ -95,7 +95,7 @@ void    G_DoSaveGame (void);
 gamestate_t     oldgamestate;
 
 gameaction_t    gameaction;
-gamestate_t     gamestate;
+gamestate_t     gamestate = GS_DEMOSCREEN;
 skill_t         gameskill;
 boolean         respawnmonsters;
 int             gameepisode;

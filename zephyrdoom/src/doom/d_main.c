@@ -319,7 +319,9 @@ void D_DoomLoop(void) {
     I_InitGraphics();
     EnableLoadingDisk();
 
+#if !defined(CONFIG_BOARD_NATIVE_SIM)
     TryRunTics();
+#endif
 
     V_RestoreBuffer();
     R_ExecuteSetViewSize();
@@ -333,7 +335,17 @@ void D_DoomLoop(void) {
     k_msleep(2);
 
     while (1) {
+#if defined(CONFIG_BOARD_NATIVE_SIM)
+        {
+            int nexttic = I_GetTime() + 1;
+
+            while (I_GetTime() < nexttic) {
+                k_usleep(1000);
+            }
+        }
+#else
         k_usleep(10);
+#endif
         // nrf_cache_profiling_counters_clear(NRF_CACHE_S);
         int frame_time = I_GetTimeRaw();
         frame_time_fps = I_RawTimeToFps(frame_time - frame_time_prev);
