@@ -16,6 +16,11 @@
 //     Protocol-compatible drop-in replacement for the upstream
 //     Chocolate Doom net_sdl module (SDL_net based).
 //
+//     ORIGIN: new file, written for zephyr-doom as part of multiplayer
+//     support; the interface mirrors Chocolate Doom 3.0.0's src/net_sdl.h.
+//     See net_zephyr.c for details and docs/multiplayer-design.md for the
+//     rationale.
+//
 
 #ifndef NET_ZEPHYR_H
 #define NET_ZEPHYR_H

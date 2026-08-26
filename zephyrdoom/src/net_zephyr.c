@@ -20,6 +20,17 @@
 //     SDL_net, so the same code works on native_sim (host-offloaded sockets)
 //     and on any board with an IP-capable network interface.
 //
+//     ORIGIN: new file, written for zephyr-doom as part of multiplayer
+//     support. It is adapted from Chocolate Doom 3.0.0's src/net_sdl.c (hence
+//     the retained Simon Howard copyright above): the net_module_t interface,
+//     the address table and the packet framing follow that file, with the
+//     SDL_net calls replaced by zsock_* equivalents. Two deliberate
+//     divergences from net_sdl.c are documented at their call sites: socket
+//     errors are non-fatal (a transient link blip must not kill the game), and
+//     addresses are kept in network byte order like SDL_net's IPaddress so the
+//     ported logic stays unchanged. See docs/multiplayer-design.md for the
+//     rationale and the bring-up history; git log for authorship.
+//
 
 #include <stdlib.h>
 #include <string.h>

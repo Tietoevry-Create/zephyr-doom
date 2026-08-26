@@ -9,20 +9,26 @@
 = Multiplayer setup
 
 zephyr-doom speaks the *Chocolate Doom 3.0.0* UDP network protocol, so it plays
-against a stock `chocolate-server` and stock `chocolate-doom` desktop clients on
-the host PC. It can *join* a game on three targets:
+against a stock `chocolate-server` and stock `chocolate-doom` desktop clients
+running on a *Linux host*. It can *join* a game on three targets:
 
 * *native_sim*: the Linux build, joining over host-offloaded sockets. Needs no
   host-side network setup at all.
 * *FRDM-MCXN947*: joining over real Ethernet (ENET-QOS).
 * *nRF5340 DK*: joining over USB CDC-ECM. The board enumerates as a USB network
-  adapter on the host.
+  adapter on the Linux host.
+
+Throughout this document, *Linux host* means the Linux PC you build on and run
+the server from, and a *desktop client* is the stock `chocolate-doom` binary
+running on it. Every host-side command below (`apt`, `ip`, `nmcli`, `ufw`) is
+Linux-specific; the boards themselves do not care what the host runs, but the
+setup steps have only been done on Linux.
 
 [IMPORTANT]
 ====
 zephyr-doom can only *join* a game, never host one (`net_server.c` is stubbed).
-You always need a `chocolate-server` on the host PC, even for a game between two
-zephyr-doom peers.
+You always need a `chocolate-server` on the Linux host, even for a game between
+two zephyr-doom peers.
 ====
 
 For the design rationale and the debugging history behind the current state, see
@@ -36,11 +42,11 @@ For the design rationale and the debugging history behind the current state, see
 
 | native_sim + desktop `chocolate-doom`
 | OK
-| Any mix, 2 to 4 players, connect order independent.
+| Any mix, 2 to 4 players, connect order independent. Both on the Linux host.
 
 | native_sim + native_sim
 | OK
-| Several instances on one host; clients bind an ephemeral port.
+| Several instances on one Linux host; clients bind an ephemeral port.
 
 | FRDM-MCXN947 + native_sim
 | OK
@@ -69,15 +75,15 @@ version mismatch only produces a warning and is not fatal, but nothing outside
 . On the *hardware* targets, the board needs the game data (`WAD`) in external
   flash already. That is a one-off step, described in the main README's *Flash*
   section. Multiplayer changes nothing about it.
-. `chocolate-doom` installed on the host PC (see below).
+. `chocolate-doom` installed on the Linux host (see below).
 . Everyone must use the *same WAD*. The boards are flashed with the shareware
   `gamedata/doom1.wad` from this repository, so desktop peers should point at
   that same file.
 
-== Host PC prerequisites
+== Linux host prerequisites
 
-Install Chocolate Doom. The Debian/Ubuntu package ships both the desktop client
-(`chocolate-doom`) and the relay server (`chocolate-server`):
+Install Chocolate Doom on the Linux host. The Debian/Ubuntu package ships both
+the desktop client (`chocolate-doom`) and the relay server (`chocolate-server`):
 
 [source,bash]
 ----
@@ -85,9 +91,9 @@ sudo apt install chocolate-doom
 chocolate-doom --version    # expect "Chocolate Doom 3.0.0"
 ----
 
-The game port is UDP *2342*. Open it if the host runs a firewall. On the hardware
-targets the traffic arrives on the cable or USB interface rather than on
-loopback, so a firewall will see it:
+The game port is UDP *2342*. Open it if the Linux host runs a firewall. On the
+hardware targets the traffic arrives on the cable or USB interface rather than
+on loopback, so a firewall will see it:
 
 [source,bash]
 ----
@@ -98,7 +104,7 @@ sudo ufw allow 2342/udp     # only if ufw is active
 
 === The relay server
 
-Every game needs exactly one `chocolate-server`, running on the host PC:
+Every game needs exactly one `chocolate-server`, running on the Linux host:
 
 [source,bash]
 ----
@@ -144,7 +150,7 @@ non-digit as the map. It did not always: a following flag was read as the map
 the handshake hung.
 ====
 
-== Quick start: two players on one PC
+== Quick start: two players on one Linux host
 
 No hardware needed, and it is the quickest check that the build and the netcode
 work. Build native_sim from the repository root:
@@ -207,7 +213,7 @@ address on the board's subnet (`192.168.10.1:2342`).
 === Shared network setup
 
 Both boards use the same static IPv4 scheme and talk to a `chocolate-server` on
-the PC at the other end of the cable:
+the Linux host at the other end of the cable:
 
 [cols="1,2" options="header, autowidth"]
 |===
@@ -271,8 +277,8 @@ Adjust the path to your LinkServer installation, which is usually not on `PATH`.
 Updating the MCU-Link probe firmware should make plain `west flash` work.
 ====
 
-Wire an Ethernet cable directly between the board and the PC, then put the PC's
-NIC on the cable subnet:
+Wire an Ethernet cable directly between the board and the Linux host, then put
+the host's NIC on the cable subnet:
 
 [source,bash]
 ----
@@ -477,7 +483,7 @@ otherwise.
 == Limitations
 
 * *Join only.* Hosting via `-server` is not implemented (`net_server.c` is
-  stubbed), so a `chocolate-server` on a PC is always required.
+  stubbed), so a `chocolate-server` on the Linux host is always required.
 * *Up to 4 players.* Hardware builds set `NET_MAXPLAYERS=4` to save RAM and
   native_sim keeps 8, but Doom itself caps at 4 either way.
 * *Hardware games are fixed at 2 players*, because the board injects `-nodes 2`.
