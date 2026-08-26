@@ -113,7 +113,7 @@ on RPi 400).
 resource requirements by removing NRFX/NCS elements. Validate on Nordic Semiconductor and NXP dev kit.
 
 | Simulation on PC
-| In progress
+| Done
 | Native Posix target.
 
 | Multiplayer
@@ -130,9 +130,13 @@ not implemented.
 | Open
 | N/A
 
-| Game save and load
+| Game menu functionality
 | Open
-| Enable save and load functionality to store/restore gameplay progress.
+| Enable save and load functionality to store/restore gameplay progress. End game, quit game, etc.
+
+| Native sim - BLE, sound, etc.
+| Open
+| N/A
 
 | SPI error at NXP dev kit
 | Open
@@ -277,8 +281,8 @@ MCUXpresso configuration Tool 26.06
 ^| MVP4
 ^| MVP5
 ^| MVP6
-^| MVP7 (nRF5340)
-^| MVP7 (FRDM-MCXN947)
+^| MVP7,8 (nRF5340)
+^| MVP7,8 (MCXN947)
 
 | https://www.nordicsemi.com/Products/Low-power-short-range-wireless/nRF5340[nRF5340]
 dev kit
@@ -533,7 +537,7 @@ external flash in a single pass:
 pyocd flash -t MCXN947VDF --base-address 0x80000000 gamedata/mcxn947-qspi-full.bin
 ----
 +
-Or from Windows powershell:
+or if using LinkServer (installed via MCUXpresso for VS Code extension), go to gamedata folder, open Windows powershell, and run:
 +
 [source,bash]
 ----
@@ -546,6 +550,13 @@ same base (`0x80000000`):
 [source,bash]
 ----
 pyocd flash -t MCXN947VDF gamedata/qspi_nxp_80.hex
+----
++
+or if using LinkServer (installed via MCUXpresso for VS Code extension), go to gamedata folder, open Windows powershell, and run:
++
+[source,bash]
+----
+& 'C:\nxp\LinkServer_25.12.83\LinkServer.exe' flash 'MCXN947:FRDM-MCXN947' load .\qspi_nxp_80.hex
 ----
 
 . Flash the game.
@@ -1599,6 +1610,71 @@ https://www.nordicsemi.com/Products/Low-power-short-range-wireless/nRF5340[nRF53
 | D7 (active-low, pull-up)
 |===
 
+=== MVP8
+
+* *Goals:*
+** Add support for the native_sim board (POSIX architecture based board). With it, a Zephyr application can be compiled together with the Zephyr kernel, and libraries, creating a normal Linux executable.
+
+* *Features:*
+** Run and debug the solution as Linux executable (validated on native Linux machine and Linux running in VMWare).
+** Control the game using host keyboard.
+
+* *Required Hardware:*
+** See MVP7.
+** For native_sim option host keyboard is used to control the game.
+
+* *Pins/buttons mapping:*
+** See MVP7
+** Host keyboard
++
+[cols="1,1" options="header, autowidth"]
+|===
+^| Key
+^| Description
+
+| Up Arrow
+| Move forward;
+
+| Down Arrow
+| Move backward;
+
+| Left Arrow
+| Turn left;
+
+| Right Arrow
+| Turn right;
+
+| X
+| Fire current weapon;
+
+| Space
+| Open doors, activate switches;
+
+| Z
+| Hold to run;
+
+| C
+| Hold to strafe (use with Left/Right);
+
+| M
+| Toggle automap view;
+
+| ESC
+| Show / escape menu;
+
+| Up Arrow (menu)
+| Move up in menu;
+
+| Down Arrow (menu)
+| Move down in menu;
+
+| ENTER
+| Select option in menu;
+
+| 1–7
+| Select weapons;
+|===
+
 == Release Notes
 
 === Fixed Bugs
@@ -1643,6 +1719,10 @@ used in original https://github.com/NordicPlayground/nrf-doom[nrf-doom] project.
 
 * N/A
 
+==== MVP8
+
+* N/A
+
 === Known Limitations
 
 ==== MVP1
@@ -1678,3 +1758,8 @@ eliminate drift. Calibration procedure could help to address this issue.
 * NXP https://www.nxp.com/design/design-center/development-boards-and-designs/FRDM-MCXN947[FRDM-MCXN947] dev kit:
 ** As SD card support was not added / tested for the NXP dev kit, the only way how to get game data into dev kit is to flash it directly to external flash.
 ** SPI error—the root cause is a race condition in Zephyr’s NXP LPSPI DMA driver. Fixing it would require driver modifications, but since it does not affect functionality or stability, the fix has been put on hold.
+
+==== MVP8
+
+* native_sim board support covers only display and game control using host keyboard. There is no audio, BLE or SD card support as of now.
+* Game menu supports only New Game option.
