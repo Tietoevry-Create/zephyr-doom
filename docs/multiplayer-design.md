@@ -100,7 +100,11 @@ board presents a USB network adapter to the host, and the same Zephyr IP stack +
 - Board display SPI is flaky (`spi_lpspi` DMA errors, `Display ID: FF` at init).
   Pre-existing, cosmetic, doesn't affect networking. Not yet chased down.
 - Hosting via `-server`: dead until `net_server.c` (`NET_SV_*`) is implemented.
-- `W_Checksum` stubbed -> harmless "WAD SHA1 does not match server" warning.
+- DEH checksum can't match a stock peer: `DEH_StructSHA1Sum` hashes each field
+  zero-extended to its declared width, and the fork narrowed `state_t.tics`,
+  `mobjinfo_t` and `weaponinfo_t` from `int` to `short`, so `tics = -1` hashes
+  as `0x0000FFFF` instead of `0xFFFFFFFF`. Compiling the real deh sections in
+  was tried and reverted. Cosmetic: neither side loads a DEH patch.
 - Hardware games are fixed at 2 players: `M_ArgvInit` injects `-nodes 2` and
   there is no way to change it short of rebuilding.
 - Proper fix for the PHY mis-read on FRDM would be a devicetree `fixed-link`
@@ -119,6 +123,16 @@ two more divergences from a stock peer, both now fixed: `BODYQUESIZE` was cut
 from 32 to 8 (corpses are collidable and `G_CheckSpot` tests against them when
 picking a spawn point), and `bodyqueslot` was a `byte`, which wraps at 256
 respawns and would then skip removals the peer still performs.
+
+## WAD checksum
+
+`W_Checksum` was stubbed, so we sent the empty SHA1 and every peer warned about
+a WAD mismatch. It hashes lump metadata only (name, WAD index, offset, size),
+not lump contents, so it is cheap enough for the MCU. The one obstacle was that
+the fork dropped `lumpinfo_t.position`; the offset is still in the on-disk
+directory, so `W_LumpPosition` reads it back from `filelumps[]`. Verified by
+reproducing chocolate-doom's own digest for `doom1.wad`
+(`485fd232c51d1f9cc85815b7f717dbefee77211c`).
 
 ## Key files
 

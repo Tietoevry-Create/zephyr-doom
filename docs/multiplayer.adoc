@@ -404,11 +404,17 @@ zephyr-doom. Both are expected; see the troubleshooting table.
 | `chocolate-server`: `Unable to bind`
 | A stale server still holds port 2342. `pgrep -af chocolate`, then kill it.
 
-| Desktop `chocolate-doom` warns `WAD SHA1 does not match server` and
-  `Dehacked SHA1 does not match server`, showing
-  `da39a3ee5e6b4b0d3255bfef95601890afd80709`
-| Expected. `W_Checksum` is stubbed in this fork, so zephyr-doom reports the
-  empty SHA1 and the peer flags the difference. Cosmetic; the game plays.
+| Desktop `chocolate-doom` warns `Dehacked SHA1 does not match server`, showing
+  `da39a3ee5e6b4b0d3255bfef95601890afd80709` for the server
+| Expected, and cosmetic. Neither side loads a dehacked patch; the digest covers
+  the default game tables, and this fork narrowed several of their fields from
+  `int` to `short` to save RAM, which changes how negative values hash. Matching
+  a stock peer would mean undoing that. See `DEH_Checksum` in `deh_main.c`.
+
+| Desktop `chocolate-doom` warns `WAD SHA1 does not match server`
+| Not expected any more. The WAD digest is computed properly and matches a stock
+  peer loading the same IWAD, so a mismatch here means you really are using
+  different WAD files. Check every peer is pointing at the same `doom1.wad`.
 
 | `This is 'Chocolate Doom 3.0.0', but the server is '...'`
 | Version mismatch warning, non-fatal. The protocol is only tested against

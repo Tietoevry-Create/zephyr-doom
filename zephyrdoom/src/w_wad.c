@@ -533,6 +533,17 @@ int W_LumpLength(lumpindex_t lump) {
     return LONG(filelumps[lump].size);
 }
 
+// Byte offset of the lump inside the WAD file. The fork dropped lumpinfo_t's
+// "position" field, but W_Checksum has to hash it to produce the same digest
+// as a stock chocolate-doom peer, so read it back off the on-disk directory.
+int W_LumpPosition(lumpindex_t lump) {
+    if (lump >= numlumps) {
+        I_Error("W_LumpPosition: %i >= numlumps", lump);
+    }
+
+    return LONG(filelumps[lump].filepos);
+}
+
 void W_ReadLump(lumpindex_t lump, void* dest) {
     if (lump >= numlumps) {
         I_Error("W_ReadLump: %i >= numlumps", lump);
