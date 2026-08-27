@@ -414,6 +414,13 @@ zephyr-doom. Both are expected; see the troubleshooting table.
 | Version mismatch warning, non-fatal. The protocol is only tested against
   Chocolate Doom 3.0.0.
 
+| `consistency failure (N should be M)`, then `Disconnected from server`
+| The two simulations diverged: zephyr-doom computed a different world state
+  from the peer. Fatal by design, and it matches upstream. If you hit this,
+  note what happened just before it (a death, a respawn, a level exit) and
+  report it, because it means a piece of game logic is still stubbed in this
+  fork.
+
 | Desktop `chocolate-doom` feels about a second laggy (smooth but delayed)
 | SDL2 Wayland present pacing. Launch with `SDL_VIDEODRIVER=x11`, or set
   `video_driver "x11"` in its config.
@@ -487,7 +494,5 @@ otherwise.
 * *Up to 4 players.* Hardware builds set `NET_MAXPLAYERS=4` to save RAM and
   native_sim keeps 8, but Doom itself caps at 4 either way.
 * *Hardware games are fixed at 2 players*, because the board injects `-nodes 2`.
-* *No respawn.* `G_DoReborn` is stubbed, so cooperative respawn after death does
-  not work yet.
 * *No LAN discovery.* `-autojoin` and `NET_FindLANServer` are not built, so the
   server address has to be given explicitly.

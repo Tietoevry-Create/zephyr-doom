@@ -101,12 +101,24 @@ board presents a USB network adapter to the host, and the same Zephyr IP stack +
   Pre-existing, cosmetic, doesn't affect networking. Not yet chased down.
 - Hosting via `-server`: dead until `net_server.c` (`NET_SV_*`) is implemented.
 - `W_Checksum` stubbed -> harmless "WAD SHA1 does not match server" warning.
-- `G_DoReborn` respawn stubbed (`g_game.c`).
 - Hardware games are fixed at 2 players: `M_ArgvInit` injects `-nodes 2` and
   there is no way to change it short of rebuilding.
 - Proper fix for the PHY mis-read on FRDM would be a devicetree `fixed-link`
   (or MDIO/MAC locking in `eth_nxp_enet_qos`) instead of stretching
   `CONFIG_PHY_MONITOR_PERIOD`.
+
+## Respawn
+
+`G_DoReborn`'s netgame branch was commented out in the fork, so a dead player
+never respawned while a stock peer did. With the consistency check live (see
+above) the divergence was fatal: `consistency failure (155 should be 0)` and a
+disconnect on the first respawn of a 2-player game. Restored from upstream.
+
+Restoring it also made the corpse queue live for the first time, which exposed
+two more divergences from a stock peer, both now fixed: `BODYQUESIZE` was cut
+from 32 to 8 (corpses are collidable and `G_CheckSpot` tests against them when
+picking a spawn point), and `bodyqueslot` was a `byte`, which wraps at 256
+respawns and would then skip removals the peer still performs.
 
 ## Key files
 

@@ -240,11 +240,22 @@ static int      savegameslot;
 static char     savedescription[32];
 */
 
-/* NRFD-TODO !! BODYQUESIZE 32 */
+/* The nrf-doom fork cut BODYQUESIZE from the upstream 32 to 8 to save RAM.
+ * Networked builds must use the upstream value: corpses are collidable mobjs
+ * that G_CheckSpot tests against when picking a respawn point, so recycling
+ * them earlier than a stock chocolate-doom peer does makes the two simulations
+ * pick different spawn spots and desync. Single-player builds keep the small
+ * queue. */
+#if defined(CONFIG_FEATURE_DOOM_NET)
+#define BODYQUESIZE     32
+#else
 #define BODYQUESIZE     8
+#endif
 
 mobj_t*         bodyque[BODYQUESIZE];
-byte            bodyqueslot;
+/* int, not byte, to match upstream: a byte wraps at 256 respawns and would
+ * then skip BODYQUESIZE corpse removals that the peer still performs. */
+int             bodyqueslot;
 
 // int             vanilla_savegame_limit = 1;
 // int             vanilla_demo_limit = 1;
@@ -1349,14 +1360,17 @@ void G_DoReborn (int playernum)
         // reload the level from scratch
         gameaction = ga_loadlevel;
     }
-    printf("NRFD-TODO: G_DoReborn\n");
-    /*
     else
     {
         // respawn at the start
 
         // first dissasociate the corpse
-        players[playernum].mo->player = NULL;
+        // (guarded: upstream assumes mo is always set here, but this fork can
+        // reach G_DoReborn before a player has ever been spawned)
+        if (players[playernum].mo)
+        {
+            players[playernum].mo->player = NULL;
+        }
 
         // spawn at random spot if in death match
         if (deathmatch)
@@ -1385,7 +1399,6 @@ void G_DoReborn (int playernum)
         }
         P_SpawnPlayer (&playerstarts[playernum]);
     }
-    */
 }
 
 
