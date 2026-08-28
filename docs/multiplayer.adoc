@@ -240,10 +240,11 @@ A few things follow from that, and they all matter when you test:
 
 . The order is fixed. Bring the host interface up, start `chocolate-server`, and
   only then reset the board, so the link is there when the board boots.
-. A hardware game always has exactly two players, because `-nodes 2` is injected
-  and there is no way to change it short of rebuilding. The board normally joins
-  second, which makes the other peer the controller, and that peer has to carry
-  `-nodes 2` itself.
+. The board's injected `-nodes 2` only matters if the board connects first.
+  `-nodes` tells the controller when to start the game, and the controller is
+  simply whichever peer connects first. Reset the board last, as above, and the
+  other peer is the controller: it decides the player count, the level and the
+  skill, and the board's own copies of those are ignored.
 . "Link up but no server" behaves differently from "no link". The injected
   `-warp 1` sets autostart, so the board drops into a direct single-player E1M1
   game rather than the attract demo. Seeing E1M1 instead of the title screen
@@ -499,6 +500,8 @@ otherwise.
   stubbed), so a `chocolate-server` on the Linux host is always required.
 * *Up to 4 players.* Hardware builds set `NET_MAXPLAYERS=4` to save RAM and
   native_sim keeps 8, but Doom itself caps at 4 either way.
-* *Hardware games are fixed at 2 players*, because the board injects `-nodes 2`.
+* *Reset the board last.* A board that connects first becomes the controller,
+  and it asks for two players, so it starts the game as soon as two are present
+  and shuts out anyone still joining.
 * *No LAN discovery.* `-autojoin` and `NET_FindLANServer` are not built, so the
   server address has to be given explicitly.
