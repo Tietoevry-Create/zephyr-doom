@@ -61,6 +61,7 @@ lumpindex_t W_GetNumForName(const char *name);
 char *W_LumpName(lumpindex_t lump);
 
 int W_LumpLength(lumpindex_t lump);
+int W_LumpPosition(lumpindex_t lump);
 void W_ReadLump(lumpindex_t lump, void *dest);
 
 void *W_CacheLumpNum(lumpindex_t lump, int tag);

@@ -29,6 +29,9 @@
 #endif
 
 #include <zephyr/kernel.h>
+#if defined(CONFIG_FEATURE_DOOM_NET) && !defined(CONFIG_BOARD_NATIVE_SIM)
+#include <zephyr/net/net_if.h>  // wait for PHY relink after display power-on
+#endif
 
 #include "am_map.h"
 #include "d_iwad.h"
@@ -208,8 +211,15 @@ void D_Display(void) {
     I_UpdateNoBlit();
 
     // draw the view directly
-    if (gamestate == GS_LEVEL && !automapactive && gametic)
+    //
+    // The mo != NULL guard is for netgames: a peer can be listed in
+    // playeringame before its map object has been spawned, and rendering the
+    // view of a player without one dereferences NULL.
+    if (gamestate == GS_LEVEL && !automapactive && gametic
+        && players[displayplayer].mo != NULL)
+    {
         R_RenderPlayerView(&players[displayplayer]);
+    }
 
     if (gamestate == GS_LEVEL && gametic) HU_Drawer();
 
@@ -1089,7 +1099,15 @@ void D_DoomMain(void) {
         else {
             startepisode = myargv[p + 1][0] - '0';
 
-            if (p + 2 < myargc) {
+            // For Doom 1, -warp takes two numbers (episode and map).
+            // Only consume the token after the episode as the map if it
+            // actually is a number; otherwise (e.g. "-warp 1 -skill 3",
+            // or "-warp 1" at end of args) default the map to 1. Without
+            // this guard a following flag like "-skill" was read as the
+            // map ('-' - '0' == -3 == 0xfd), producing an invalid map that
+            // a strict netgame server rejects.
+            if (p + 2 < myargc && myargv[p + 2][0] >= '0'
+                && myargv[p + 2][0] <= '9') {
                 startmap = myargv[p + 2][0] - '0';
             } else {
                 startmap = 1;
@@ -1143,6 +1161,39 @@ void D_DoomMain(void) {
 
     DEH_printf("S_Init: Setting up sound.\n");
     S_Init(sfxVolume * 8, musicVolume * 8);
+
+#if !defined(CONFIG_BOARD_NATIVE_SIM) && defined(CONFIG_FEATURE_DOOM_NET) \
+    && defined(CONFIG_FEATURE_DOOM_DISPLAY)
+    // Power on the display before joining the network: the FT810 power-on
+    // briefly drops the Ethernet PHY link, so trigger that glitch (and let the
+    // link recover) before the netgame handshake. I_InitGraphics is idempotent.
+    DEH_printf("I_InitGraphics: early display power-on (pre-net).\n");
+    I_InitGraphics();
+
+    // Wait for the link to come back after the display glitch before connecting.
+    // Bounded so an unplugged cable still falls through.
+    {
+        struct net_if *iface = net_if_get_default();
+        int waited = 0;
+
+        k_msleep(200);  // let the link drop first, then wait for it back
+        while (iface != NULL && !net_if_is_carrier_ok(iface) && waited < 4000)
+        {
+            k_msleep(50);
+            waited += 50;
+        }
+        DEH_printf("Post-display link wait: carrier=%d after %d ms\n",
+                   iface != NULL ? net_if_is_carrier_ok(iface) : -1, waited);
+    }
+#endif
+
+#if defined(CONFIG_FEATURE_DOOM_NET)
+    DEH_printf("NET_Init: Init network subsystem.\n");
+    NET_Init();
+
+    // Initial netgame startup. Connect to server etc.
+    D_ConnectNetGame();
+#endif
 
     DEH_printf("D_CheckNetGame: Checking network game status.\n");
     D_CheckNetGame();

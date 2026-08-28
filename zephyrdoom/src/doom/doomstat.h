@@ -248,7 +248,7 @@ extern  gamestate_t     wipegamestate;
 
 // extern  int             mouseSensitivity;
 
-extern  byte            bodyqueslot;
+extern  int             bodyqueslot;
 
 
 

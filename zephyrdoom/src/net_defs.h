@@ -33,8 +33,15 @@
 // The maximum number of players, multiplayer/networking.
 // This is the maximum supported by the networking code; individual games
 // have their own values for MAXPLAYERS that can be smaller.
-
+//
+// 4 on hardware to save ~19 KB (recvwindow + ticdata scale with this); Doom's
+// MAXPLAYERS is 4 anyway. native_sim has RAM to spare and keeps 8. Peers with
+// different values interoperate as long as the actual player count fits both.
+#if defined(CONFIG_BOARD_NATIVE_SIM)
 #define NET_MAXPLAYERS 8
+#else
+#define NET_MAXPLAYERS 4
+#endif
 
 // Maximum length of a player's name.
 
@@ -42,8 +49,20 @@
 
 // Networking and tick handling related.
 
-/* NRFD-TODO !! BACKUPTICS 128 */
+/* The nrf-doom fork reduced BACKUPTICS from the upstream value of 128 to 4 to
+ * save RAM on the MCU. Networked builds need the full upstream lockstep window
+ * back, on hardware as much as on native_sim: a 4-tic window stalls and forces
+ * resends against a real server. ticdata, send_queue and recvwindow all scale
+ * with it, which is the main reason the FRDM build has to claw RAM back
+ * elsewhere (NET_MAXPLAYERS 4, smaller k_heap). Single-player MCU builds keep
+ * the small value. BACKUPTICS only sizes local ring buffers, it is not part of
+ * the wire protocol, so it does not affect compatibility with
+ * chocolate-server. */
+#if defined(CONFIG_FEATURE_DOOM_NET)
+#define BACKUPTICS 128
+#else
 #define BACKUPTICS 4
+#endif
 
 typedef struct _net_module_s net_module_t;
 typedef struct _net_packet_s net_packet_t;

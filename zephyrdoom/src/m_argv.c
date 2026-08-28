@@ -20,11 +20,17 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <strings.h>  // strcasecmp
 
 #include "doomtype.h"
 #include "i_system.h"
 #include "m_misc.h"
 #include "m_argv.h"  // haleyjd 20110212: warning fix
+
+#if defined(CONFIG_FEATURE_DOOM_NET) && !defined(CONFIG_BOARD_NATIVE_SIM)
+#include <zephyr/kernel.h>      // k_msleep
+#include <zephyr/net/net_if.h>  // net_if_get_default, net_if_is_carrier_ok
+#endif
 
 int     myargc;
 char**      myargv;
@@ -39,8 +45,6 @@ char**      myargv;
 
 int M_CheckParmWithArgs(char *check, int num_args)
 {
-    // NRFD-EXCLUDE
-    /*
     int i;
 
     for (i = 1; i < myargc - num_args; i++)
@@ -48,7 +52,7 @@ int M_CheckParmWithArgs(char *check, int num_args)
         if (!strcasecmp(check, myargv[i]))
            return i;
     }
-*/
+
     return 0;
 }
 
@@ -253,8 +257,100 @@ char *M_GetExecutableName(void)
     return "doom"; // NRFD-NOTE: Not applicable to NRFD
 }
 
+#if defined(CONFIG_FEATURE_DOOM_NET) && !defined(CONFIG_BOARD_NATIVE_SIM)
+// True if the Ethernet link comes up within timeout_ms (link negotiation takes
+// ~1.7 s after reset). Used to pick multiplayer vs single-player at boot.
+static boolean EthernetLinkUpWithin(int timeout_ms)
+{
+    struct net_if *iface = net_if_get_default();
+    int waited = 0;
+
+    if (iface == NULL)
+    {
+        return false;
+    }
+
+    while (waited < timeout_ms)
+    {
+        if (net_if_is_carrier_ok(iface))
+        {
+            return true;
+        }
+
+        k_msleep(50);
+        waited += 50;
+    }
+
+    return false;
+}
+#endif
+
 void M_ArgvInit(void)
 {
-    myargc = 0;
-    myargv = NULL;
+#if defined(CONFIG_BOARD_NATIVE_SIM)
+    // native_sim runs as a real host process, so we can accept normal Doom
+    // command-line parameters (e.g. "-connect 127.0.0.1 -warp 1"). They are
+    // passed via the DOOM_ARGS environment variable, which avoids having to
+    // hook the native simulator's own argument parser:
+    //
+    //     DOOM_ARGS="-connect 127.0.0.1" ./build/zephyr/zephyr.exe
+    //
+    static char argbuf[512];
+    static char *argv_storage[64];
+    const int max_args = (int) (sizeof(argv_storage) / sizeof(argv_storage[0]));
+    const char *env;
+    int argc = 0;
+
+    argv_storage[argc++] = "doom";
+
+    env = getenv("DOOM_ARGS");
+
+    if (env != NULL && env[0] != '\0')
+    {
+        char *tok;
+
+        strncpy(argbuf, env, sizeof(argbuf) - 1);
+        argbuf[sizeof(argbuf) - 1] = '\0';
+
+        tok = strtok(argbuf, " \t");
+        while (tok != NULL && argc < max_args)
+        {
+            argv_storage[argc++] = tok;
+            tok = strtok(NULL, " \t");
+        }
+    }
+
+    myargc = argc;
+    myargv = argv_storage;
+#else
+    // Hardware targets have no command line.
+    static char *argv_storage[16];
+    int argc = 0;
+
+    argv_storage[argc++] = "doom";
+
+#if defined(CONFIG_FEATURE_DOOM_NET)
+    // Cable at boot -> join the server; no cable -> single-player demo/menu.
+    if (EthernetLinkUpWithin(CONFIG_DOOM_NET_LINK_WAIT_MS))
+    {
+        printf("M_ArgvInit: Ethernet link up; joining %s\n",
+               CONFIG_DOOM_SERVER_ADDR);
+        argv_storage[argc++] = "-connect";
+        argv_storage[argc++] = CONFIG_DOOM_SERVER_ADDR;
+        argv_storage[argc++] = "-nodes";
+        argv_storage[argc++] = "2";
+        argv_storage[argc++] = "-warp";
+        argv_storage[argc++] = "1";
+        argv_storage[argc++] = "-skill";
+        argv_storage[argc++] = "3";
+    }
+    else
+    {
+        printf("M_ArgvInit: No Ethernet link; starting single-player\n");
+    }
+#endif
+
+    myargc = argc;
+    myargv = argv_storage;
+#endif
 }

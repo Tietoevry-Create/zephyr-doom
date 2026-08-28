@@ -35,8 +35,10 @@
 #include "net_io.h"
 #include "net_query.h"
 #include "net_server.h"
-//#include "net_sdl.h"
 #include "net_loop.h"
+#if defined(CONFIG_FEATURE_DOOM_NET)
+#include "net_zephyr.h"
+#endif
 
 // The complete set of data for a particular tic.
 
@@ -248,8 +250,6 @@ void NetUpdate (void)
 
 static void D_Disconnected(void)
 {
-    printf("NRFD-TODO: D_Disconnected\n");
-    /*
     // In drone mode, the game cannot continue once disconnected.
 
     if (drone)
@@ -260,7 +260,6 @@ static void D_Disconnected(void)
     // disconnected from server
 
     printf("Disconnected from server.\n");
-    */
 }
 
 //
@@ -315,8 +314,6 @@ void D_StartGameLoop(void)
 static void BlockUntilStart(net_gamesettings_t *settings,
                             netgame_startup_callback_t callback)
 {
-    printf("NRFD-TODO: BlockUntilStart");
-    /*
     while (!NET_CL_GetSettings(settings))
     {
         NET_CL_Run();
@@ -335,7 +332,6 @@ static void BlockUntilStart(net_gamesettings_t *settings,
 
         I_Sleep(100);
     }
-    */
 }
 
 void D_StartNetGame(net_gamesettings_t *settings,
@@ -440,8 +436,7 @@ void D_StartNetGame(net_gamesettings_t *settings,
 
 boolean D_InitNetGame(net_connect_data_t *connect_data)
 {
-        printf("NRFD-TODO: D_InitNetGame\n");
-/*
+#if defined(CONFIG_FEATURE_DOOM_NET)
     boolean result = false;
     net_addr_t *addr = NULL;
     int i;
@@ -463,7 +458,7 @@ boolean D_InitNetGame(net_connect_data_t *connect_data)
     {
         NET_SV_Init();
         NET_SV_AddModule(&net_loop_server_module);
-        NET_SV_AddModule(&net_sdl_module);
+        NET_SV_AddModule(&net_zephyr_module);
         NET_SV_RegisterWithMaster();
 
         net_loop_client_module.InitClient();
@@ -472,38 +467,22 @@ boolean D_InitNetGame(net_connect_data_t *connect_data)
     else
     {
         //!
-        // @category net
-        //
-        // Automatically search the local LAN for a multiplayer
-        // server and join it.
-        //
-
-        i = M_CheckParm("-autojoin");
-
-        if (i > 0)
-        {
-            addr = NET_FindLANServer();
-
-            if (addr == NULL)
-            {
-                I_Error("No server found on local LAN");
-            }
-        }
-
-        //!
         // @arg <address>
         // @category net
         //
         // Connect to a multiplayer server running on the given
         // address.
         //
+        // Note: the upstream -autojoin / NET_FindLANServer path is omitted
+        // here because net_query.c is not part of the build.
+        //
 
         i = M_CheckParmWithArgs("-connect", 1);
 
         if (i > 0)
         {
-            net_sdl_module.InitClient();
-            addr = net_sdl_module.ResolveAddress(myargv[i+1]);
+            net_zephyr_module.InitClient();
+            addr = net_zephyr_module.ResolveAddress(myargv[i+1]);
 
             if (addr == NULL)
             {
@@ -521,21 +500,30 @@ boolean D_InitNetGame(net_connect_data_t *connect_data)
 
         if (!NET_CL_Connect(addr, connect_data))
         {
-            I_Error("D_InitNetGame: Failed to connect to %s\n",
-                    NET_AddrToString(addr));
+            // Server unreachable: fall back to single-player (leave result
+            // false) instead of aborting the whole game.
+            printf("D_InitNetGame: Failed to connect to %s; "
+                   "falling back to single-player\n",
+                   NET_AddrToString(addr));
         }
+        else
+        {
+            printf("D_InitNetGame: Connected to %s\n", NET_AddrToString(addr));
 
-        printf("D_InitNetGame: Connected to %s\n", NET_AddrToString(addr));
+            // Wait for launch message received from server.
 
-        // Wait for launch message received from server.
+            NET_WaitForLaunch();
 
-        NET_WaitForLaunch();
-
-        result = true;
+            result = true;
+        }
     }
 
     return result;
-    */ return false;
+#else
+    (void) connect_data;
+    printf("D_InitNetGame: networking disabled (CONFIG_FEATURE_DOOM_NET=n)\n");
+    return false;
+#endif
 }
 
 
@@ -546,11 +534,8 @@ boolean D_InitNetGame(net_connect_data_t *connect_data)
 //
 void D_QuitNetGame (void)
 {
-        printf("NRFD-TODO: ");
-/*
     NET_SV_Shutdown();
     NET_CL_Disconnect();
-    */
 }
 
 static int GetLowTic(void)

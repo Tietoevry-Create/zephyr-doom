@@ -40,6 +40,15 @@
 #include "w_checksum.h"
 #include "w_wad.h"
 
+// Version string advertised to the server in the SYN handshake and compared
+// against the server's version. The nrf-doom fork renamed the autotools
+// PACKAGE_STRING macro to DOOM_PACKAGE_STRING; we report the Chocolate Doom
+// release we are protocol-compatible with so a stock chocolate-server does not
+// log a version-mismatch desync warning. (A mismatch is non-fatal regardless.)
+#ifndef PACKAGE_STRING
+#define PACKAGE_STRING "Chocolate Doom 3.0.0"
+#endif
+
 extern void D_ReceiveTic(ticcmd_t *ticcmds, boolean *playeringame);
 
 typedef enum
@@ -116,8 +125,7 @@ boolean net_client_connected;
 // and the wait data that was received.
 
 boolean net_client_received_wait_data;
-// NRFD-TODO: Net
-// net_waitdata_t net_client_wait_data;
+net_waitdata_t net_client_wait_data;
 
 // Waiting at the initial wait screen for the game to be launched?
 
@@ -137,7 +145,6 @@ static ticcmd_t last_ticcmd;
 
 // Buffer of ticcmd diffs being sent to the server
 
-/* NRFD-TODO:
 static net_server_send_t send_queue[BACKUPTICS];
 
 // Receive window
@@ -156,7 +163,6 @@ static unsigned int gamedata_recv_time;
 
 sha1_digest_t net_local_wad_sha1sum;
 sha1_digest_t net_local_deh_sha1sum;
-*/
 
 // Are we playing with the freedoom IWAD?
 
@@ -183,7 +189,6 @@ static void NET_CL_Disconnected(void)
 static void NET_CL_ExpandFullTiccmd(net_full_ticcmd_t *cmd, unsigned int seq,
                                     ticcmd_t *ticcmds)
 {
-    printf("NRFD-TODO: \n"); /*
     int latency;
     fixed_t adjustment;
     int i;
@@ -221,8 +226,6 @@ static void NET_CL_ExpandFullTiccmd(net_full_ticcmd_t *cmd, unsigned int seq,
         }
     }
 
-    //printf("latency: %i\tremote:%i\n", average_latency / FRACUNIT,
-    //                                   cmd->latency);
 
     // Possibly adjust offsetms in d_net.c, try to make players all have
     // the same lag.  Don't adjust in the first few tics of play, as
@@ -265,14 +268,12 @@ static void NET_CL_ExpandFullTiccmd(net_full_ticcmd_t *cmd, unsigned int seq,
             recvwindow_cmd_base[i] = ticcmds[i];
         }
     }
-    */
 }
 
 // Advance the receive window
 
 static void NET_CL_AdvanceWindow(void)
 {
-        printf("NRFD-TODO: \n"); /*
     ticcmd_t ticcmds[NET_MAXPLAYERS];
 
     while (recvwindow[0].active)
@@ -291,16 +292,13 @@ static void NET_CL_AdvanceWindow(void)
 
         ++recvwindow_start;
 
-        //printf("CL: advanced to %i\n", recvwindow_start);
     }
-    */
 }
 
 // Shut down the client code, etc.  Invoked after a disconnect.
 
 static void NET_CL_Shutdown(void)
 {
-        printf("NRFD-TODO: \n"); /*
     if (net_client_connected)
     {
         net_client_connected = false;
@@ -309,19 +307,15 @@ static void NET_CL_Shutdown(void)
 
         // Shut down network module, etc.  To do.
     }
-    */
 }
 
 void NET_CL_LaunchGame(void)
 {
-        printf("NRFD-TODO: \n"); /*
     NET_Conn_NewReliable(&client_connection, NET_PACKET_TYPE_LAUNCH);
-    */
 }
 
 void NET_CL_StartGame(net_gamesettings_t *settings)
 {
-        printf("NRFD-TODO: \n"); /*
     net_packet_t *packet;
 
     // Start from a ticcmd of all zeros
@@ -334,12 +328,10 @@ void NET_CL_StartGame(net_gamesettings_t *settings)
                                   NET_PACKET_TYPE_GAMESTART);
 
     NET_WriteSettings(packet, settings);
-    */
 }
 
 static void NET_CL_SendGameDataACK(void)
 {
-        printf("NRFD-TODO: \n"); /*
     net_packet_t *packet;
 
     packet = NET_NewPacket(10);
@@ -352,12 +344,10 @@ static void NET_CL_SendGameDataACK(void)
     NET_FreePacket(packet);
 
     need_to_acknowledge = false;
-    */
 }
 
 static void NET_CL_SendTics(int start, int end)
 {
-        printf("NRFD-TODO: \n"); /*
     net_packet_t *packet;
     int i;
 
@@ -407,14 +397,12 @@ static void NET_CL_SendTics(int start, int end)
     // Acknowledgement has been sent as part of the packet
 
     need_to_acknowledge = false;
-    */
 }
 
 // Add a new ticcmd to the send queue
 
 void NET_CL_SendTiccmd(ticcmd_t *ticcmd, int maketic)
 {
-    printf("NRFD-TODO: NET_CL_SendTiccmd\n"); /*
     net_ticdiff_t diff;
     net_server_send_t *sendobj;
     int starttic, endtic;
@@ -442,14 +430,12 @@ void NET_CL_SendTiccmd(ticcmd_t *ticcmd, int maketic)
         starttic = 0;
 
     NET_CL_SendTics(starttic, endtic);
-    */
 }
 
 // Parse a SYN packet received back from the server indicating a successful
 // connection attempt.
 static void NET_CL_ParseSYN(net_packet_t *packet)
 {
-        printf("NRFD-TODO: \n"); /*
     net_protocol_t protocol;
     char *server_version;
 
@@ -479,14 +465,12 @@ static void NET_CL_ParseSYN(net_packet_t *packet)
                 "'%s'. It is possible that this mismatch may cause the game "
                 "to desync.\n", PACKAGE_STRING, server_version);
     }
-    */
 }
 
 // data received while we are waiting for the game to start
 
 static void NET_CL_ParseWaitingData(net_packet_t *packet)
 {
-        printf("NRFD-TODO: \n"); /*
     net_waitdata_t wait_data;
 
     if (!NET_ReadWaitData(packet, &wait_data))
@@ -515,12 +499,10 @@ static void NET_CL_ParseWaitingData(net_packet_t *packet)
 
     memcpy(&net_client_wait_data, &wait_data, sizeof(net_waitdata_t));
     net_client_received_wait_data = true;
-    */
 }
 
 static void NET_CL_ParseLaunch(net_packet_t *packet)
 {
-        printf("NRFD-TODO: \n"); /*
     unsigned int num_players;
 
     if (client_state != CLIENT_STATE_WAITING_LAUNCH)
@@ -539,12 +521,10 @@ static void NET_CL_ParseLaunch(net_packet_t *packet)
 
     net_client_wait_data.num_players = num_players;
     client_state = CLIENT_STATE_WAITING_START;
-    */
 }
 
 static void NET_CL_ParseGameStart(net_packet_t *packet)
 {
-        printf("NRFD-TODO: \n"); /*
     if (!NET_ReadSettings(packet, &settings))
     {
         return;
@@ -582,17 +562,14 @@ static void NET_CL_ParseGameStart(net_packet_t *packet)
     // Clear the send queue
 
     memset(&send_queue, 0x00, sizeof(send_queue));
-    */
 }
 
 static void NET_CL_SendResendRequest(int start, int end)
 {
-        printf("NRFD-TODO: \n"); /*
     net_packet_t *packet;
     unsigned int nowtime;
     int i;
 
-    //printf("CL: Send resend %i-%i\n", start, end);
 
     packet = NET_NewPacket(64);
     NET_WriteInt16(packet, NET_PACKET_TYPE_GAMEDATA_RESEND);
@@ -616,14 +593,12 @@ static void NET_CL_SendResendRequest(int start, int end)
 
         recvwindow[index].resend_time = nowtime;
     }
-    */
 }
 
 // Check for expired resend requests
 
 static void NET_CL_CheckResends(void)
 {
-        printf("NRFD-TODO: \n"); /*
     int i;
     int resend_start, resend_end;
     unsigned int nowtime;
@@ -664,7 +639,6 @@ static void NET_CL_CheckResends(void)
             {
                 // End of a run of resend tics
 
-                //printf("CL: resend request timed out: %i-%i\n", resend_start, resend_end);
                 NET_CL_SendResendRequest(recvwindow_start + resend_start,
                                          recvwindow_start + resend_end);
 
@@ -675,7 +649,6 @@ static void NET_CL_CheckResends(void)
 
     if (resend_start >= 0)
     {
-        //printf("CL: resend request timed out: %i-%i\n", resend_start, resend_end);
         NET_CL_SendResendRequest(recvwindow_start + resend_start,
                                  recvwindow_start + resend_end);
     }
@@ -688,7 +661,6 @@ static void NET_CL_CheckResends(void)
     {
         NET_CL_SendGameDataACK();
     }
-    */
 }
 
 
@@ -697,7 +669,6 @@ static void NET_CL_CheckResends(void)
 
 static void NET_CL_ParseGameData(net_packet_t *packet)
 {
-        printf("NRFD-TODO: \n"); /*
     net_server_recv_t *recvobj;
     unsigned int seq, num_tics;
     unsigned int nowtime;
@@ -758,7 +729,6 @@ static void NET_CL_ParseGameData(net_packet_t *packet)
     // all tics before the first tic in this packet?  If so, send a
     // resend request.
 
-    //printf("CL: %p: %i\n", client, seq);
 
     resend_end = seq - recvwindow_start;
 
@@ -800,14 +770,12 @@ static void NET_CL_ParseGameData(net_packet_t *packet)
         NET_CL_SendResendRequest(recvwindow_start + resend_start,
                                  recvwindow_start + resend_end - 1);
     }
-    */
 }
 
 // Parse a resend request from the server due to a dropped packet
 
 static void NET_CL_ParseResendRequest(net_packet_t *packet)
 {
-        printf("NRFD-TODO: \n"); /*
     static unsigned int start;
     static unsigned int end;
     static unsigned int num_tics;
@@ -827,7 +795,6 @@ static void NET_CL_ParseResendRequest(net_packet_t *packet)
 
     end = start + num_tics - 1;
 
-    //printf("requested resend %i-%i .. ", start, end);
 
     // Check we have the tics being requested.  If not, reduce the
     // window of tics to only what we have.
@@ -846,24 +813,20 @@ static void NET_CL_ParseResendRequest(net_packet_t *packet)
         --end;
     }
 
-    //printf("%i-%i\n", start, end);
 
     // Resend those tics
 
     if (start <= end)
     {
-        //printf("CL: resend %i-%i\n", start, start+num_tics-1);
 
         NET_CL_SendTics(start, end);
     }
-    */
 }
 
 // Console message that the server wants the client to print
 
 static void NET_CL_ParseConsoleMessage(net_packet_t *packet)
 {
-        printf("NRFD-TODO: \n"); /*
     char *msg;
 
     msg = NET_ReadSafeString(packet);
@@ -874,14 +837,12 @@ static void NET_CL_ParseConsoleMessage(net_packet_t *packet)
     }
 
     printf("Message from server:\n%s\n", msg);
-    */
 }
 
 // parse a received packet
 
 static void NET_CL_ParsePacket(net_packet_t *packet)
 {
-        printf("NRFD-TODO: \n"); /*
     unsigned int packet_type;
 
     if (!NET_ReadInt16(packet, &packet_type))
@@ -929,7 +890,6 @@ static void NET_CL_ParsePacket(net_packet_t *packet)
                 break;
         }
     }
-    */
 }
 
 // "Run" the client code: check for new packets, send packets as
@@ -937,7 +897,6 @@ static void NET_CL_ParsePacket(net_packet_t *packet)
 
 void NET_CL_Run(void)
 {
-    N_ldbg("NRFD-TODO: NET_CL_Run\n"); /*
     net_addr_t *addr;
     net_packet_t *packet;
 
@@ -988,12 +947,10 @@ void NET_CL_Run(void)
 
         NET_CL_CheckResends();
     }
-    */
 }
 
 static void NET_CL_SendSYN(net_connect_data_t *data)
 {
-        printf("NRFD-TODO: \n"); /*
     net_packet_t *packet;
 
     packet = NET_NewPacket(10);
@@ -1005,13 +962,11 @@ static void NET_CL_SendSYN(net_connect_data_t *data)
     NET_WriteString(packet, net_player_name);
     NET_Conn_SendPacket(&client_connection, packet);
     NET_FreePacket(packet);
-    */
 }
 
 // Connect to a server
 boolean NET_CL_Connect(net_addr_t *addr, net_connect_data_t *data)
 {
-        printf("NRFD-TODO: \n"); return false; /*
     int start_time;
     int last_send_time;
 
@@ -1097,7 +1052,6 @@ boolean NET_CL_Connect(net_addr_t *addr, net_connect_data_t *data)
 
         return false;
     }
-    */
 }
 
 // read game settings received from server
@@ -1118,7 +1072,6 @@ boolean NET_CL_GetSettings(net_gamesettings_t *_settings)
 
 void NET_CL_Disconnect(void)
 {
-        printf("NRFD-TODO: \n"); /*
     int start_time;
 
     if (!net_client_connected)
@@ -1152,14 +1105,13 @@ void NET_CL_Disconnect(void)
     // Finished sending disconnect packets, etc.
 
     NET_CL_Shutdown();
-    */
 }
 
 void NET_CL_Init(void)
 {
     // Try to set from the USER and USERNAME environment variables
     // Otherwise, fallback to "Player"
-    /*NRFD-EXCLUDE:
+
     if (net_player_name == NULL)
         net_player_name = getenv("USER");
     if (net_player_name == NULL)
@@ -1174,7 +1126,6 @@ void NET_CL_Init(void)
         net_player_name = M_OEMToUTF8(net_player_name);
     }
 #endif
-        */
 
     if (net_player_name == NULL)
         net_player_name = "Player";
@@ -1187,6 +1138,9 @@ void NET_Init(void)
 
 void NET_BindVariables(void)
 {
-    printf("NRFD-TODO: NET_BindVariables\n");
+    // NRFD-EXCLUDE: the nrf-doom config system (m_config.c) binds against a
+    // fixed table of known variables and fatally errors on any name not in it.
+    // "player_name" is not in that table, so we must not bind it here; it keeps
+    // the default assigned in NET_Init ("Player" or $USER).
     // M_BindStringVariable("player_name", &net_player_name);
 }

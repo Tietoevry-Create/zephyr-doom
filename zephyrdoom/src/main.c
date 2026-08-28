@@ -40,9 +40,37 @@ LOG_MODULE_REGISTER(doom_main, CONFIG_DOOM_MAIN_LOG_LEVEL);
 
 int no_sdcard = 1;
 
+#if defined(CONFIG_BOARD_NATIVE_SIM)
+// Debug aid: on native_sim (a normal host process) install a SIGSEGV/SIGABRT
+// handler that prints a glibc backtrace, so a crash leaves an addr2line-able
+// stack on stderr without needing gdb (which disturbs the native simulator's
+// offloaded-socket host threads). Resolve with:
+//   addr2line -e build/zephyr/zephyr.exe -f -p <addr>
+#include <signal.h>
+#include <stdio.h>
+
+static void doom_crash_handler(int sig) {
+    fprintf(stderr, "\n=== native_sim caught signal %d (run under gdb for a "
+                    "full backtrace) ===\n", sig);
+    fflush(stderr);
+    signal(sig, SIG_DFL);
+    raise(sig);
+}
+
+static void doom_install_crash_handler(void) {
+    signal(SIGSEGV, doom_crash_handler);
+    signal(SIGBUS, doom_crash_handler);
+}
+#else
+static void doom_install_crash_handler(void) {}
+#endif
+
 void D_DoomMain(void);
 void M_ArgvInit(void);
 void N_ButtonsInit(void);
+#if defined(CONFIG_USBD_CDC_ECM_CLASS)
+int N_usb_net_init(void);
+#endif
 
 #if defined(CONFIG_SOC_NRF5340_CPUAPP)
 static void platform_clock_cache_init(void) {
@@ -124,6 +152,8 @@ static void try_mount_disk(void) { no_sdcard = 1; }
 #endif
 
 int main(void) {
+    doom_install_crash_handler();
+
     LOG_INF("BOARD STARTING %s", CONFIG_BOARD);
 
     doom_status_led_init();
@@ -140,6 +170,9 @@ int main(void) {
     N_ButtonsInit();
 #if defined(CONFIG_FEATURE_DOOM_AUDIO)
     N_I2S_init();
+#endif
+#if defined(CONFIG_USBD_CDC_ECM_CLASS)
+    N_usb_net_init();
 #endif
     M_ArgvInit();
 

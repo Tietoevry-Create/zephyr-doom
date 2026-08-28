@@ -32,7 +32,18 @@
 #include "deh_defs.h"
 #include "deh_io.h"
 
-extern deh_section_t *deh_section_types[];
+// The fork excludes the dehacked section modules, so the upstream definition of
+// this table (doom/deh_doom.c, not compiled) is absent. An empty table keeps the
+// checksum and lookup code linking.
+//
+// Compiling the real sections in was tried and deliberately reverted: their
+// SHA1 helpers hash each table field zero-extended to its declared width, and
+// this fork narrowed state_t.tics, mobjinfo_t and weaponinfo_t from int to
+// short to save RAM. A tics value of -1 (very common in states[]) therefore
+// hashes as 0x0000FFFF here but 0xFFFFFFFF on a stock peer, so the digest can
+// never match without undoing that narrowing. The resulting "Dehacked SHA1 does
+// not match" warning on the peer is cosmetic: neither side loads a DEH patch.
+deh_section_t *deh_section_types[] = { NULL };
 extern char *deh_signatures[];
 
 static boolean deh_initialized = false;

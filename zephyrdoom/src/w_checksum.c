@@ -26,48 +26,23 @@
 #include "w_checksum.h"
 #include "w_wad.h"
 
-// static wad_file_t **open_wadfiles = NULL;
-// static int num_open_wadfiles = 0;
+// Hash one WAD directory entry exactly the way Chocolate Doom does, so that a
+// netgame peer loading the same IWAD computes the same digest. The fields and
+// their order are load-bearing: name (as a NUL-terminated 9-byte buffer), the
+// index of the WAD the lump came from, the lump's byte offset, and its size.
+//
+// This fork only ever has one WAD open (W_AddFile errors on a second), so the
+// file index is always 0; upstream tracks a table of open files to number them.
 
-static int GetFileNumber(wad_file_t *handle)
+static void ChecksumAddLump(sha1_context_t *sha1_context, lumpindex_t lump)
 {
-    printf("NRF-TODO: GetFileNumber\n"); return 0; /*
-    int i;
-    int result;
-
-    for (i = 0; i < num_open_wadfiles; ++i)
-    {
-        if (open_wadfiles[i] == handle)
-        {
-            return i;
-        }
-    }
-
-    // Not found in list.  This is a new file we haven't seen yet.
-    // Allocate another slot for this file.
-
-    open_wadfiles = I_Realloc(open_wadfiles,
-                            sizeof(wad_file_t *) * (num_open_wadfiles + 1));
-    open_wadfiles[num_open_wadfiles] = handle;
-
-    result = num_open_wadfiles;
-    ++num_open_wadfiles;
-
-    return result;
-    */
-}
-
-static void ChecksumAddLump(sha1_context_t *sha1_context, lumpinfo_t *lump)
-{
-    printf("NRF-TODO: ChecksumAddLump\n"); /*
     char buf[9];
 
-    M_StringCopy(buf, lump->name, sizeof(buf));
+    M_StringCopy(buf, W_LumpName(lump), sizeof(buf));
     SHA1_UpdateString(sha1_context, buf);
-    SHA1_UpdateInt32(sha1_context, GetFileNumber(lump->wad_file));
-    SHA1_UpdateInt32(sha1_context, lump->position);
-    SHA1_UpdateInt32(sha1_context, lump->size);
-    */
+    SHA1_UpdateInt32(sha1_context, 0);
+    SHA1_UpdateInt32(sha1_context, W_LumpPosition(lump));
+    SHA1_UpdateInt32(sha1_context, W_LumpLength(lump));
 }
 
 void W_Checksum(sha1_digest_t digest)
@@ -77,17 +52,13 @@ void W_Checksum(sha1_digest_t digest)
 
     SHA1_Init(&sha1_context);
 
-    // NRFD-TODO
-    // num_open_wadfiles = 0;
-
     // Go through each entry in the WAD directory, adding information
     // about each entry to the SHA1 hash.
-    /*
+
     for (i = 0; i < numlumps; ++i)
     {
-        ChecksumAddLump(&sha1_context, &lumpinfo[i]);
+        ChecksumAddLump(&sha1_context, (lumpindex_t) i);
     }
-    */
 
     SHA1_Final(digest, &sha1_context);
 }

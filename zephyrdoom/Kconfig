@@ -81,6 +81,42 @@ config FEATURE_DOOM_SHIELD
 	  The joystick axes are read via Zephyr ADC (devicetree io-channels), and
 	  the buttons are read via Zephyr GPIO (devicetree aliases).
 
+config FEATURE_DOOM_NET
+	bool "Network multiplayer (UDP, Chocolate Doom 3.0.0 compatible)"
+	default y if BOARD_NATIVE_SIM
+	default n
+	select NETWORKING
+	select NET_SOCKETS
+	help
+	  Enable Chocolate Doom 3.0.0 protocol-compatible UDP multiplayer, so the
+	  game can join a standard chocolate-server / chocolate-doom session.
+
+	  The transport (net_zephyr.c) uses Zephyr's BSD socket API. On native_sim
+	  this is backed by host-offloaded sockets (enable
+	  CONFIG_NET_NATIVE_OFFLOADED_SOCKETS in the board config), which needs no
+	  host-side network setup. On hardware targets an IP-capable network
+	  interface must additionally be configured.
+
+config DOOM_SERVER_ADDR
+	string "Multiplayer server address host[:port] (hardware targets)"
+	depends on FEATURE_DOOM_NET
+	default "192.168.10.1:2342"
+	help
+	  Hardware targets have no command line, so this is the server the game
+	  connects to when an Ethernet link is present at boot (see M_ArgvInit).
+	  Dotted-quad IPv4, optionally ":port" (default port 2342). Ignored on
+	  native_sim, which takes -connect from the DOOM_ARGS environment variable.
+
+config DOOM_NET_LINK_WAIT_MS
+	int "Boot wait (ms) for Ethernet link before choosing SP vs MP"
+	depends on FEATURE_DOOM_NET
+	default 3000
+	help
+	  How long to wait at boot for the Ethernet PHY to report carrier. If the
+	  link comes up within this window the game joins CONFIG_DOOM_SERVER_ADDR;
+	  otherwise it starts single-player. PHY negotiation typically takes
+	  ~1.7 s after reset.
+
 choice
 	prompt "Feature preset"
 	default FEATURE_DOOM_PRESET_CUSTOM

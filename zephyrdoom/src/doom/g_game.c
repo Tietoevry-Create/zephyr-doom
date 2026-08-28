@@ -154,6 +154,12 @@ wbstartstruct_t wminfo;                 // parms for world map / intermission
 
 byte            consistancy[MAXPLAYERS][BACKUPTICS];
 
+#if defined(CONFIG_FEATURE_DOOM_NET)
+// Used by the per-tic consistency check below as the fallback value when a
+// player has no map object yet. Defined in m_random.c (not in m_random.h).
+extern int rndindex;
+#endif
+
 #define MAXPLMOVE               (forwardmove[1])
 
 #define TURBOTHRESHOLD  0x32
@@ -234,11 +240,22 @@ static int      savegameslot;
 static char     savedescription[32];
 */
 
-/* NRFD-TODO !! BODYQUESIZE 32 */
+/* The nrf-doom fork cut BODYQUESIZE from the upstream 32 to 8 to save RAM.
+ * Networked builds must use the upstream value: corpses are collidable mobjs
+ * that G_CheckSpot tests against when picking a respawn point, so recycling
+ * them earlier than a stock chocolate-doom peer does makes the two simulations
+ * pick different spawn spots and desync. Single-player builds keep the small
+ * queue. */
+#if defined(CONFIG_FEATURE_DOOM_NET)
+#define BODYQUESIZE     32
+#else
 #define BODYQUESIZE     8
+#endif
 
 mobj_t*         bodyque[BODYQUESIZE];
-byte            bodyqueslot;
+/* int, not byte, to match upstream: a byte wraps at 256 respawns and would
+ * then skip BODYQUESIZE corpse removals that the peer still performs. */
+int             bodyqueslot;
 
 // int             vanilla_savegame_limit = 1;
 // int             vanilla_demo_limit = 1;
@@ -1015,8 +1032,16 @@ void G_Ticker (void)
             */
 
 
-            // NRFD-TODO: multiplayer
-            /*
+#if defined(CONFIG_FEATURE_DOOM_NET)
+            // NRFD-NET: We interoperate with stock Chocolate Doom, which
+            // enforces the per-tic consistency byte. G_BuildTiccmd sends
+            // consistancy[consoleplayer][...] (the low byte of our player's
+            // mo->x), so we must compute and store that value here every tic.
+            // If we skip it, consistancy[][] stays 0 and the byte we send
+            // matches a peer's only while the player is motionless (a
+            // stationary mo->x has a zero low byte); the first frame anyone
+            // moves it diverges and the peer aborts with "consistency
+            // failure". We also verify incoming bytes, matching upstream.
             if (netgame && !netdemo && !(gametic%ticdup) )
             {
                 if (gametic > BACKUPTICS
@@ -1030,7 +1055,7 @@ void G_Ticker (void)
                 else
                     consistancy[i][buf] = rndindex;
             }
-            */
+#endif
         }
     }
 
@@ -1335,14 +1360,17 @@ void G_DoReborn (int playernum)
         // reload the level from scratch
         gameaction = ga_loadlevel;
     }
-    printf("NRFD-TODO: G_DoReborn\n");
-    /*
     else
     {
         // respawn at the start
 
         // first dissasociate the corpse
-        players[playernum].mo->player = NULL;
+        // (guarded: upstream assumes mo is always set here, but this fork can
+        // reach G_DoReborn before a player has ever been spawned)
+        if (players[playernum].mo)
+        {
+            players[playernum].mo->player = NULL;
+        }
 
         // spawn at random spot if in death match
         if (deathmatch)
@@ -1371,7 +1399,6 @@ void G_DoReborn (int playernum)
         }
         P_SpawnPlayer (&playerstarts[playernum]);
     }
-    */
 }
 
 
